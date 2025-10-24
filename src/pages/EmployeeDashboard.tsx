@@ -191,7 +191,7 @@ export default function EmployeeDashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
-            <h1 className="text-xl font-bold font-display">Mine Rutiner</h1>
+            <h1 className="text-xl">Mine Rutiner</h1>
           </div>
           <Button variant="ghost" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />
@@ -204,7 +204,7 @@ export default function EmployeeDashboard() {
         {!selectedShift ? (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold">Vælg din vagt</h2>
+              <h2 className="text-3xl">Vælg din vagt</h2>
               <p className="text-muted-foreground">
                 Vælg hvilken vagt du har i dag
               </p>
@@ -242,7 +242,7 @@ export default function EmployeeDashboard() {
                   ← Tilbage
                 </Button>
                 <div>
-                  <h2 className="text-2xl font-bold">{selectedShift.name}</h2>
+                  <h2 className="text-2xl">{selectedShift.name}</h2>
                   <p className="text-sm text-muted-foreground">
                     {completions.size} af {routines.length} opgaver fuldført
                   </p>

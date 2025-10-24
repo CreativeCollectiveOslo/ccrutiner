@@ -64,7 +64,7 @@ export default function Auth() {
           <div className="flex justify-center mb-4">
             <img src={logo} alt="Creative Collective" className="h-16 w-auto" />
           </div>
-          <CardTitle className="text-2xl font-display">Creative Collective Medarbejder app</CardTitle>
+          <h1 className="text-2xl">Creative Collective Medarbejder app</h1>
           <CardDescription>
             Log ind for at se dagens opgaver
           </CardDescription>

@@ -148,7 +148,7 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
-            <h1 className="text-xl font-bold font-display">Admin Dashboard</h1>
+            <h1 className="text-xl">Admin Dashboard</h1>
           </div>
           <Button variant="ghost" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-2xl">
                   {shifts.find((s) => s.id === selectedShift)?.name} Rutiner
                 </h2>
                 <p className="text-sm text-muted-foreground">

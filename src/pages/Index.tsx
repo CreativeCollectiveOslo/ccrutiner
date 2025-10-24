@@ -22,7 +22,7 @@ const Index = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Creative Collective" className="h-10 w-auto" />
-            <span className="text-2xl font-bold font-display">Creative Collective</span>
+            <h2 className="text-2xl">Creative Collective</h2>
           </div>
           <Button onClick={() => navigate("/auth")}>
             Log ind
@@ -32,7 +32,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6 max-w-3xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
+          <h1 className="text-4xl md:text-6xl tracking-tight">
             Håndter dine daglige rutiner
             <span className="block text-primary mt-2">med lethed</span>
           </h1>
@@ -56,7 +56,7 @@ const Index = () => {
               <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
                 <CheckCircle2 className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold">Enkel afkrydsning</h3>
+              <h3 className="text-xl">Enkel afkrydsning</h3>
               <p className="text-muted-foreground">
                 Tjek opgaver af løbende gennem dagen med visuel feedback
               </p>
@@ -68,7 +68,7 @@ const Index = () => {
               <div className="w-16 h-16 mx-auto rounded-full bg-secondary/20 flex items-center justify-center">
                 <Calendar className="h-8 w-8 text-secondary" />
               </div>
-              <h3 className="text-xl font-semibold">Vagtbaseret</h3>
+              <h3 className="text-xl">Vagtbaseret</h3>
               <p className="text-muted-foreground">
                 Se kun de rutiner der er relevante for din vagt
               </p>
@@ -80,7 +80,7 @@ const Index = () => {
               <div className="w-16 h-16 mx-auto rounded-full bg-accent flex items-center justify-center">
                 <Users className="h-8 w-8 text-accent-foreground" />
               </div>
-              <h3 className="text-xl font-semibold">Admin kontrol</h3>
+              <h3 className="text-xl">Admin kontrol</h3>
               <p className="text-muted-foreground">
                 Ejeren kan nemt oprette og administrere alle rutiner
               </p>
