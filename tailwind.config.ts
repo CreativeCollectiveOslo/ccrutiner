@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['DM Sans', 'system-ui', 'sans-serif'],
+        sans: ['Chivo', 'system-ui', 'sans-serif'],
+        display: ['Chivo', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
