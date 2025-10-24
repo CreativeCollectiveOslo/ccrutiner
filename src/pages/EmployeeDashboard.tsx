@@ -67,7 +67,12 @@ export default function EmployeeDashboard() {
   }, [user, navigate]);
 
   const checkAdminStatus = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("checkAdminStatus: No user found");
+      return;
+    }
+
+    console.log("checkAdminStatus: Checking for user", user.id);
 
     const { data, error } = await supabase
       .from("user_roles")
@@ -76,8 +81,13 @@ export default function EmployeeDashboard() {
       .eq("role", "admin")
       .maybeSingle();
 
+    console.log("checkAdminStatus result:", { data, error });
+
     if (!error && data) {
+      console.log("Setting isAdmin to true");
       setIsAdmin(true);
+    } else {
+      console.log("User is not admin or error occurred");
     }
   };
 
