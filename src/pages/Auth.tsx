@@ -66,7 +66,7 @@ export default function Auth() {
               <Coffee className="w-8 h-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Keramik Café Rutiner</CardTitle>
+          <CardTitle className="text-2xl">Creative Collective Medarbejder app</CardTitle>
           <CardDescription>
             Log ind for at se dagens opgaver
           </CardDescription>
@@ -162,7 +162,7 @@ export default function Auth() {
 
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Håndværk • Kvalitet • Rutiner
+            Kreativitet • Samarbejde • Rutiner
           </p>
         </CardFooter>
       </Card>

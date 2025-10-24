@@ -21,7 +21,7 @@ const Index = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Coffee className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Keramik Café</span>
+            <span className="text-2xl font-bold">Creative Collective</span>
           </div>
           <Button onClick={() => navigate("/auth")}>
             Log ind
@@ -89,7 +89,7 @@ const Index = () => {
       </main>
 
       <footer className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground border-t mt-16">
-        <p>Håndværk • Kvalitet • Rutiner</p>
+        <p>Kreativitet • Samarbejde • Rutiner</p>
       </footer>
     </div>
   );
