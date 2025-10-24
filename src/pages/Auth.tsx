@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Coffee } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export default function Auth() {
   const { signIn, signUp } = useAuth();
@@ -62,11 +62,9 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <Coffee className="w-8 h-8 text-primary" />
-            </div>
+            <img src={logo} alt="Creative Collective" className="h-16 w-auto" />
           </div>
-          <CardTitle className="text-2xl">Creative Collective Medarbejder app</CardTitle>
+          <CardTitle className="text-2xl font-display">Creative Collective Medarbejder app</CardTitle>
           <CardDescription>
             Log ind for at se dagens opgaver
           </CardDescription>

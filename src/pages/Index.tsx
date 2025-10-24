@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Coffee, CheckCircle2, Users, Calendar } from "lucide-react";
+import { CheckCircle2, Users, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import logo from "@/assets/logo.png";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -19,9 +20,9 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background via-accent/30 to-background">
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Coffee className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">Creative Collective</span>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Creative Collective" className="h-10 w-auto" />
+            <span className="text-2xl font-bold font-display">Creative Collective</span>
           </div>
           <Button onClick={() => navigate("/auth")}>
             Log ind

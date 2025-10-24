@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Ceramic café color palette - warm, earthy tones */
+    /* Creative Collective color palette - warm terracotta */
     --background: 35 25% 96%;
     --foreground: 25 25% 15%;
 
@@ -18,8 +18,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 25 25% 15%;
 
-    /* Terracotta/clay primary color */
-    --primary: 15 75% 55%;
+    /* Terracotta primary color from logo */
+    --primary: 9 61% 53%;
     --primary-foreground: 0 0% 100%;
 
     /* Soft sage green secondary */
@@ -30,7 +30,7 @@ All colors MUST be HSL.
     --muted-foreground: 25 15% 45%;
 
     /* Warm cream accent */
-    --accent: 40 40% 88%;
+    --accent: 35 40% 92%;
     --accent-foreground: 25 25% 15%;
 
     --destructive: 0 72% 51%;
@@ -38,9 +38,9 @@ All colors MUST be HSL.
 
     --border: 35 20% 85%;
     --input: 35 20% 85%;
-    --ring: 15 75% 55%;
+    --ring: 9 61% 53%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
     
     /* Shift colors */
     --shift-morning: 38 90% 60%;
@@ -48,13 +48,13 @@ All colors MUST be HSL.
     --shift-evening: 270 60% 50%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(15 75% 55%), hsl(25 80% 65%));
+    --gradient-primary: linear-gradient(135deg, hsl(9 61% 53%), hsl(15 70% 60%));
     --gradient-secondary: linear-gradient(180deg, hsl(140 30% 65%), hsl(160 35% 55%));
-    --gradient-warm: linear-gradient(to bottom, hsl(35 25% 96%), hsl(40 30% 92%));
+    --gradient-warm: linear-gradient(to bottom, hsl(35 25% 96%), hsl(40 30% 94%));
     
     /* Shadows */
-    --shadow-soft: 0 2px 8px hsl(15 40% 30% / 0.1);
-    --shadow-elevated: 0 8px 24px hsl(15 40% 30% / 0.15);
+    --shadow-soft: 0 2px 12px hsl(9 40% 30% / 0.08);
+    --shadow-elevated: 0 8px 28px hsl(9 40% 30% / 0.12);
     
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,7 +86,7 @@ All colors MUST be HSL.
     --popover: 25 15% 16%;
     --popover-foreground: 35 25% 92%;
 
-    --primary: 15 75% 55%;
+    --primary: 9 61% 53%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 140 25% 40%;
@@ -103,16 +103,16 @@ All colors MUST be HSL.
 
     --border: 25 10% 25%;
     --input: 25 10% 25%;
-    --ring: 15 75% 55%;
+    --ring: 9 61% 53%;
     
     --sidebar-background: 25 20% 12%;
     --sidebar-foreground: 35 25% 92%;
-    --sidebar-primary: 15 75% 55%;
+    --sidebar-primary: 9 61% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 25 10% 25%;
     --sidebar-accent-foreground: 35 25% 92%;
     --sidebar-border: 25 10% 25%;
-    --sidebar-ring: 15 75% 55%;
+    --sidebar-ring: 9 61% 53%;
   }
 }
 

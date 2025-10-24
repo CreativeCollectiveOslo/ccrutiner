@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Edit2, Coffee, Loader2 } from "lucide-react";
+import { LogOut, Plus, Trash2, Edit2, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import logo from "@/assets/logo.png";
 
 interface Shift {
   id: string;
@@ -145,9 +146,9 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-b from-background to-accent">
       <header className="border-b bg-card/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Coffee className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Admin Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
+            <h1 className="text-xl font-bold font-display">Admin Dashboard</h1>
           </div>
           <Button variant="ghost" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />

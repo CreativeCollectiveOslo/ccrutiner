@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Sun, CloudRain, Moon, Coffee, Loader2 } from "lucide-react";
+import { LogOut, Sun, CloudRain, Moon, Loader2 } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 interface Shift {
   id: string;
@@ -188,9 +189,9 @@ export default function EmployeeDashboard() {
     <div className="min-h-screen bg-gradient-to-b from-background to-accent">
       <header className="border-b bg-card/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Coffee className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Mine Rutiner</h1>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
+            <h1 className="text-xl font-bold font-display">Mine Rutiner</h1>
           </div>
           <Button variant="ghost" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />
