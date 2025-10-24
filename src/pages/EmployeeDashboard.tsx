@@ -7,7 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Sun, CloudRain, Moon, Loader2 } from "lucide-react";
+import { LogOut, Sun, CloudRain, Moon, Loader2, Plus, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import logo from "@/assets/logo.png";
 
 interface Shift {
@@ -44,6 +48,13 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [activeTab, setActiveTab] = useState<"tasks" | "admin">("tasks");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newRoutine, setNewRoutine] = useState({
+    title: "",
+    description: "",
+    priority: 0,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -187,6 +198,48 @@ export default function EmployeeDashboard() {
     }
   };
 
+  const handleCreateRoutine = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedShift) {
+      toast.error("Velg en vakt først");
+      return;
+    }
+
+    const { error } = await supabase.from("routines").insert({
+      shift_id: selectedShift.id,
+      title: newRoutine.title,
+      description: newRoutine.description || null,
+      priority: newRoutine.priority,
+      order_index: routines.length,
+    });
+
+    if (error) {
+      toast.error("Kunne ikke opprette rutine");
+      console.error(error);
+    } else {
+      toast.success("Rutine opprettet!");
+      setDialogOpen(false);
+      setNewRoutine({ title: "", description: "", priority: 0 });
+      fetchRoutines();
+    }
+  };
+
+  const handleDeleteRoutine = async (id: string) => {
+    const { error } = await supabase
+      .from("routines")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Kunne ikke slette rutine");
+      console.error(error);
+    } else {
+      toast.success("Rutine slettet");
+      fetchRoutines();
+    }
+  };
+
   const getShiftColorClass = (colorCode: string) => {
     if (colorCode.includes("38")) return "bg-shift-morning";
     if (colorCode.includes("210")) return "bg-shift-afternoon";
@@ -211,11 +264,6 @@ export default function EmployeeDashboard() {
             <h1 className="text-xl">Mine Rutiner</h1>
           </div>
           <div className="flex items-center gap-2">
-            {isAdmin && (
-              <Button variant="outline" onClick={() => navigate("/admin")}>
-                Administrer
-              </Button>
-            )}
             <Button variant="ghost" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Logg ut
@@ -274,60 +322,196 @@ export default function EmployeeDashboard() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              {routines.length === 0 ? (
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <p className="text-muted-foreground">
-                      Ingen rutiner for denne vakten ennå
+            {isAdmin && (
+              <div className="flex gap-2">
+                <Button
+                  variant={activeTab === "tasks" ? "default" : "outline"}
+                  onClick={() => setActiveTab("tasks")}
+                >
+                  Mine oppgaver
+                </Button>
+                <Button
+                  variant={activeTab === "admin" ? "default" : "outline"}
+                  onClick={() => setActiveTab("admin")}
+                >
+                  Administrer rutiner
+                </Button>
+              </div>
+            )}
+
+            {activeTab === "tasks" ? (
+              <div className="space-y-3">
+                {routines.length === 0 ? (
+                  <Card>
+                    <CardContent className="pt-6 text-center">
+                      <p className="text-muted-foreground">
+                        Ingen rutiner for denne vakten ennå
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  routines.map((routine) => {
+                    const isCompleted = completions.has(routine.id);
+                    return (
+                      <Card
+                        key={routine.id}
+                        className={`transition-all ${
+                          isCompleted ? "opacity-60" : ""
+                        }`}
+                      >
+                        <CardContent className="pt-6">
+                          <div className="flex items-start gap-4">
+                            <Checkbox
+                              id={routine.id}
+                              checked={isCompleted}
+                              onCheckedChange={() => toggleTaskCompletion(routine.id)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1 space-y-2">
+                              <label
+                                htmlFor={routine.id}
+                                className={`font-medium cursor-pointer ${
+                                  isCompleted ? "line-through" : ""
+                                }`}
+                              >
+                                {routine.title}
+                              </label>
+                              {routine.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {routine.description}
+                                </p>
+                              )}
+                              {routine.priority > 0 && (
+                                <Badge variant="secondary">
+                                  Prioritet: {routine.priority}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium">Administrer rutiner</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {routines.length} rutiner totalt
                     </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                routines.map((routine) => {
-                  const isCompleted = completions.has(routine.id);
-                  return (
-                    <Card
-                      key={routine.id}
-                      className={`transition-all ${
-                        isCompleted ? "opacity-60" : ""
-                      }`}
-                    >
-                      <CardContent className="pt-6">
-                        <div className="flex items-start gap-4">
-                          <Checkbox
-                            id={routine.id}
-                            checked={isCompleted}
-                            onCheckedChange={() => toggleTaskCompletion(routine.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1 space-y-2">
-                            <label
-                              htmlFor={routine.id}
-                              className={`font-medium cursor-pointer ${
-                                isCompleted ? "line-through" : ""
-                              }`}
-                            >
-                              {routine.title}
-                            </label>
-                            {routine.description && (
-                              <p className="text-sm text-muted-foreground">
-                                {routine.description}
-                              </p>
-                            )}
-                            {routine.priority > 0 && (
-                              <Badge variant="secondary">
-                                Prioritet: {routine.priority}
-                              </Badge>
-                            )}
+                  </div>
+
+                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ny Rutine
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <form onSubmit={handleCreateRoutine}>
+                        <DialogHeader>
+                          <DialogTitle>Opprett ny rutine</DialogTitle>
+                          <DialogDescription>
+                            Legg til en ny rutine til {selectedShift.name}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="title">Tittel *</Label>
+                            <Input
+                              id="title"
+                              value={newRoutine.title}
+                              onChange={(e) =>
+                                setNewRoutine({ ...newRoutine, title: e.target.value })
+                              }
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="description">Beskrivelse</Label>
+                            <Textarea
+                              id="description"
+                              value={newRoutine.description}
+                              onChange={(e) =>
+                                setNewRoutine({
+                                  ...newRoutine,
+                                  description: e.target.value,
+                                })
+                              }
+                              rows={3}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="priority">Prioritet</Label>
+                            <Input
+                              id="priority"
+                              type="number"
+                              value={newRoutine.priority}
+                              onChange={(e) =>
+                                setNewRoutine({
+                                  ...newRoutine,
+                                  priority: parseInt(e.target.value) || 0,
+                                })
+                              }
+                            />
                           </div>
                         </div>
+                        <DialogFooter>
+                          <Button type="submit">Opprett rutine</Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                <div className="space-y-3">
+                  {routines.length === 0 ? (
+                    <Card>
+                      <CardContent className="pt-6 text-center">
+                        <p className="text-muted-foreground">
+                          Ingen rutiner ennå. Opprett den første!
+                        </p>
                       </CardContent>
                     </Card>
-                  );
-                })
-              )}
-            </div>
+                  ) : (
+                    routines.map((routine) => (
+                      <Card key={routine.id}>
+                        <CardContent className="pt-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium">{routine.title}</h3>
+                                {routine.priority > 0 && (
+                                  <Badge variant="secondary">
+                                    Prioritet: {routine.priority}
+                                  </Badge>
+                                )}
+                              </div>
+                              {routine.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {routine.description}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteRoutine(routine.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
