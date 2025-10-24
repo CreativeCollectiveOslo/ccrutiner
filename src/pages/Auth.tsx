@@ -28,19 +28,23 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
     
-    const { error } = await signIn(loginData.email, loginData.password);
-    
-    if (error) {
-      toast.error("Innlogging feilet", {
-        description: error.message,
-      });
-      setIsLoading(false);
-      return;
-    }
-    
-    // If admin login, verify admin role and redirect
+    // For admin login, use supabase directly to control navigation
     if (adminLogin) {
       const { supabase } = await import("@/integrations/supabase/client");
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
+      
+      if (error) {
+        toast.error("Innlogging feilet", {
+          description: error.message,
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Verify admin role
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
@@ -60,7 +64,17 @@ export default function Auth() {
           return;
         }
         
+        // Redirect to admin dashboard
         window.location.href = "/admin";
+      }
+    } else {
+      // Normal login uses context which handles navigation
+      const { error } = await signIn(loginData.email, loginData.password);
+      
+      if (error) {
+        toast.error("Innlogging feilet", {
+          description: error.message,
+        });
       }
     }
     
