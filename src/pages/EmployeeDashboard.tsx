@@ -42,6 +42,7 @@ export default function EmployeeDashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
   const navigate = useNavigate();
 
@@ -51,7 +52,23 @@ export default function EmployeeDashboard() {
       return;
     }
     fetchShifts();
+    checkAdminStatus();
   }, [user, navigate]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!error && data) {
+      setIsAdmin(true);
+    }
+  };
 
   useEffect(() => {
     if (selectedShift) {
@@ -193,10 +210,17 @@ export default function EmployeeDashboard() {
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
             <h1 className="text-xl">Mine Rutiner</h1>
           </div>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logg ut
-          </Button>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button variant="outline" onClick={() => navigate("/admin")}>
+                Administrer
+              </Button>
+            )}
+            <Button variant="ghost" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logg ut
+            </Button>
+          </div>
         </div>
       </header>
 

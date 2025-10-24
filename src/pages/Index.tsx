@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Users, Calendar } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import logo from "@/assets/logo.png";
 
 const Index = () => {
@@ -31,61 +29,27 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-16">
-        <div className="text-center space-y-6 max-w-3xl mx-auto mb-16">
-          <h1 className="text-4xl md:text-6xl tracking-tight">
-            Håndter dine daglige rutiner
-            <span className="block text-primary mt-2">med letthet</span>
+        <div className="text-center space-y-8 max-w-2xl mx-auto min-h-[60vh] flex flex-col justify-center">
+          <h1 className="text-5xl md:text-7xl tracking-tight">
+            Se dine rutiner
+            <span className="block text-primary mt-2">enkelt</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            En enkel og effektiv måte for medarbeidere å holde oversikt over dagens oppgaver,
-            mens eieren enkelt kan administrere og tildele rutiner.
+          <p className="text-xl text-muted-foreground">
+            Hold oversikt over dagens oppgaver
           </p>
-          <div className="flex gap-4 justify-center pt-4">
-            <Button size="lg" onClick={() => navigate("/auth")}>
-              Kom i gang
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/auth")}>
+          <div className="flex flex-col gap-3 items-center pt-6">
+            <Button size="lg" className="w-full max-w-xs" onClick={() => navigate("/auth")}>
               Logg inn
             </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => navigate("/auth")}
+            >
+              Admin innlogging
+            </Button>
           </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <Card className="border-2 hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl">Enkel avkryssing</h3>
-              <p className="text-muted-foreground">
-                Kryss av oppgaver fortløpende gjennom dagen med visuell tilbakemelding
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-secondary/20 flex items-center justify-center">
-                <Calendar className="h-8 w-8 text-secondary" />
-              </div>
-              <h3 className="text-xl">Vaktbasert</h3>
-              <p className="text-muted-foreground">
-                Se bare de rutinene som er relevante for din vakt
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-accent flex items-center justify-center">
-                <Users className="h-8 w-8 text-accent-foreground" />
-              </div>
-              <h3 className="text-xl">Admin kontroll</h3>
-              <p className="text-muted-foreground">
-                Eieren kan enkelt opprette og administrere alle rutiner
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </main>
 

@@ -35,12 +35,9 @@ export default function Dashboard() {
     } else if (data) {
       setUserRole(data.role);
       
-      // Redirect based on role
-      if (data.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/employee");
-      }
+      // Always redirect to employee dashboard
+      // Admins can access admin dashboard from there
+      navigate("/employee");
     }
     
     setLoading(false);
