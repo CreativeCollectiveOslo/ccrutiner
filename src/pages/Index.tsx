@@ -41,14 +41,6 @@ const Index = () => {
             <Button size="lg" className="w-full max-w-xs" onClick={() => navigate("/auth")}>
               Logg inn
             </Button>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="text-sm text-muted-foreground hover:text-foreground"
-              onClick={() => navigate("/auth")}
-            >
-              Admin innlogging
-            </Button>
           </div>
         </div>
       </main>
