@@ -121,14 +121,20 @@ export default function EmployeeDashboard() {
   const fetchShifts = async () => {
     const { data, error } = await supabase
       .from("shifts")
-      .select("*")
-      .order("name");
+      .select("*");
 
     if (error) {
       toast.error("Kunne ikke hente vakter");
       console.error(error);
     } else if (data) {
-      setShifts(data);
+      // Custom sort order: Morgen, Eftermiddag, Aften
+      const sortOrder = ["Morgen", "Eftermiddag", "Aften"];
+      const sortedData = data.sort((a, b) => {
+        const indexA = sortOrder.indexOf(a.name);
+        const indexB = sortOrder.indexOf(b.name);
+        return indexA - indexB;
+      });
+      setShifts(sortedData);
     }
     setLoading(false);
   };
