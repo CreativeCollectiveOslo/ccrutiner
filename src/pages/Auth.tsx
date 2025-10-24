@@ -30,7 +30,7 @@ export default function Auth() {
     const { error } = await signIn(loginData.email, loginData.password);
     
     if (error) {
-      toast.error("Login fejlede", {
+      toast.error("Innlogging feilet", {
         description: error.message,
       });
     }
@@ -45,12 +45,12 @@ export default function Auth() {
     const { error } = await signUp(signupData.email, signupData.password, signupData.name);
     
     if (error) {
-      toast.error("Registrering fejlede", {
+      toast.error("Registrering feilet", {
         description: error.message,
       });
     } else {
       toast.success("Velkommen!", {
-        description: "Din konto er oprettet",
+        description: "Kontoen din er opprettet",
       });
     }
     
@@ -64,27 +64,27 @@ export default function Auth() {
           <div className="flex justify-center mb-4">
             <img src={logo} alt="Creative Collective" className="h-16 w-auto" />
           </div>
-          <h1 className="text-2xl">Creative Collective Medarbejder app</h1>
+          <h1 className="text-2xl">Creative Collective Medarbeider app</h1>
           <CardDescription>
-            Log ind for at se dagens opgaver
+            Logg inn for å se dagens oppgaver
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Log ind</TabsTrigger>
-              <TabsTrigger value="signup">Opret konto</TabsTrigger>
+              <TabsTrigger value="login">Logg inn</TabsTrigger>
+              <TabsTrigger value="signup">Opprett konto</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email">E-post</Label>
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder="din@email.dk"
+                    placeholder="din@epost.no"
                     value={loginData.email}
                     onChange={(e) =>
                       setLoginData({ ...loginData, email: e.target.value })
@@ -93,7 +93,7 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Adgangskode</Label>
+                  <Label htmlFor="login-password">Passord</Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -105,7 +105,7 @@ export default function Auth() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logger ind..." : "Log ind"}
+                  {isLoading ? "Logger inn..." : "Logg inn"}
                 </Button>
               </form>
             </TabsContent>
@@ -117,7 +117,7 @@ export default function Auth() {
                   <Input
                     id="signup-name"
                     type="text"
-                    placeholder="Dit navn"
+                    placeholder="Ditt navn"
                     value={signupData.name}
                     onChange={(e) =>
                       setSignupData({ ...signupData, name: e.target.value })
@@ -126,11 +126,11 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">E-post</Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="din@email.dk"
+                    placeholder="din@epost.no"
                     value={signupData.email}
                     onChange={(e) =>
                       setSignupData({ ...signupData, email: e.target.value })
@@ -139,7 +139,7 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Adgangskode</Label>
+                  <Label htmlFor="signup-password">Passord</Label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -151,7 +151,7 @@ export default function Auth() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Opretter..." : "Opret konto"}
+                  {isLoading ? "Oppretter..." : "Opprett konto"}
                 </Button>
               </form>
             </TabsContent>
@@ -160,7 +160,7 @@ export default function Auth() {
 
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Kreativitet • Samarbejde • Rutiner
+            Kreativitet • Samarbeid • Rutiner
           </p>
         </CardFooter>
       </Card>

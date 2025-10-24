@@ -65,7 +65,7 @@ export default function AdminDashboard() {
       .order("name");
 
     if (error) {
-      toast.error("Kunne ikke hente vagter");
+      toast.error("Kunne ikke hente vakter");
       console.error(error);
     } else if (data) {
       setShifts(data);
@@ -96,7 +96,7 @@ export default function AdminDashboard() {
     e.preventDefault();
 
     if (!selectedShift) {
-      toast.error("Vælg en vagt først");
+      toast.error("Velg en vakt først");
       return;
     }
 
@@ -109,10 +109,10 @@ export default function AdminDashboard() {
     });
 
     if (error) {
-      toast.error("Kunne ikke oprette rutine");
+      toast.error("Kunne ikke opprette rutine");
       console.error(error);
     } else {
-      toast.success("Rutine oprettet!");
+      toast.success("Rutine opprettet!");
       setDialogOpen(false);
       setNewRoutine({ title: "", description: "", priority: 0 });
       fetchRoutines();
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
           </div>
           <Button variant="ghost" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />
-            Log ud
+            Logg ut
           </Button>
         </div>
       </header>
@@ -161,8 +161,8 @@ export default function AdminDashboard() {
         <div className="grid gap-6 md:grid-cols-[300px_1fr]">
           <Card>
             <CardHeader>
-              <CardTitle>Vagter</CardTitle>
-              <CardDescription>Vælg en vagt at administrere</CardDescription>
+              <CardTitle>Vakter</CardTitle>
+              <CardDescription>Velg en vakt å administrere</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {shifts.map((shift) => (
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
                   {shifts.find((s) => s.id === selectedShift)?.name} Rutiner
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {routines.length} rutiner i alt
+                  {routines.length} rutiner totalt
                 </p>
               </div>
 
@@ -199,15 +199,15 @@ export default function AdminDashboard() {
                 <DialogContent>
                   <form onSubmit={handleCreateRoutine}>
                     <DialogHeader>
-                      <DialogTitle>Opret ny rutine</DialogTitle>
+                      <DialogTitle>Opprett ny rutine</DialogTitle>
                       <DialogDescription>
-                        Tilføj en ny rutine til{" "}
+                        Legg til en ny rutine til{" "}
                         {shifts.find((s) => s.id === selectedShift)?.name}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label htmlFor="title">Titel *</Label>
+                        <Label htmlFor="title">Tittel *</Label>
                         <Input
                           id="title"
                           value={newRoutine.title}
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button type="submit">Opret rutine</Button>
+                      <Button type="submit">Opprett rutine</Button>
                     </DialogFooter>
                   </form>
                 </DialogContent>
@@ -259,7 +259,7 @@ export default function AdminDashboard() {
                 <Card>
                   <CardContent className="pt-6 text-center">
                     <p className="text-muted-foreground">
-                      Ingen rutiner endnu. Opret den første!
+                      Ingen rutiner ennå. Opprett den første!
                     </p>
                   </CardContent>
                 </Card>

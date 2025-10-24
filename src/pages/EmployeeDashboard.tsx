@@ -31,8 +31,8 @@ interface TaskCompletion {
 
 const shiftIcons = {
   Morgen: Sun,
-  Eftermiddag: CloudRain,
-  Aften: Moon,
+  Ettermiddag: CloudRain,
+  Kveld: Moon,
 };
 
 export default function EmployeeDashboard() {
@@ -70,7 +70,7 @@ export default function EmployeeDashboard() {
         if (selectedShift) {
           fetchTodayCompletions();
         }
-        toast.success("Ny dag startet! Opgaver er nulstillet 🌅");
+        toast.success("Ny dag startet! Oppgaver er nullstilt 🌅");
       }
     };
 
@@ -86,7 +86,7 @@ export default function EmployeeDashboard() {
       .order("name");
 
     if (error) {
-      toast.error("Kunne ikke hente vagter");
+      toast.error("Kunne ikke hente vakter");
       console.error(error);
     } else if (data) {
       setShifts(data);
@@ -145,7 +145,7 @@ export default function EmployeeDashboard() {
         .eq("shift_date", today);
 
       if (error) {
-        toast.error("Kunne ikke opdatere opgave");
+        toast.error("Kunne ikke oppdatere oppgave");
         console.error(error);
       } else {
         const newCompletions = new Set(completions);
@@ -160,7 +160,7 @@ export default function EmployeeDashboard() {
       });
 
       if (error) {
-        toast.error("Kunne ikke opdatere opgave");
+        toast.error("Kunne ikke oppdatere oppgave");
         console.error(error);
       } else {
         const newCompletions = new Set(completions);
@@ -195,7 +195,7 @@ export default function EmployeeDashboard() {
           </div>
           <Button variant="ghost" onClick={signOut}>
             <LogOut className="h-4 w-4 mr-2" />
-            Log ud
+            Logg ut
           </Button>
         </div>
       </header>
@@ -204,9 +204,9 @@ export default function EmployeeDashboard() {
         {!selectedShift ? (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl">Vælg din vagt</h2>
+              <h2 className="text-3xl">Velg din vakt</h2>
               <p className="text-muted-foreground">
-                Vælg hvilken vagt du har i dag
+                Velg hvilken vakt du har i dag
               </p>
             </div>
 
@@ -239,12 +239,12 @@ export default function EmployeeDashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="outline" onClick={() => setSelectedShift(null)}>
-                  ← Tilbage
+                  ← Tilbake
                 </Button>
                 <div>
                   <h2 className="text-2xl">{selectedShift.name}</h2>
                   <p className="text-sm text-muted-foreground">
-                    {completions.size} af {routines.length} opgaver fuldført
+                    {completions.size} av {routines.length} oppgaver fullført
                   </p>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function EmployeeDashboard() {
                 <Card>
                   <CardContent className="pt-6 text-center">
                     <p className="text-muted-foreground">
-                      Ingen rutiner for denne vagt endnu
+                      Ingen rutiner for denne vakten ennå
                     </p>
                   </CardContent>
                 </Card>
