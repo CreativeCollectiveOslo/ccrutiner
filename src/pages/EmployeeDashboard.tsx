@@ -41,6 +41,7 @@ export default function EmployeeDashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,6 +58,25 @@ export default function EmployeeDashboard() {
       fetchTodayCompletions();
     }
   }, [selectedShift]);
+
+  // Check for date change every minute and reset tasks at midnight
+  useEffect(() => {
+    const checkDateChange = () => {
+      const today = new Date().toISOString().split("T")[0];
+      if (today !== currentDate) {
+        setCurrentDate(today);
+        setCompletions(new Set());
+        if (selectedShift) {
+          fetchTodayCompletions();
+        }
+        toast.success("Ny dag startet! Opgaver er nulstillet 🌅");
+      }
+    };
+
+    const interval = setInterval(checkDateChange, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
+  }, [currentDate, selectedShift]);
 
   const fetchShifts = async () => {
     const { data, error } = await supabase
