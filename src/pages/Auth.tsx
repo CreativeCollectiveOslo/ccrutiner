@@ -11,6 +11,7 @@ import logo from "@/assets/logo.png";
 export default function Auth() {
   const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -23,7 +24,7 @@ export default function Auth() {
     password: "",
   });
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent, adminLogin = false) => {
     e.preventDefault();
     setIsLoading(true);
     
@@ -33,6 +34,34 @@ export default function Auth() {
       toast.error("Innlogging feilet", {
         description: error.message,
       });
+      setIsLoading(false);
+      return;
+    }
+    
+    // If admin login, verify admin role and redirect
+    if (adminLogin) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        if (roleError || !data) {
+          toast.error("Ingen admin tilgang", {
+            description: "Du har ikke tillatelse til å logge inn som admin",
+          });
+          await supabase.auth.signOut();
+          setIsLoading(false);
+          return;
+        }
+        
+        window.location.href = "/admin";
+      }
     }
     
     setIsLoading(false);
@@ -78,7 +107,7 @@ export default function Auth() {
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={(e) => handleLogin(e, isAdminLogin)} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">E-post</Label>
                   <Input
@@ -105,7 +134,16 @@ export default function Auth() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logger inn..." : "Logg inn"}
+                  {isLoading ? "Logger inn..." : isAdminLogin ? "Logg inn som admin" : "Logg inn"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => setIsAdminLogin(!isAdminLogin)}
+                >
+                  {isAdminLogin ? "← Vanlig innlogging" : "Logg inn som admin"}
                 </Button>
               </form>
             </TabsContent>
