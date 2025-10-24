@@ -29,6 +29,13 @@ interface Routine {
   order_index: number;
 }
 
+interface UserWithRole {
+  id: string;
+  name: string;
+  email: string;
+  roles: string[];
+}
+
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -36,6 +43,8 @@ export default function AdminDashboard() {
   const [selectedShift, setSelectedShift] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [activeTab, setActiveTab] = useState<"routines" | "users">("routines");
   const navigate = useNavigate();
 
   const [newRoutine, setNewRoutine] = useState({
@@ -50,6 +59,7 @@ export default function AdminDashboard() {
       return;
     }
     fetchShifts();
+    fetchUsers();
   }, [user, navigate]);
 
   useEffect(() => {
@@ -57,6 +67,35 @@ export default function AdminDashboard() {
       fetchRoutines();
     }
   }, [selectedShift]);
+
+  const fetchUsers = async () => {
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, name, email");
+
+    if (profileError) {
+      toast.error("Kunne ikke hente brukere");
+      console.error(profileError);
+      return;
+    }
+
+    const { data: roles, error: roleError } = await supabase
+      .from("user_roles")
+      .select("user_id, role");
+
+    if (roleError) {
+      console.error(roleError);
+    }
+
+    const usersWithRoles: UserWithRole[] = profiles.map((profile) => ({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      roles: roles?.filter((r) => r.user_id === profile.id).map((r) => r.role) || [],
+    }));
+
+    setUsers(usersWithRoles);
+  };
 
   const fetchShifts = async () => {
     const { data, error } = await supabase
@@ -158,25 +197,43 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid gap-6 md:grid-cols-[300px_1fr]">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vakter</CardTitle>
-              <CardDescription>Velg en vakt å administrere</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {shifts.map((shift) => (
-                <Button
-                  key={shift.id}
-                  variant={selectedShift === shift.id ? "default" : "outline"}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedShift(shift.id)}
-                >
-                  {shift.name}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
+        <div className="mb-6">
+          <div className="flex gap-2">
+            <Button
+              variant={activeTab === "routines" ? "default" : "outline"}
+              onClick={() => setActiveTab("routines")}
+            >
+              Rutiner
+            </Button>
+            <Button
+              variant={activeTab === "users" ? "default" : "outline"}
+              onClick={() => setActiveTab("users")}
+            >
+              Brukere & Roller
+            </Button>
+          </div>
+        </div>
+
+        {activeTab === "routines" ? (
+          <div className="grid gap-6 md:grid-cols-[300px_1fr]">
+            <Card>
+              <CardHeader>
+                <CardTitle>Vakter</CardTitle>
+                <CardDescription>Velg en vakt å administrere</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {shifts.map((shift) => (
+                  <Button
+                    key={shift.id}
+                    variant={selectedShift === shift.id ? "default" : "outline"}
+                    className="w-full justify-start"
+                    onClick={() => setSelectedShift(shift.id)}
+                  >
+                    {shift.name}
+                  </Button>
+                ))}
+              </CardContent>
+            </Card>
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -298,6 +355,51 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Brukeroversikt</CardTitle>
+              <CardDescription>
+                Se hvilke brukere som har admin-rettigheter
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {users
+                  .sort((a, b) => {
+                    const aIsAdmin = a.roles.includes("admin");
+                    const bIsAdmin = b.roles.includes("admin");
+                    if (aIsAdmin && !bIsAdmin) return -1;
+                    if (!aIsAdmin && bIsAdmin) return 1;
+                    return a.name.localeCompare(b.name);
+                  })
+                  .map((user) => {
+                    const isAdmin = user.roles.includes("admin");
+                    return (
+                      <div
+                        key={user.id}
+                        className={`flex items-center justify-between p-4 rounded-lg border ${
+                          isAdmin ? "bg-primary/5 border-primary" : ""
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">{user.name}</h3>
+                            {isAdmin && (
+                              <Badge variant="default">Admin</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );
