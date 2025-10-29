@@ -39,7 +39,7 @@ interface UserWithRole {
 }
 
 export default function AdminDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [selectedShift, setSelectedShift] = useState<string>("");
@@ -56,13 +56,15 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       navigate("/auth");
       return;
     }
-    fetchShifts();
-    fetchUsers();
-  }, [user, navigate]);
+    if (user) {
+      fetchShifts();
+      fetchUsers();
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (selectedShift) {
@@ -175,7 +177,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

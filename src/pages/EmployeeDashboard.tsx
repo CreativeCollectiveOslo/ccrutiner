@@ -38,7 +38,7 @@ interface TaskCompletion {
 }
 
 export default function EmployeeDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [routines, setRoutines] = useState<Routine[]>([]);
@@ -56,13 +56,15 @@ export default function EmployeeDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       navigate("/auth");
       return;
     }
-    fetchShifts();
-    checkAdminStatus();
-  }, [user, navigate]);
+    if (user) {
+      fetchShifts();
+      checkAdminStatus();
+    }
+  }, [user, authLoading, navigate]);
 
   const checkAdminStatus = async () => {
     if (!user) {
@@ -264,7 +266,7 @@ export default function EmployeeDashboard() {
     return IconComponent ? <IconComponent className={className} /> : <LucideIcons.Sun className={className} />;
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
