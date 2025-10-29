@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          message: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          message: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          message?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      announcements_read: {
+        Row: {
+          announcement_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_read_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -83,18 +139,21 @@ export type Database = {
         Row: {
           color_code: string
           created_at: string
+          icon: string | null
           id: string
           name: string
         }
         Insert: {
           color_code: string
           created_at?: string
+          icon?: string | null
           id?: string
           name: string
         }
         Update: {
           color_code?: string
           created_at?: string
+          icon?: string | null
           id?: string
           name?: string
         }

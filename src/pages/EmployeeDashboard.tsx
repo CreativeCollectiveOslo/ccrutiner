@@ -7,18 +7,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Sun, CloudRain, Moon, Loader2, Plus, Trash2 } from "lucide-react";
+import { LogOut, Loader2, Plus, Trash2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import logo from "@/assets/logo.png";
 
 interface Shift {
   id: string;
   name: string;
   color_code: string;
+  icon: string;
 }
 
 interface Routine {
@@ -33,12 +36,6 @@ interface Routine {
 interface TaskCompletion {
   routine_id: string;
 }
-
-const shiftIcons = {
-  Morgen: Sun,
-  Ettermiddag: CloudRain,
-  Kveld: Moon,
-};
 
 export default function EmployeeDashboard() {
   const { user, signOut } = useAuth();
@@ -262,11 +259,9 @@ export default function EmployeeDashboard() {
     }
   };
 
-  const getShiftColorClass = (colorCode: string) => {
-    if (colorCode.includes("38")) return "bg-shift-morning";
-    if (colorCode.includes("210")) return "bg-shift-afternoon";
-    if (colorCode.includes("270")) return "bg-shift-evening";
-    return "bg-primary";
+  const renderIcon = (iconName: string, className?: string) => {
+    const IconComponent = (LucideIcons as any)[iconName];
+    return IconComponent ? <IconComponent className={className} /> : <LucideIcons.Sun className={className} />;
   };
 
   if (loading) {
@@ -295,6 +290,8 @@ export default function EmployeeDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <AnnouncementBanner />
+        
         {!selectedShift ? (
           <div className="space-y-6">
             <div className="text-center space-y-2">
@@ -306,7 +303,6 @@ export default function EmployeeDashboard() {
 
             <div className="grid gap-4 md:grid-cols-3">
               {shifts.map((shift) => {
-                const Icon = shiftIcons[shift.name as keyof typeof shiftIcons] || Sun;
                 return (
                   <Card
                     key={shift.id}
@@ -315,11 +311,10 @@ export default function EmployeeDashboard() {
                   >
                     <CardHeader className="text-center">
                       <div
-                        className={`mx-auto w-16 h-16 rounded-full ${getShiftColorClass(
-                          shift.color_code
-                        )} flex items-center justify-center mb-4`}
+                        className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                        style={{ backgroundColor: shift.color_code }}
                       >
-                        <Icon className="h-8 w-8 text-white" />
+                        {renderIcon(shift.icon || "Sun", "h-8 w-8 text-white")}
                       </div>
                       <CardTitle>{shift.name}</CardTitle>
                     </CardHeader>

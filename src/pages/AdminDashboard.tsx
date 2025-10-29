@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { LogOut, Plus, Trash2, Edit2, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
+import { ShiftManager } from "@/components/ShiftManager";
+import { AnnouncementManager } from "@/components/AnnouncementManager";
 
 interface Shift {
   id: string;
@@ -44,7 +46,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [activeTab, setActiveTab] = useState<"routines" | "users">("routines");
+  const [activeTab, setActiveTab] = useState<"routines" | "users" | "shifts" | "announcements">("routines");
   const navigate = useNavigate();
 
   const [newRoutine, setNewRoutine] = useState({
@@ -198,12 +200,24 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant={activeTab === "routines" ? "default" : "outline"}
               onClick={() => setActiveTab("routines")}
             >
               Rutiner
+            </Button>
+            <Button
+              variant={activeTab === "shifts" ? "default" : "outline"}
+              onClick={() => setActiveTab("shifts")}
+            >
+              Vakter
+            </Button>
+            <Button
+              variant={activeTab === "announcements" ? "default" : "outline"}
+              onClick={() => setActiveTab("announcements")}
+            >
+              Opdateringer
             </Button>
             <Button
               variant={activeTab === "users" ? "default" : "outline"}
@@ -355,6 +369,10 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+        ) : activeTab === "shifts" ? (
+          <ShiftManager />
+        ) : activeTab === "announcements" ? (
+          <AnnouncementManager />
         ) : (
           <Card>
             <CardHeader>
