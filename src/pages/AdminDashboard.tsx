@@ -47,6 +47,11 @@ export default function AdminDashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [activeTab, setActiveTab] = useState<"routines" | "users" | "shifts" | "announcements">("routines");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState<"admin" | "employee">("employee");
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
   const navigate = useNavigate();
 
   const [newRoutine, setNewRoutine] = useState({
@@ -174,6 +179,60 @@ export default function AdminDashboard() {
     } else {
       toast.success("Rutine slettet");
       fetchRoutines();
+    }
+  };
+
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!inviteEmail.trim() || !inviteName.trim()) {
+      toast.error("Udfyld venligst alle felter");
+      return;
+    }
+
+    setInviteLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Du skal være logget ind");
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            email: inviteEmail,
+            name: inviteName,
+            role: inviteRole,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Kunne ikke invitere bruker");
+      }
+
+      toast.success("Bruker inviteret! De kan nu logge ind med deres email.");
+      setInviteEmail("");
+      setInviteName("");
+      setInviteRole("employee");
+      setInviteDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error inviting user:", error);
+      toast.error(error.message || "Kunne ikke invitere bruker");
+    } finally {
+      setInviteLoading(false);
     }
   };
 
@@ -378,10 +437,80 @@ export default function AdminDashboard() {
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Brukeroversikt</CardTitle>
-              <CardDescription>
-                Se hvilke brukere som har admin-rettigheter
-              </CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Brukeroversikt</CardTitle>
+                  <CardDescription>
+                    Se hvilke brukere som har admin-rettigheter
+                  </CardDescription>
+                </div>
+                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Inviter Bruker
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Inviter ny bruker</DialogTitle>
+                      <DialogDescription>
+                        Inviter en ny bruker til systemet. De vil kunne logge ind med deres email.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleInviteUser} className="space-y-4">
+                      <div>
+                        <Label htmlFor="invite-name">Navn</Label>
+                        <Input
+                          id="invite-name"
+                          placeholder="Navn på bruker"
+                          value={inviteName}
+                          onChange={(e) => setInviteName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="invite-email">Email</Label>
+                        <Input
+                          id="invite-email"
+                          type="email"
+                          placeholder="bruker@eksempel.no"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="invite-role">Rolle</Label>
+                        <Select
+                          value={inviteRole}
+                          onValueChange={(value: "admin" | "employee") => setInviteRole(value)}
+                        >
+                          <SelectTrigger id="invite-role">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="employee">Medarbejder</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setInviteDialogOpen(false)}
+                        >
+                          Annuller
+                        </Button>
+                        <Button type="submit" disabled={inviteLoading}>
+                          {inviteLoading ? "Inviterer..." : "Inviter"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
