@@ -222,7 +222,7 @@ export default function AdminDashboard() {
         throw new Error(result.error || "Kunne ikke invitere bruker");
       }
 
-      toast.success("Bruker inviteret! Standardpassword er: password123");
+      toast.success("Bruker inviteret! Standardpassword er: Creative1");
       setInviteEmail("");
       setInviteName("");
       setInviteRole("employee");
@@ -455,7 +455,7 @@ export default function AdminDashboard() {
                     <DialogHeader>
                       <DialogTitle>Inviter ny bruker</DialogTitle>
                       <DialogDescription>
-                        Angiv kun brukerens email. Standardpassword bliver "password123".
+                        Angiv kun brukerens email. Standardpassword bliver "Creative1".
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleInviteUser} className="space-y-4">

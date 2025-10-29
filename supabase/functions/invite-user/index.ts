@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Use simple default password
-    const defaultPassword = "password123";
+    const defaultPassword = "Creative1";
 
     // Create the user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
