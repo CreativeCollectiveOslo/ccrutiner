@@ -9,7 +9,7 @@ const corsHeaders = {
 
 interface InviteUserRequest {
   email: string;
-  name: string;
+  name?: string;
   role: "admin" | "employee";
 }
 
@@ -62,9 +62,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, name, role }: InviteUserRequest = await req.json();
 
     // Validate input
-    if (!email || !name || !role) {
+    if (!email || !role) {
       return new Response(
-        JSON.stringify({ error: "Email, name, and role are required" }),
+        JSON.stringify({ error: "Email and role are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -76,15 +76,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate a temporary password
-    const tempPassword = crypto.randomUUID();
+    // Use simple default password
+    const defaultPassword = "password123";
 
     // Create the user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: tempPassword,
+      password: defaultPassword,
       email_confirm: true, // Auto-confirm email
-      user_metadata: { name }
+      user_metadata: { name: name || '' }
     });
 
     if (createError) {

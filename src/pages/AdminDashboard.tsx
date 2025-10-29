@@ -185,8 +185,8 @@ export default function AdminDashboard() {
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inviteEmail.trim() || !inviteName.trim()) {
-      toast.error("Udfyld venligst alle felter");
+    if (!inviteEmail.trim()) {
+      toast.error("Email er påkrævet");
       return;
     }
 
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
         throw new Error(result.error || "Kunne ikke invitere bruker");
       }
 
-      toast.success("Bruker inviteret! De kan nu logge ind med deres email.");
+      toast.success("Bruker inviteret! Standardpassword er: password123");
       setInviteEmail("");
       setInviteName("");
       setInviteRole("employee");
@@ -455,22 +455,12 @@ export default function AdminDashboard() {
                     <DialogHeader>
                       <DialogTitle>Inviter ny bruker</DialogTitle>
                       <DialogDescription>
-                        Inviter en ny bruker til systemet. De vil kunne logge ind med deres email.
+                        Angiv kun brukerens email. Standardpassword bliver "password123".
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleInviteUser} className="space-y-4">
                       <div>
-                        <Label htmlFor="invite-name">Navn</Label>
-                        <Input
-                          id="invite-name"
-                          placeholder="Navn på bruker"
-                          value={inviteName}
-                          onChange={(e) => setInviteName(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="invite-email">Email</Label>
+                        <Label htmlFor="invite-email">Email *</Label>
                         <Input
                           id="invite-email"
                           type="email"
@@ -478,6 +468,15 @@ export default function AdminDashboard() {
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
                           required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="invite-name">Navn (valgfrit)</Label>
+                        <Input
+                          id="invite-name"
+                          placeholder="Navn på bruker"
+                          value={inviteName}
+                          onChange={(e) => setInviteName(e.target.value)}
                         />
                       </div>
                       <div>
