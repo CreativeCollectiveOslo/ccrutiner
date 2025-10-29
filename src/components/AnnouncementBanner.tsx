@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
 import { toast } from "sonner";
 
 interface Announcement {
@@ -78,7 +78,7 @@ export function AnnouncementBanner() {
       {unreadAnnouncements.map((announcement) => (
         <Card key={announcement.id} className="border-primary/50 bg-primary/5">
           <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 mb-4">
               <Bell className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">{announcement.title}</h3>
@@ -87,12 +87,13 @@ export function AnnouncementBanner() {
                   {new Date(announcement.created_at).toLocaleDateString("da-DK")}
                 </p>
               </div>
+            </div>
+            <div className="flex justify-end">
               <Button
-                variant="ghost"
+                variant="default"
                 size="sm"
                 onClick={() => markAsRead(announcement.id)}
               >
-                <X className="h-4 w-4 mr-1" />
                 Læst
               </Button>
             </div>
