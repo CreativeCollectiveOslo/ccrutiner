@@ -282,22 +282,14 @@ export default function EmployeeDashboard() {
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
             <h1 className="text-xl">Mine Rutiner</h1>
           </div>
-          <div className="flex items-center gap-2">
-            {isAdmin && (
-              <Button variant="outline" onClick={() => navigate("/admin")}>
-                <Settings className="h-4 w-4 mr-2" />
-                Admin
-              </Button>
-            )}
-            <Button variant="ghost" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logg ut
-            </Button>
-          </div>
+          <Button variant="ghost" onClick={signOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logg ut
+          </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container mx-auto px-4 py-8 max-w-4xl pb-20">
         <AnnouncementBanner />
         
         {!selectedShift ? (
@@ -543,6 +535,17 @@ export default function EmployeeDashboard() {
           </div>
         )}
       </main>
+
+      {isAdmin && (
+        <footer className="fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur">
+          <div className="container mx-auto px-4 py-3 flex justify-center">
+            <Button variant="outline" onClick={() => navigate("/admin")}>
+              <Settings className="h-4 w-4 mr-2" />
+              Admin Dashboard
+            </Button>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
