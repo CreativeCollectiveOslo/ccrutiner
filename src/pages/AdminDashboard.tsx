@@ -476,13 +476,54 @@ export default function AdminDashboard() {
         ) : (
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Brukeroversikt</CardTitle>
-                  <CardDescription>
-                    Se hvilke brukere som har admin-rettigheter
-                  </CardDescription>
-                </div>
+              <CardTitle>Brukeroversikt</CardTitle>
+              <CardDescription>
+                Se hvilke brukere som har admin-rettigheter
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {users
+                  .sort((a, b) => {
+                    const aIsAdmin = a.roles.includes("admin");
+                    const bIsAdmin = b.roles.includes("admin");
+                    if (aIsAdmin && !bIsAdmin) return -1;
+                    if (!aIsAdmin && bIsAdmin) return 1;
+                    return a.name.localeCompare(b.name);
+                  })
+                  .map((user) => {
+                    const isAdmin = user.roles.includes("admin");
+                    return (
+                      <div
+                        key={user.id}
+                        className={`flex items-center justify-between p-4 rounded-lg border ${
+                          isAdmin ? "bg-primary/5 border-primary" : ""
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">{user.name}</h3>
+                            {isAdmin && (
+                              <Badge variant="default">Admin</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+              </div>
+              <div className="mt-6 flex justify-center">
                 <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
@@ -548,49 +589,6 @@ export default function AdminDashboard() {
                     </form>
                   </DialogContent>
                 </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {users
-                  .sort((a, b) => {
-                    const aIsAdmin = a.roles.includes("admin");
-                    const bIsAdmin = b.roles.includes("admin");
-                    if (aIsAdmin && !bIsAdmin) return -1;
-                    if (!aIsAdmin && bIsAdmin) return 1;
-                    return a.name.localeCompare(b.name);
-                  })
-                  .map((user) => {
-                    const isAdmin = user.roles.includes("admin");
-                    return (
-                      <div
-                        key={user.id}
-                        className={`flex items-center justify-between p-4 rounded-lg border ${
-                          isAdmin ? "bg-primary/5 border-primary" : ""
-                        }`}
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{user.name}</h3>
-                            {isAdmin && (
-                              <Badge variant="default">Admin</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    );
-                  })}
               </div>
             </CardContent>
           </Card>
