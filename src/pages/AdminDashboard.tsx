@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Edit2, Loader2 } from "lucide-react";
+import { LogOut, Plus, Trash2, Edit2, Loader2, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 import { ShiftManager } from "@/components/ShiftManager";
@@ -193,10 +193,16 @@ export default function AdminDashboard() {
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
             <h1 className="text-xl">Admin Dashboard</h1>
           </div>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logg ut
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/employee")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Til Medarbejder Visning
+            </Button>
+            <Button variant="ghost" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logg ut
+            </Button>
+          </div>
         </div>
       </header>
 

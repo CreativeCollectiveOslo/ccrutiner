@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Plus, Trash2 } from "lucide-react";
+import { LogOut, Loader2, Plus, Trash2, Settings } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -283,6 +283,12 @@ export default function EmployeeDashboard() {
             <h1 className="text-xl">Mine Rutiner</h1>
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button variant="outline" onClick={() => navigate("/admin")}>
+                <Settings className="h-4 w-4 mr-2" />
+                Admin
+              </Button>
+            )}
             <Button variant="ghost" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Logg ut
