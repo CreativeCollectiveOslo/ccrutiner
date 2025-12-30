@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { RoutineNotificationBanner } from "@/components/RoutineNotificationBanner";
 import logo from "@/assets/logo.png";
 
 interface Shift {
@@ -286,7 +287,7 @@ export default function EmployeeDashboard() {
 
       <main className="container mx-auto px-4 py-8 max-w-4xl pb-20">
         <AnnouncementBanner />
-        
+        <RoutineNotificationBanner />
         {!selectedShift ? (
           <div className="space-y-6">
             <div className="text-center space-y-2">
