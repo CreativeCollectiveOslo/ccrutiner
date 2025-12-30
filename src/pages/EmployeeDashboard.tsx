@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Plus, Trash2, Settings, Bell, Calendar } from "lucide-react";
+import { LogOut, Loader2, Plus, Trash2, Settings, Bell, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,12 @@ interface Shift {
   order_index: number;
 }
 
+interface Section {
+  id: string;
+  name: string;
+  order_index: number;
+}
+
 interface Routine {
   id: string;
   title: string;
@@ -32,6 +38,7 @@ interface Routine {
   priority: number;
   order_index: number;
   multimedia_url: string | null;
+  section_id: string | null;
 }
 
 interface TaskCompletion {
@@ -42,6 +49,7 @@ export default function EmployeeDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [sections, setSections] = useState<Section[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -51,6 +59,7 @@ export default function EmployeeDashboard() {
   const [activeTab, setActiveTab] = useState<"tasks" | "admin">("tasks");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [newRoutine, setNewRoutine] = useState({
     title: "",
     description: "",
@@ -97,10 +106,27 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     if (selectedShift) {
+      fetchSections();
       fetchRoutines();
       fetchTodayCompletions();
     }
   }, [selectedShift]);
+
+  const fetchSections = async () => {
+    if (!selectedShift) return;
+
+    const { data, error } = await supabase
+      .from("sections")
+      .select("*")
+      .eq("shift_id", selectedShift.id)
+      .order("order_index");
+
+    if (error) {
+      console.error(error);
+    } else if (data) {
+      setSections(data);
+    }
+  };
 
   // Check for date change every minute and reset tasks at midnight
   useEffect(() => {
@@ -186,7 +212,6 @@ export default function EmployeeDashboard() {
       .from("routines")
       .select("*")
       .eq("shift_id", selectedShift.id)
-      .order("priority", { ascending: false })
       .order("order_index");
 
     if (error) {
@@ -195,6 +220,22 @@ export default function EmployeeDashboard() {
     } else if (data) {
       setRoutines(data);
     }
+  };
+
+  const toggleDescription = (routineId: string) => {
+    setExpandedDescriptions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(routineId)) {
+        newSet.delete(routineId);
+      } else {
+        newSet.add(routineId);
+      }
+      return newSet;
+    });
+  };
+
+  const getRoutinesBySection = (sectionId: string | null) => {
+    return routines.filter((r) => r.section_id === sectionId);
   };
 
   const fetchTodayCompletions = async () => {
@@ -452,7 +493,7 @@ export default function EmployeeDashboard() {
             )}
 
             {activeTab === "tasks" ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {routines.length === 0 ? (
                   <Card>
                     <CardContent className="p-6 text-center">
@@ -462,51 +503,165 @@ export default function EmployeeDashboard() {
                     </CardContent>
                   </Card>
                 ) : (
-                  routines.map((routine) => {
-                    const isCompleted = completions.has(routine.id);
-                    return (
-                      <Card
-                        key={routine.id}
-                        className={`relative transition-all ${
-                          isCompleted ? "opacity-60 animate-celebrate" : ""
-                        }`}
-                      >
-                        <TaskCompletionAnimation isCompleted={isCompleted} />
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className={isCompleted ? "animate-check-bounce" : ""}>
-                              <Checkbox
-                                id={routine.id}
-                                checked={isCompleted}
-                                onCheckedChange={() => toggleTaskCompletion(routine.id)}
-                                className="mt-0.5"
-                              />
-                            </div>
-                            <div className="flex-1 space-y-1">
-                              <label
-                                htmlFor={routine.id}
-                                className={`text-sm font-medium cursor-pointer ${
-                                  isCompleted ? "line-through" : ""
+                  <>
+                    {/* Unsorted routines (no section) */}
+                    {getRoutinesBySection(null).length > 0 && (
+                      <div className="space-y-3">
+                        {getRoutinesBySection(null).map((routine) => {
+                          const isCompleted = completions.has(routine.id);
+                          const isExpanded = expandedDescriptions.has(routine.id);
+                          return (
+                            <Card
+                              key={routine.id}
+                              className={`relative transition-all ${
+                                isCompleted ? "opacity-60 animate-celebrate" : ""
+                              }`}
+                            >
+                              <TaskCompletionAnimation isCompleted={isCompleted} />
+                              <CardContent className="p-4">
+                                <div className="flex items-start gap-3">
+                                  <div className={isCompleted ? "animate-check-bounce" : ""}>
+                                    <Checkbox
+                                      id={routine.id}
+                                      checked={isCompleted}
+                                      onCheckedChange={() => toggleTaskCompletion(routine.id)}
+                                      className="mt-0.5"
+                                    />
+                                  </div>
+                                  <div className="flex-1 space-y-1">
+                                    <label
+                                      htmlFor={routine.id}
+                                      className={`text-sm font-medium cursor-pointer ${
+                                        isCompleted ? "line-through" : ""
+                                      }`}
+                                    >
+                                      {routine.title}
+                                    </label>
+                                    {routine.description && (
+                                      <div>
+                                        <p
+                                          className={`text-sm text-muted-foreground ${
+                                            !isExpanded ? "line-clamp-3" : ""
+                                          }`}
+                                        >
+                                          {routine.description}
+                                        </p>
+                                        {routine.description.length > 150 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => toggleDescription(routine.id)}
+                                            className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
+                                          >
+                                            {isExpanded ? (
+                                              <>
+                                                Vis mindre <ChevronUp className="h-3 w-3" />
+                                              </>
+                                            ) : (
+                                              <>
+                                                Vis mer <ChevronDown className="h-3 w-3" />
+                                              </>
+                                            )}
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                    {routine.priority > 0 && (
+                                      <Badge variant="secondary">
+                                        Prioritet: {routine.priority}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Sections with their routines */}
+                    {sections.map((section) => {
+                      const sectionRoutines = getRoutinesBySection(section.id);
+                      if (sectionRoutines.length === 0) return null;
+                      
+                      return (
+                        <div key={section.id} className="space-y-3">
+                          <h3 className="text-base font-medium text-foreground border-b pb-2">
+                            {section.name}
+                          </h3>
+                          {sectionRoutines.map((routine) => {
+                            const isCompleted = completions.has(routine.id);
+                            const isExpanded = expandedDescriptions.has(routine.id);
+                            return (
+                              <Card
+                                key={routine.id}
+                                className={`relative transition-all ${
+                                  isCompleted ? "opacity-60 animate-celebrate" : ""
                                 }`}
                               >
-                                {routine.title}
-                              </label>
-                              {routine.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {routine.description}
-                                </p>
-                              )}
-                              {routine.priority > 0 && (
-                                <Badge variant="secondary">
-                                  Prioritet: {routine.priority}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
+                                <TaskCompletionAnimation isCompleted={isCompleted} />
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className={isCompleted ? "animate-check-bounce" : ""}>
+                                      <Checkbox
+                                        id={routine.id}
+                                        checked={isCompleted}
+                                        onCheckedChange={() => toggleTaskCompletion(routine.id)}
+                                        className="mt-0.5"
+                                      />
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                      <label
+                                        htmlFor={routine.id}
+                                        className={`text-sm font-medium cursor-pointer ${
+                                          isCompleted ? "line-through" : ""
+                                        }`}
+                                      >
+                                        {routine.title}
+                                      </label>
+                                      {routine.description && (
+                                        <div>
+                                          <p
+                                            className={`text-sm text-muted-foreground ${
+                                              !isExpanded ? "line-clamp-3" : ""
+                                            }`}
+                                          >
+                                            {routine.description}
+                                          </p>
+                                          {routine.description.length > 150 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => toggleDescription(routine.id)}
+                                              className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
+                                            >
+                                              {isExpanded ? (
+                                                <>
+                                                  Vis mindre <ChevronUp className="h-3 w-3" />
+                                                </>
+                                              ) : (
+                                                <>
+                                                  Vis mer <ChevronDown className="h-3 w-3" />
+                                                </>
+                                              )}
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
+                                      {routine.priority > 0 && (
+                                        <Badge variant="secondary">
+                                          Prioritet: {routine.priority}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </>
                 )}
               </div>
             ) : (
