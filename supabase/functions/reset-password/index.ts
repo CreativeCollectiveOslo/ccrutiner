@@ -113,26 +113,26 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Update the profile with the new temp password and reset has_logged_in
+    // Reset has_logged_in flag - password is NOT stored in database for security
     const { error: updateProfileError } = await supabaseAdmin
       .from("profiles")
       .update({ 
-        temp_password: newPassword,
         has_logged_in: false 
       })
       .eq("id", userId);
 
     if (updateProfileError) {
-      console.error("Error storing temp password:", updateProfileError);
+      console.error("Error updating profile:", updateProfileError);
     }
 
     console.log("Password reset successfully for user:", userId);
 
+    // Password is returned to admin only once and NOT stored in database
     return new Response(
       JSON.stringify({ 
         success: true, 
         newPassword: newPassword,
-        message: "Password reset successfully" 
+        message: "Password reset successfully. Password shown only once." 
       }),
       {
         status: 200,

@@ -44,13 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     });
     if (!error && data.user) {
-      // Opdater profil for at markere login og slette temp password
+      // Mark that user has logged in
       await supabase
         .from("profiles")
-        .update({ 
-          has_logged_in: true,
-          temp_password: null 
-        })
+        .update({ has_logged_in: true })
         .eq("id", data.user.id);
       
       navigate("/dashboard");

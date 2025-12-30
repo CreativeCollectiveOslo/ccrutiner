@@ -117,19 +117,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // The profile will be created automatically via the handle_new_user trigger
-    // Update the profile with the temp password
-    if (newUser.user?.id) {
-      const { error: updateError } = await supabaseAdmin
-        .from("profiles")
-        .update({ temp_password: generatedPassword })
-        .eq("id", newUser.user.id);
-
-      if (updateError) {
-        console.error("Error storing temp password:", updateError);
-      }
-    }
-
+    // Password is returned to admin only once and NOT stored in database
+    // This ensures the password is never persisted in plain text
     console.log("User created successfully:", newUser.user?.id);
 
     return new Response(
@@ -137,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
         success: true, 
         user: newUser.user,
         generatedPassword: generatedPassword,
-        message: "User invited successfully" 
+        message: "User invited successfully. Password shown only once." 
       }),
       {
         status: 200,

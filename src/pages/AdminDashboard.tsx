@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Eye, EyeOff, Copy, Info, Bell } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Bell } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,6 @@ interface UserWithRole {
   name: string;
   email: string;
   roles: string[];
-  temp_password: string | null;
   has_logged_in: boolean;
 }
 
@@ -49,7 +48,7 @@ export default function AdminDashboard() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState<string | null>(null);
-  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+  
   const [selectedUserForNotifications, setSelectedUserForNotifications] = useState<UserWithRole | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const navigate = useNavigate();
@@ -95,7 +94,7 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
       .from("profiles")
-      .select("id, name, email, temp_password, has_logged_in");
+      .select("id, name, email, has_logged_in");
 
     if (profileError) {
       toast.error("Kunne ikke hente brukere");
@@ -116,7 +115,6 @@ export default function AdminDashboard() {
       name: profile.name,
       email: profile.email,
       roles: roles?.filter((r) => r.user_id === profile.id).map((r) => r.role) || [],
-      temp_password: profile.temp_password,
       has_logged_in: profile.has_logged_in || false,
     }));
 
@@ -281,22 +279,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const togglePasswordVisibility = (userId: string) => {
-    setVisiblePasswords(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(userId)) {
-        newSet.delete(userId);
-      } else {
-        newSet.add(userId);
-      }
-      return newSet;
-    });
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Passord kopiert!");
-  };
 
   if (loading || authLoading || isAdmin === null) {
     return (
@@ -439,8 +421,6 @@ export default function AdminDashboard() {
                   })
                   .map((userItem) => {
                     const isAdmin = userItem.roles.includes("admin");
-                    const showPassword = visiblePasswords.has(userItem.id);
-                    const hasPassword = userItem.temp_password && !userItem.has_logged_in;
                     return (
                       <div
                         key={userItem.id}
@@ -497,45 +477,6 @@ export default function AdminDashboard() {
                             </Button>
                           </div>
                         </div>
-                        
-                        {hasPassword && (
-                          <div className="mt-3 pt-3 border-t flex flex-wrap items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm text-muted-foreground">Passord:</span>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Dette passord vises kun her til brukeren har logget inn første gang</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono break-all">
-                              {showPassword ? userItem.temp_password : "••••••••"}
-                            </code>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => togglePasswordVisibility(userItem.id)}
-                              >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => copyToClipboard(userItem.temp_password!)}
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
