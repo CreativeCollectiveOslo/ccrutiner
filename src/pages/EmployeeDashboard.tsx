@@ -11,7 +11,35 @@ import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings } fro
 import * as LucideIcons from "lucide-react";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { NotificationsTab } from "@/components/NotificationsTab";
+import { UnreadNotificationsBanner } from "@/components/UnreadNotificationsBanner";
 import logo from "@/assets/logo.png";
+
+interface RoutineInfo {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: number;
+}
+
+interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  type: "announcement";
+}
+
+interface RoutineNotification {
+  id: string;
+  routine_id: string;
+  shift_id: string;
+  message: string;
+  created_at: string;
+  routines: RoutineInfo | null;
+  type: "routine";
+}
+
+type NotificationItem = (Announcement & { type: "announcement" }) | (RoutineNotification & { type: "routine" });
 
 interface Shift {
   id: string;
@@ -53,6 +81,7 @@ export default function EmployeeDashboard() {
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
   const navigate = useNavigate();
@@ -141,35 +170,56 @@ export default function EmployeeDashboard() {
 
     if (!profile) return;
 
-    // Count unread announcements
+    // Fetch announcements
     const { data: announcements } = await supabase
       .from("announcements")
-      .select("id")
-      .gte("created_at", profile.created_at);
+      .select("*")
+      .gte("created_at", profile.created_at)
+      .order("created_at", { ascending: false });
 
+    // Fetch read announcements
     const { data: readAnnouncements } = await supabase
       .from("announcements_read")
       .select("announcement_id")
       .eq("user_id", user.id);
 
     const readAnnouncementIds = new Set(readAnnouncements?.map((r) => r.announcement_id) || []);
-    const unreadAnnouncementCount = announcements?.filter((a) => !readAnnouncementIds.has(a.id)).length || 0;
 
-    // Count unread routine notifications
+    // Fetch routine notifications with routine data
     const { data: routineNotifications } = await supabase
       .from("routine_notifications")
-      .select("id")
-      .gte("created_at", profile.created_at);
+      .select(`
+        *,
+        routines (
+          id,
+          title,
+          description,
+          priority
+        )
+      `)
+      .gte("created_at", profile.created_at)
+      .order("created_at", { ascending: false });
 
+    // Fetch read routine notifications
     const { data: readRoutineNotifs } = await supabase
       .from("routine_notifications_read")
       .select("notification_id")
       .eq("user_id", user.id);
 
     const readRoutineIds = new Set(readRoutineNotifs?.map((r) => r.notification_id) || []);
-    const unreadRoutineCount = routineNotifications?.filter((n) => !readRoutineIds.has(n.id)).length || 0;
 
-    setUnreadCount(unreadAnnouncementCount + unreadRoutineCount);
+    // Filter unread notifications
+    const unreadAnnouncements = announcements?.filter((a) => !readAnnouncementIds.has(a.id)) || [];
+    const unreadRoutineNotifs = routineNotifications?.filter((n) => !readRoutineIds.has(n.id)) || [];
+
+    // Combine unread notifications
+    const allUnread: NotificationItem[] = [
+      ...unreadAnnouncements.map((a) => ({ ...a, type: "announcement" as const })),
+      ...unreadRoutineNotifs.map((r) => ({ ...r, type: "routine" as const })),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    setUnreadNotifications(allUnread);
+    setUnreadCount(allUnread.length);
   };
 
   const fetchShifts = async () => {
@@ -403,10 +453,7 @@ export default function EmployeeDashboard() {
                 }`}
               >
                 <Bell className="h-4 w-4" />
-                Notifikationer
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full" />
-                )}
+                Læste notifikationer
                 {mainTab === "notifications" && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
@@ -414,9 +461,20 @@ export default function EmployeeDashboard() {
             </div>
 
             {mainTab === "notifications" ? (
-              <NotificationsTab onMarkAsRead={() => setUnreadCount((prev) => Math.max(0, prev - 1))} />
+              <NotificationsTab />
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6">
+                {/* Unread notifications banner above shifts */}
+                <UnreadNotificationsBanner
+                  notifications={unreadNotifications}
+                  onMarkAsRead={(notification) => {
+                    setUnreadNotifications((prev) =>
+                      prev.filter((n) => !(n.type === notification.type && n.id === notification.id))
+                    );
+                    setUnreadCount((prev) => Math.max(0, prev - 1));
+                  }}
+                />
+
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl">Velg din vakt</h2>
                   <p className="text-sm text-muted-foreground">
