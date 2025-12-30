@@ -334,26 +334,38 @@ export default function EmployeeDashboard() {
         {!selectedShift ? (
           <>
             {/* Main tabs - only visible on front page */}
-            <div className="flex gap-2 mb-6">
-              <Button
-                variant={mainTab === "shifts" ? "default" : "outline"}
+            <div className="flex border-b border-border mb-6">
+              <button
                 onClick={() => setMainTab("shifts")}
-                className="gap-2"
+                className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                  mainTab === "shifts"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
                 <Calendar className="h-4 w-4" />
                 Vakter
-              </Button>
-              <Button
-                variant={mainTab === "notifications" ? "default" : "outline"}
+                {mainTab === "shifts" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+              <button
                 onClick={() => setMainTab("notifications")}
-                className="gap-2 relative"
+                className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                  mainTab === "notifications"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
                 <Bell className="h-4 w-4" />
                 Notifikationer
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full" />
                 )}
-              </Button>
+                {mainTab === "notifications" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
             </div>
 
             {mainTab === "notifications" ? (
