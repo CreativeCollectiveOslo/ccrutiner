@@ -22,6 +22,7 @@ interface RoutineNotification {
   id: string;
   message: string;
   created_at: string;
+  created_by: string | null;
   routine_id: string;
   shift_id: string;
   routine?: {
@@ -378,13 +379,10 @@ export function AnnouncementManager() {
                       <CardContent className="pt-6">
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold mb-1">{announcement.title}</h3>
-                            <p className="text-xs text-muted-foreground mb-2">
-                              Af {getCreatorName(announcement.created_by)}
-                            </p>
+                            <h3 className="font-semibold mb-2">{announcement.title}</h3>
                             <CollapsibleText text={announcement.message} />
                             <p className="text-xs text-muted-foreground mt-2">
-                              {new Date(announcement.created_at).toLocaleString("da-DK")}
+                              {new Date(announcement.created_at).toLocaleString("da-DK")} · Af {getCreatorName(announcement.created_by)}
                             </p>
                           </div>
                           <div className="flex flex-col gap-1 shrink-0">
@@ -474,6 +472,7 @@ export function AnnouncementManager() {
                             <CollapsibleText text={notification.message} />
                             <p className="text-xs text-muted-foreground mt-2">
                               {new Date(notification.created_at).toLocaleString("da-DK")}
+                              {notification.created_by && ` · Af ${getCreatorName(notification.created_by)}`}
                             </p>
                           </div>
                           <div className="flex flex-col gap-1 shrink-0">
