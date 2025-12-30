@@ -74,20 +74,26 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          has_logged_in: boolean | null
           id: string
           name: string
+          temp_password: string | null
         }
         Insert: {
           created_at?: string
           email: string
+          has_logged_in?: boolean | null
           id: string
           name: string
+          temp_password?: string | null
         }
         Update: {
           created_at?: string
           email?: string
+          has_logged_in?: boolean | null
           id?: string
           name?: string
+          temp_password?: string | null
         }
         Relationships: []
       }

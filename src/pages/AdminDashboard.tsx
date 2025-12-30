@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2 } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Eye, EyeOff, Copy } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
@@ -29,6 +29,8 @@ interface UserWithRole {
   name: string;
   email: string;
   roles: string[];
+  temp_password: string | null;
+  has_logged_in: boolean;
 }
 
 export default function AdminDashboard() {
@@ -44,6 +46,8 @@ export default function AdminDashboard() {
   const [inviteRole, setInviteRole] = useState<"admin" | "employee">("employee");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState<string | null>(null);
+  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,7 +64,7 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
       .from("profiles")
-      .select("id, name, email");
+      .select("id, name, email, temp_password, has_logged_in");
 
     if (profileError) {
       toast.error("Kunne ikke hente brukere");
@@ -81,6 +85,8 @@ export default function AdminDashboard() {
       name: profile.name,
       email: profile.email,
       roles: roles?.filter((r) => r.user_id === profile.id).map((r) => r.role) || [],
+      temp_password: profile.temp_password,
+      has_logged_in: profile.has_logged_in || false,
     }));
 
     setUsers(usersWithRoles);
@@ -197,6 +203,68 @@ export default function AdminDashboard() {
     } finally {
       setInviteLoading(false);
     }
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    if (!confirm("Er du sikker på at du vil resette passordet for denne brukeren?")) {
+      return;
+    }
+
+    setResetLoading(userId);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Du skal være logget ind");
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Kunne ikke resette passord");
+      }
+
+      toast.success(`Nytt passord: ${result.newPassword}`, {
+        duration: 10000,
+      });
+      fetchUsers();
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      toast.error(error.message || "Kunne ikke resette passord");
+    } finally {
+      setResetLoading(null);
+    }
+  };
+
+  const togglePasswordVisibility = (userId: string) => {
+    setVisiblePasswords(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Passord kopiert!");
   };
 
   if (loading || authLoading) {
@@ -338,34 +406,83 @@ export default function AdminDashboard() {
                     if (!aIsAdmin && bIsAdmin) return 1;
                     return a.name.localeCompare(b.name);
                   })
-                  .map((user) => {
-                    const isAdmin = user.roles.includes("admin");
+                  .map((userItem) => {
+                    const isAdmin = userItem.roles.includes("admin");
+                    const showPassword = visiblePasswords.has(userItem.id);
+                    const hasPassword = userItem.temp_password && !userItem.has_logged_in;
                     return (
                       <div
-                        key={user.id}
-                        className={`flex items-center justify-between p-4 rounded-lg border ${
+                        key={userItem.id}
+                        className={`p-4 rounded-lg border ${
                           isAdmin ? "bg-primary/5 border-primary" : ""
                         }`}
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{user.name}</h3>
-                            {isAdmin && (
-                              <Badge variant="default">Admin</Badge>
-                            )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium">{userItem.name}</h3>
+                              {isAdmin && (
+                                <Badge variant="default">Admin</Badge>
+                              )}
+                              {userItem.has_logged_in && (
+                                <Badge variant="secondary" className="text-xs">Har logget inn</Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {userItem.email}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleResetPassword(userItem.id)}
+                              disabled={resetLoading === userItem.id}
+                            >
+                              {resetLoading === userItem.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <KeyRound className="h-4 w-4 mr-1" />
+                                  Reset
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteUser(userItem.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        
+                        {hasPassword && (
+                          <div className="mt-3 pt-3 border-t flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Midlertidig passord:</span>
+                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
+                              {showPassword ? userItem.temp_password : "••••••••"}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => togglePasswordVisibility(userItem.id)}
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => copyToClipboard(userItem.temp_password!)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

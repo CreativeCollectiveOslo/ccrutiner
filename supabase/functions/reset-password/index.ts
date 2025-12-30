@@ -7,10 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface InviteUserRequest {
-  email: string;
-  name?: string;
-  role: "admin" | "employee";
+interface ResetPasswordRequest {
+  userId: string;
 }
 
 // Norwegian word lists for generating memorable passwords
@@ -82,64 +80,54 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, name, role }: InviteUserRequest = await req.json();
+    const { userId }: ResetPasswordRequest = await req.json();
 
     // Validate input
-    if (!email || !role) {
+    if (!userId) {
       return new Response(
-        JSON.stringify({ error: "Email and role are required" }),
+        JSON.stringify({ error: "userId is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!["admin", "employee"].includes(role)) {
+    // Generate a new memorable password
+    const newPassword = generatePassword();
+    console.log(`Generated new password for user ${userId}`);
+
+    // Update the user's password
+    const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(
+      userId,
+      { password: newPassword }
+    );
+
+    if (updateAuthError) {
+      console.error("Error updating password:", updateAuthError);
       return new Response(
-        JSON.stringify({ error: "Invalid role. Must be 'admin' or 'employee'" }),
+        JSON.stringify({ error: updateAuthError.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Generate a memorable two-word password
-    const generatedPassword = generatePassword();
-    console.log(`Generated password for ${email}: ${generatedPassword}`);
+    // Update the profile with the new temp password and reset has_logged_in
+    const { error: updateProfileError } = await supabaseAdmin
+      .from("profiles")
+      .update({ 
+        temp_password: newPassword,
+        has_logged_in: false 
+      })
+      .eq("id", userId);
 
-    // Create the user
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: generatedPassword,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: { name: name || '' }
-    });
-
-    if (createError) {
-      console.error("Error creating user:", createError);
-      return new Response(
-        JSON.stringify({ error: createError.message }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (updateProfileError) {
+      console.error("Error storing temp password:", updateProfileError);
     }
 
-    // The profile will be created automatically via the handle_new_user trigger
-    // Update the profile with the temp password
-    if (newUser.user?.id) {
-      const { error: updateError } = await supabaseAdmin
-        .from("profiles")
-        .update({ temp_password: generatedPassword })
-        .eq("id", newUser.user.id);
-
-      if (updateError) {
-        console.error("Error storing temp password:", updateError);
-      }
-    }
-
-    console.log("User created successfully:", newUser.user?.id);
+    console.log("Password reset successfully for user:", userId);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user: newUser.user,
-        generatedPassword: generatedPassword,
-        message: "User invited successfully" 
+        newPassword: newPassword,
+        message: "Password reset successfully" 
       }),
       {
         status: 200,
@@ -147,7 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in invite-user function:", error);
+    console.error("Error in reset-password function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
