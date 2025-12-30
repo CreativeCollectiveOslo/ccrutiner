@@ -331,34 +331,34 @@ export default function EmployeeDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl pb-20">
-        {/* Main tabs */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={mainTab === "shifts" ? "default" : "outline"}
-            onClick={() => setMainTab("shifts")}
-            className="gap-2"
-          >
-            <Calendar className="h-4 w-4" />
-            Vakter
-          </Button>
-          <Button
-            variant={mainTab === "notifications" ? "default" : "outline"}
-            onClick={() => setMainTab("notifications")}
-            className="gap-2 relative"
-          >
-            <Bell className="h-4 w-4" />
-            Notifikationer
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full" />
-            )}
-          </Button>
-        </div>
-
-        {mainTab === "notifications" ? (
-          <NotificationsTab onMarkAsRead={() => setUnreadCount((prev) => Math.max(0, prev - 1))} />
-        ) : (
+        {!selectedShift ? (
           <>
-            {!selectedShift ? (
+            {/* Main tabs - only visible on front page */}
+            <div className="flex gap-2 mb-6">
+              <Button
+                variant={mainTab === "shifts" ? "default" : "outline"}
+                onClick={() => setMainTab("shifts")}
+                className="gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                Vakter
+              </Button>
+              <Button
+                variant={mainTab === "notifications" ? "default" : "outline"}
+                onClick={() => setMainTab("notifications")}
+                className="gap-2 relative"
+              >
+                <Bell className="h-4 w-4" />
+                Notifikationer
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full" />
+                )}
+              </Button>
+            </div>
+
+            {mainTab === "notifications" ? (
+              <NotificationsTab onMarkAsRead={() => setUnreadCount((prev) => Math.max(0, prev - 1))} />
+            ) : (
               <div className="space-y-6">
                 <div className="text-center space-y-2">
                   <h2 className="text-3xl">Velg din vakt</h2>
@@ -389,7 +389,9 @@ export default function EmployeeDashboard() {
                   })}
                 </div>
               </div>
-            ) : (
+            )}
+          </>
+        ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -600,8 +602,6 @@ export default function EmployeeDashboard() {
             )}
           </div>
         )}
-        </>
-      )}
       </main>
 
       {isAdmin && (
