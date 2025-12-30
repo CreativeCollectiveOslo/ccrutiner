@@ -121,6 +121,21 @@ const handler = async (req: Request): Promise<Response> => {
     // This ensures the password is never persisted in plain text
     console.log("User created successfully:", newUser.user?.id);
 
+    // Update role if admin was selected (handle_new_user trigger creates employee by default)
+    if (role === "admin" && newUser.user?.id) {
+      const { error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .update({ role: "admin" })
+        .eq("user_id", newUser.user.id);
+
+      if (roleError) {
+        console.error("Error updating user role:", roleError);
+        // User was created but role update failed - return success with warning
+      } else {
+        console.log("User role updated to admin");
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
