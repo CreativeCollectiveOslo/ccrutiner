@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Eye, EyeOff, Copy, Info } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Eye, EyeOff, Copy, Info, Bell } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import logo from "@/assets/logo.png";
 import { ShiftManager } from "@/components/ShiftManager";
 import { AnnouncementManager } from "@/components/AnnouncementManager";
 import { SectionManager } from "@/components/SectionManager";
+import { UserNotificationsView } from "@/components/UserNotificationsView";
 
 interface Shift {
   id: string;
@@ -49,6 +50,7 @@ export default function AdminDashboard() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState<string | null>(null);
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+  const [selectedUserForNotifications, setSelectedUserForNotifications] = useState<UserWithRole | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -437,6 +439,14 @@ export default function AdminDashboard() {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => setSelectedUserForNotifications(userItem)}
+                              title="Se notifikasjonsstatus"
+                            >
+                              <Bell className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleResetPassword(userItem.id)}
                               disabled={resetLoading === userItem.id}
                             >
@@ -572,6 +582,27 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* User Notifications Dialog */}
+        <Dialog 
+          open={!!selectedUserForNotifications} 
+          onOpenChange={(open) => !open && setSelectedUserForNotifications(null)}
+        >
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Notifikasjonsstatus</DialogTitle>
+              <DialogDescription>
+                Se hvilke notifikasjoner brukeren har læst
+              </DialogDescription>
+            </DialogHeader>
+            {selectedUserForNotifications && (
+              <UserNotificationsView
+                userId={selectedUserForNotifications.id}
+                userName={selectedUserForNotifications.name}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur">
