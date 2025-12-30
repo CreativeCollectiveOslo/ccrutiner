@@ -20,13 +20,21 @@ const iconOptions = [
   "Home", "Briefcase", "Heart", "Star", "Clock", "Calendar"
 ];
 
-export function ShiftManager() {
+interface ShiftManagerProps {
+  onShiftChange?: () => void;
+}
+
+export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [name, setName] = useState("");
   const [colorCode, setColorCode] = useState("#3b82f6");
   const [selectedIcon, setSelectedIcon] = useState("Sun");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const notifyChange = () => {
+    if (onShiftChange) onShiftChange();
+  };
 
   useEffect(() => {
     fetchShifts();
@@ -67,6 +75,7 @@ export function ShiftManager() {
         toast.success("Vagt opdateret!");
         resetForm();
         fetchShifts();
+        notifyChange();
       }
     } else {
       // Get the highest order_index and add 1
@@ -84,6 +93,7 @@ export function ShiftManager() {
         toast.success("Vagt oprettet!");
         resetForm();
         fetchShifts();
+        notifyChange();
       }
     }
 
@@ -136,6 +146,7 @@ export function ShiftManager() {
     } else {
       toast.success("Vagt slettet");
       fetchShifts();
+      notifyChange();
     }
   };
 
