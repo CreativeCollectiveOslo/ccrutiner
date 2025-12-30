@@ -28,6 +28,7 @@ interface Announcement {
   title: string;
   message: string;
   created_at: string;
+  created_by: string;
   type: "announcement";
 }
 
@@ -37,11 +38,17 @@ interface RoutineNotification {
   shift_id: string;
   message: string;
   created_at: string;
+  created_by: string | null;
   routines: RoutineInfo | null;
   type: "routine";
 }
 
 type NotificationItem = (Announcement & { type: "announcement" }) | (RoutineNotification & { type: "routine" });
+
+interface UserProfile {
+  id: string;
+  name: string;
+}
 
 interface Shift {
   id: string;
@@ -84,6 +91,7 @@ export default function EmployeeDashboard() {
   const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
   const { isSupported: wakeLockSupported, isActive: wakeLockActive, toggleWakeLock } = useWakeLock();
@@ -99,6 +107,7 @@ export default function EmployeeDashboard() {
       checkAdminStatus();
       fetchUnreadCount();
       fetchAllShiftProgress();
+      fetchProfiles();
     }
   }, [user, authLoading, navigate]);
 
@@ -117,6 +126,15 @@ export default function EmployeeDashboard() {
     }
   };
 
+  const fetchProfiles = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, name");
+
+    if (!error && data) {
+      setProfiles(data);
+    }
+  };
 
   useEffect(() => {
     if (selectedShift) {
@@ -470,6 +488,7 @@ export default function EmployeeDashboard() {
                 {/* Unread notifications banner above shifts */}
                 <UnreadNotificationsBanner
                   notifications={unreadNotifications}
+                  profiles={profiles}
                   onMarkAsRead={(notification) => {
                     setUnreadNotifications((prev) =>
                       prev.filter((n) => !(n.type === notification.type && n.id === notification.id))
