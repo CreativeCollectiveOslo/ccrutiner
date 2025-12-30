@@ -14,8 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
-import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-import { RoutineNotificationBanner } from "@/components/RoutineNotificationBanner";
 import { NotificationsTab } from "@/components/NotificationsTab";
 import logo from "@/assets/logo.png";
 
@@ -52,6 +50,7 @@ export default function EmployeeDashboard() {
   const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
   const [activeTab, setActiveTab] = useState<"tasks" | "admin">("tasks");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [newRoutine, setNewRoutine] = useState({
     title: "",
     description: "",
@@ -67,6 +66,7 @@ export default function EmployeeDashboard() {
     if (user) {
       fetchShifts();
       checkAdminStatus();
+      fetchUnreadCount();
     }
   }, [user, authLoading, navigate]);
 
@@ -120,6 +120,49 @@ export default function EmployeeDashboard() {
     
     return () => clearInterval(interval);
   }, [currentDate, selectedShift]);
+
+  const fetchUnreadCount = async () => {
+    if (!user) return;
+
+    // Get user's profile created_at
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) return;
+
+    // Count unread announcements
+    const { data: announcements } = await supabase
+      .from("announcements")
+      .select("id")
+      .gte("created_at", profile.created_at);
+
+    const { data: readAnnouncements } = await supabase
+      .from("announcements_read")
+      .select("announcement_id")
+      .eq("user_id", user.id);
+
+    const readAnnouncementIds = new Set(readAnnouncements?.map((r) => r.announcement_id) || []);
+    const unreadAnnouncementCount = announcements?.filter((a) => !readAnnouncementIds.has(a.id)).length || 0;
+
+    // Count unread routine notifications
+    const { data: routineNotifications } = await supabase
+      .from("routine_notifications")
+      .select("id")
+      .gte("created_at", profile.created_at);
+
+    const { data: readRoutineNotifs } = await supabase
+      .from("routine_notifications_read")
+      .select("notification_id")
+      .eq("user_id", user.id);
+
+    const readRoutineIds = new Set(readRoutineNotifs?.map((r) => r.notification_id) || []);
+    const unreadRoutineCount = routineNotifications?.filter((n) => !readRoutineIds.has(n.id)).length || 0;
+
+    setUnreadCount(unreadAnnouncementCount + unreadRoutineCount);
+  };
 
   const fetchShifts = async () => {
     const { data, error } = await supabase
@@ -301,19 +344,20 @@ export default function EmployeeDashboard() {
           <Button
             variant={mainTab === "notifications" ? "default" : "outline"}
             onClick={() => setMainTab("notifications")}
-            className="gap-2"
+            className="gap-2 relative"
           >
             <Bell className="h-4 w-4" />
             Notifikationer
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full" />
+            )}
           </Button>
         </div>
 
         {mainTab === "notifications" ? (
-          <NotificationsTab />
+          <NotificationsTab onMarkAsRead={() => setUnreadCount((prev) => Math.max(0, prev - 1))} />
         ) : (
           <>
-            <AnnouncementBanner />
-            <RoutineNotificationBanner />
             {!selectedShift ? (
               <div className="space-y-6">
                 <div className="text-center space-y-2">
