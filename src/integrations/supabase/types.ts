@@ -142,6 +142,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          order_index: number | null
         }
         Insert: {
           color_code: string
@@ -149,6 +150,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          order_index?: number | null
         }
         Update: {
           color_code?: string
@@ -156,6 +158,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          order_index?: number | null
         }
         Relationships: []
       }
