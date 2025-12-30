@@ -381,22 +381,22 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     <Card key={routine.id} className="group">
       <CardContent className="p-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-sm font-medium truncate">{routine.title}</h4>
+              <h4 className="text-sm font-medium break-words">{routine.title}</h4>
               {routine.priority > 0 && (
                 <Badge variant="secondary" className="text-xs shrink-0">
-                  Prioritet: {routine.priority}
+                  P:{routine.priority}
                 </Badge>
               )}
             </div>
             {routine.description && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
                 {routine.description}
               </p>
             )}
           </div>
-          <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-0.5 shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -429,18 +429,18 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl">{shiftName} Rutiner</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-xl truncate">{shiftName} Rutiner</h2>
           <p className="text-sm text-muted-foreground">
             {routines.length} rutiner, {sections.length} afsnit
           </p>
         </div>
         <Dialog open={sectionDialogOpen} onOpenChange={setSectionDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline">
+            <Button variant="outline" size="sm" className="shrink-0 w-full sm:w-auto">
               <FolderOpen className="h-4 w-4 mr-2" />
               Nyt Afsnit
             </Button>
@@ -501,22 +501,23 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         return (
           <Card key={section.id}>
             <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                  <h3 className="font-medium">{section.name}</h3>
-                  <Badge variant="secondary" className="text-xs">
-                    {sectionRoutines.length} rutiner
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <h3 className="font-medium truncate">{section.name}</h3>
+                  <Badge variant="secondary" className="text-xs shrink-0">
+                    {sectionRoutines.length}
                   </Badge>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-8 px-2"
                     onClick={() => openNewRoutineDialog(section.id)}
                   >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Ny Rutine
+                    <Plus className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Ny Rutine</span>
                   </Button>
                   <Button
                     variant="ghost"
