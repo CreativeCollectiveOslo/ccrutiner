@@ -368,31 +368,59 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl pb-20">
         <div className="mb-6">
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={activeTab === "routines" ? "default" : "outline"}
+          <div className="flex border-b border-border">
+            <button
               onClick={() => setActiveTab("routines")}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                activeTab === "routines"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               Rutiner
-            </Button>
-            <Button
-              variant={activeTab === "shifts" ? "default" : "outline"}
+              {activeTab === "routines" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab("shifts")}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                activeTab === "shifts"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               Vakter
-            </Button>
-            <Button
-              variant={activeTab === "announcements" ? "default" : "outline"}
+              {activeTab === "shifts" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab("announcements")}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                activeTab === "announcements"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               Opdateringer
-            </Button>
-            <Button
-              variant={activeTab === "users" ? "default" : "outline"}
+              {activeTab === "announcements" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab("users")}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                activeTab === "users"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               Brukere & Roller
-            </Button>
+              {activeTab === "users" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
           </div>
         </div>
 
