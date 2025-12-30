@@ -34,7 +34,11 @@ interface RoutineNotification {
 
 type NotificationItem = (Announcement & { type: "announcement" }) | (RoutineNotification & { type: "routine" });
 
-export function NotificationsTab() {
+interface NotificationsTabProps {
+  onMarkAsRead?: () => void;
+}
+
+export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [readAnnouncementIds, setReadAnnouncementIds] = useState<Set<string>>(new Set());
@@ -143,6 +147,7 @@ export function NotificationsTab() {
     }
 
     setReadAnnouncementIds((prev) => new Set(prev).add(announcementId));
+    onMarkAsRead?.();
     toast.success("Markeret som læst");
   };
 
@@ -160,6 +165,7 @@ export function NotificationsTab() {
     }
 
     setReadRoutineNotificationIds((prev) => new Set(prev).add(notificationId));
+    onMarkAsRead?.();
     toast.success("Markeret som læst");
   };
 
