@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,7 @@ function CollapsibleText({ text, maxLines = 3 }: { text: string; maxLines?: numb
 }
 
 export function AnnouncementManager() {
+  const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [routineNotifications, setRoutineNotifications] = useState<RoutineNotification[]>([]);
   const [title, setTitle] = useState("");
@@ -149,15 +151,12 @@ export function AnnouncementManager() {
       return;
     }
 
-    setLoading(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
       toast.error("Du skal være logget ind");
-      setLoading(false);
       return;
     }
+
+    setLoading(true);
 
     const { error } = await supabase
       .from("announcements")
