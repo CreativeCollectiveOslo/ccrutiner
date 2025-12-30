@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Trash2, Edit, ChevronUp, ChevronDown } from "lucide-react";
+import { Trash2, Edit, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Shift {
   id: string;
@@ -31,6 +31,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
   const [selectedIcon, setSelectedIcon] = useState("Sun");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [iconsExpanded, setIconsExpanded] = useState(false);
 
   const notifyChange = () => {
     if (onShiftChange) onShiftChange();
@@ -164,122 +165,135 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingId ? "Rediger vagt" : "Opret ny vagt"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Navn</label>
-              <Input
-                placeholder="F.eks. Morgen"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+      {/* Create/Edit Form */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium">{editingId ? "Rediger vagt" : "Opret ny vagt"}</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Navn</label>
+            <Input
+              placeholder="F.eks. Morgen"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Farve</label>
+            <Input
+              type="color"
+              value={colorCode}
+              onChange={(e) => setColorCode(e.target.value)}
+              className="h-10"
+            />
+          </div>
+          <Collapsible open={iconsExpanded} onOpenChange={setIconsExpanded}>
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-muted-foreground">Ikon</label>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 px-2 gap-1">
+                  <span className="flex items-center gap-1.5">
+                    {renderIcon(selectedIcon, "h-4 w-4")}
+                    <span className="text-xs">{selectedIcon}</span>
+                  </span>
+                  <ChevronRight className={`h-3 w-3 transition-transform ${iconsExpanded ? "rotate-90" : ""}`} />
+                </Button>
+              </CollapsibleTrigger>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Farve</label>
-              <Input
-                type="color"
-                value={colorCode}
-                onChange={(e) => setColorCode(e.target.value)}
-                className="h-12"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Ikon</label>
-              <div className="grid grid-cols-6 gap-2">
+            <CollapsibleContent className="pt-2">
+              <div className="flex flex-wrap gap-1">
                 {iconOptions.map((icon) => (
                   <Button
                     key={icon}
                     type="button"
-                    variant={selectedIcon === icon ? "default" : "outline"}
-                    onClick={() => setSelectedIcon(icon)}
-                    className="h-12"
+                    variant={selectedIcon === icon ? "default" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      setSelectedIcon(icon);
+                      setIconsExpanded(false);
+                    }}
                   >
-                    {renderIcon(icon, "h-5 w-5")}
+                    {renderIcon(icon, "h-4 w-4")}
                   </Button>
                 ))}
               </div>
-            </div>
-            <div className="flex gap-2">
-              <Button type="submit" disabled={loading}>
-                {loading ? "Gemmer..." : editingId ? "Opdater vagt" : "Opret vagt"}
+            </CollapsibleContent>
+          </Collapsible>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={loading} size="sm">
+              {loading ? "Gemmer..." : editingId ? "Opdater" : "Opret"}
+            </Button>
+            {editingId && (
+              <Button type="button" variant="outline" size="sm" onClick={resetForm}>
+                Annuller
               </Button>
-              {editingId && (
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Annuller
-                </Button>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Eksisterende vakter</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {shifts.length === 0 ? (
-              <p className="text-muted-foreground">Ingen vakter endnu</p>
-            ) : (
-              shifts.map((shift, index) => (
-                <Card key={shift.id} style={{ borderLeftColor: shift.color_code, borderLeftWidth: 4 }}>
-                  <CardContent className="pt-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => handleMoveShift(shift.id, "up")}
-                            disabled={index === 0}
-                          >
-                            <ChevronUp className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => handleMoveShift(shift.id, "down")}
-                            disabled={index === shifts.length - 1}
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div style={{ color: shift.color_code }}>
-                          {renderIcon(shift.icon, "h-6 w-6")}
-                        </div>
-                        <span className="font-medium">{shift.name}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(shift)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(shift.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
             )}
           </div>
-        </CardContent>
-      </Card>
+        </form>
+      </div>
+
+      {/* Existing Shifts */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Eksisterende vakter</h3>
+        <div className="space-y-1.5">
+          {shifts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Ingen vakter endnu</p>
+          ) : (
+            shifts.map((shift, index) => (
+              <div
+                key={shift.id}
+                className="flex items-center justify-between p-2 rounded-md border-l-4 bg-muted/30 hover:bg-muted/50 transition-colors"
+                style={{ borderLeftColor: shift.color_code }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-col">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => handleMoveShift(shift.id, "up")}
+                      disabled={index === 0}
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => handleMoveShift(shift.id, "down")}
+                      disabled={index === shifts.length - 1}
+                    >
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div style={{ color: shift.color_code }}>
+                    {renderIcon(shift.icon, "h-4 w-4")}
+                  </div>
+                  <span className="text-sm font-medium">{shift.name}</span>
+                </div>
+                <div className="flex gap-0.5">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => handleEdit(shift)}
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => handleDelete(shift.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
