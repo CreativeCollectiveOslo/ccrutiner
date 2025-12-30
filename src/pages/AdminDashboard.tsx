@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Eye, EyeOff, Copy } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Eye, EyeOff, Copy, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
@@ -461,7 +462,19 @@ export default function AdminDashboard() {
                         
                         {hasPassword && (
                           <div className="mt-3 pt-3 border-t flex flex-wrap items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Midlertidig passord:</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm text-muted-foreground">Passord:</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Dette passord vises kun her til brukeren har logget inn første gang</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                             <code className="bg-muted px-2 py-1 rounded text-sm font-mono break-all">
                               {showPassword ? userItem.temp_password : "••••••••"}
                             </code>
