@@ -13,6 +13,29 @@ interface InviteUserRequest {
   role: "admin" | "employee";
 }
 
+// Norwegian word lists for generating memorable passwords
+const adjectives = [
+  "Sulten", "Glad", "Rask", "Stor", "Liten", "Blå", "Rød", "Grønn", "Gul", "Hvit",
+  "Sort", "Varm", "Kald", "Søt", "Sur", "Morsom", "Sterk", "Rask", "Lat", "Modig",
+  "Stille", "Høy", "Lav", "Bred", "Smal", "Tung", "Lett", "Myk", "Hard", "Våt",
+  "Tørr", "Ung", "Gammel", "Ny", "Frisk", "Klok", "Vill", "Tam", "Rik", "Smart",
+  "Snill", "Grei", "Fin", "Pen", "Kjapp", "Rolig", "Lystig", "Munter", "Ivrig", "Flott"
+];
+
+const nouns = [
+  "Katt", "Hund", "Fugl", "Fisk", "Bjørn", "Ulv", "Rev", "Elg", "Hest", "Ku",
+  "Sau", "Gris", "Høne", "And", "Gås", "Ørn", "Ugle", "Ravn", "Hare", "Mus",
+  "Sol", "Måne", "Stjerne", "Sky", "Regn", "Snø", "Vind", "Storm", "Lyn", "Torden",
+  "Fjell", "Dal", "Elv", "Sjø", "Hav", "Skog", "Tre", "Blomst", "Gress", "Stein",
+  "Vifte", "Lampe", "Stol", "Bord", "Bok", "Penn", "Klokke", "Nøkkel", "Kopp", "Tallerken"
+];
+
+const generatePassword = (): string => {
+  const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  return `${adjective}${noun}`;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -76,13 +99,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Use simple default password
-    const defaultPassword = "Creative1";
+    // Generate a memorable two-word password
+    const generatedPassword = generatePassword();
+    console.log(`Generated password for ${email}: ${generatedPassword}`);
 
     // Create the user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: defaultPassword,
+      password: generatedPassword,
       email_confirm: true, // Auto-confirm email
       user_metadata: { name: name || '' }
     });
@@ -103,6 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         user: newUser.user,
+        generatedPassword: generatedPassword,
         message: "User invited successfully" 
       }),
       {
