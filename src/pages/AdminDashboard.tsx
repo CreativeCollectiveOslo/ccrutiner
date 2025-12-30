@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2 } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 import { ShiftManager } from "@/components/ShiftManager";
@@ -36,7 +37,8 @@ export default function AdminDashboard() {
   const [selectedShift, setSelectedShift] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [activeTab, setActiveTab] = useState<"routines" | "users" | "shifts" | "announcements">("routines");
+  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements">("routines");
+  const [shiftManagerOpen, setShiftManagerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "employee">("employee");
@@ -235,19 +237,6 @@ export default function AdminDashboard() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab("shifts")}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                activeTab === "shifts"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Vakter
-              {activeTab === "shifts" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-            <button
               onClick={() => setActiveTab("announcements")}
               className={`px-4 py-2 text-sm font-medium transition-colors relative ${
                 activeTab === "announcements"
@@ -279,21 +268,47 @@ export default function AdminDashboard() {
         {activeTab === "routines" ? (
           <div className="grid gap-6 md:grid-cols-[300px_1fr]">
             <Card>
-              <CardHeader>
-                <CardTitle>Vakter</CardTitle>
-                <CardDescription>Velg en vakt å administrere</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle>Vakter</CardTitle>
+                  <CardDescription>Velg en vakt å administrere</CardDescription>
+                </div>
+                <Sheet open={shiftManagerOpen} onOpenChange={setShiftManagerOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Rediger vakter">
+                      <Settings2 className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>Administrer vakter</SheetTitle>
+                      <SheetDescription>
+                        Opret, rediger og omarranger vakter
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-6">
+                      <ShiftManager onShiftChange={fetchShifts} />
+                    </div>
+                  </SheetContent>
+                </Sheet>
               </CardHeader>
               <CardContent className="space-y-2">
-                {shifts.map((shift) => (
-                  <Button
-                    key={shift.id}
-                    variant={selectedShift === shift.id ? "default" : "outline"}
-                    className="w-full justify-start"
-                    onClick={() => setSelectedShift(shift.id)}
-                  >
-                    {shift.name}
-                  </Button>
-                ))}
+                {shifts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Ingen vakter endnu. Klik på tandhjulet for at oprette.
+                  </p>
+                ) : (
+                  shifts.map((shift) => (
+                    <Button
+                      key={shift.id}
+                      variant={selectedShift === shift.id ? "default" : "outline"}
+                      className="w-full justify-start"
+                      onClick={() => setSelectedShift(shift.id)}
+                    >
+                      {shift.name}
+                    </Button>
+                  ))
+                )}
               </CardContent>
             </Card>
 
@@ -301,8 +316,6 @@ export default function AdminDashboard() {
               <SectionManager shiftId={selectedShift} shifts={shifts} />
             )}
           </div>
-        ) : activeTab === "shifts" ? (
-          <ShiftManager />
         ) : activeTab === "announcements" ? (
           <AnnouncementManager />
         ) : (
