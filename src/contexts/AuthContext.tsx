@@ -39,11 +39,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (!error) {
+    if (!error && data.user) {
+      // Opdater profil for at markere login og slette temp password
+      await supabase
+        .from("profiles")
+        .update({ 
+          has_logged_in: true,
+          temp_password: null 
+        })
+        .eq("id", data.user.id);
+      
       navigate("/dashboard");
     }
     return { error };
