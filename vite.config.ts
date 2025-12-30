@@ -15,7 +15,14 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "logo.png"],
+      includeAssets: [
+        "favicon.ico",
+        "logo.png",
+        "pwa-192x192.png",
+        "pwa-512x512.png",
+        "splash-1125x2436.png",
+        "splash-1024x1024.png",
+      ],
       manifest: {
         name: "Creative Collective Medarbeider",
         short_name: "CC Rutiner",
@@ -25,6 +32,8 @@ export default defineConfig(({ mode }) => ({
         display: "standalone",
         orientation: "portrait",
         start_url: "/",
+        scope: "/",
+        categories: ["productivity", "business"],
         icons: [
           {
             src: "/pwa-192x192.png",
@@ -43,9 +52,25 @@ export default defineConfig(({ mode }) => ({
             purpose: "maskable",
           },
         ],
+        screenshots: [
+          {
+            src: "/splash-1125x2436.png",
+            sizes: "1125x1920",
+            type: "image/png",
+            form_factor: "narrow",
+          },
+          {
+            src: "/splash-1024x1024.png",
+            sizes: "1024x1024",
+            type: "image/png",
+            form_factor: "wide",
+          },
+        ],
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -66,6 +91,29 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/xocqltbfyqibzrtpcgjx\.supabase\.co\/.*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "api-cache",
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 5,
               },
             },
           },
