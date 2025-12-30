@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { NotificationsTab } from "@/components/NotificationsTab";
@@ -49,6 +49,7 @@ export default function EmployeeDashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
@@ -62,9 +63,25 @@ export default function EmployeeDashboard() {
     }
     if (user) {
       fetchShifts();
+      checkAdminStatus();
       fetchUnreadCount();
     }
   }, [user, authLoading, navigate]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!error && data) {
+      setIsAdmin(true);
+    }
+  };
 
 
   useEffect(() => {
@@ -558,6 +575,17 @@ export default function EmployeeDashboard() {
           </div>
         )}
       </main>
+
+      {isAdmin && (
+        <footer className="fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur">
+          <div className="container mx-auto px-4 py-3 flex justify-center">
+            <Button variant="outline" onClick={() => navigate("/admin")}>
+              <Settings className="h-4 w-4 mr-2" />
+              Admin Dashboard
+            </Button>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
