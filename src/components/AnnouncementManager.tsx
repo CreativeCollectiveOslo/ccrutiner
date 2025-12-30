@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Trash2, Users, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Trash2, Users, ChevronDown, ChevronUp, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Announcement {
@@ -46,6 +46,8 @@ interface UserProfile {
   created_at: string;
 }
 
+const ITEMS_PER_PAGE = 15;
+
 export function AnnouncementManager() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [routineNotifications, setRoutineNotifications] = useState<RoutineNotification[]>([]);
@@ -56,7 +58,10 @@ export function AnnouncementManager() {
   const [readStatuses, setReadStatuses] = useState<ReadStatus[]>([]);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [loadingReadStatus, setLoadingReadStatus] = useState(false);
+  const [showAnnouncements, setShowAnnouncements] = useState(true);
   const [showRoutineNotifications, setShowRoutineNotifications] = useState(false);
+  const [announcementPage, setAnnouncementPage] = useState(1);
+  const [routineNotificationPage, setRoutineNotificationPage] = useState(1);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -233,6 +238,48 @@ export function AnnouncementManager() {
     return eligibleUsers.filter(user => !readUserIds.includes(user.id));
   };
 
+  // Pagination helpers
+  const getAnnouncementsTotalPages = () => Math.ceil(announcements.length / ITEMS_PER_PAGE);
+  const getRoutineNotificationsTotalPages = () => Math.ceil(routineNotifications.length / ITEMS_PER_PAGE);
+  
+  const getPaginatedAnnouncements = () => {
+    const start = (announcementPage - 1) * ITEMS_PER_PAGE;
+    return announcements.slice(start, start + ITEMS_PER_PAGE);
+  };
+  
+  const getPaginatedRoutineNotifications = () => {
+    const start = (routineNotificationPage - 1) * ITEMS_PER_PAGE;
+    return routineNotifications.slice(start, start + ITEMS_PER_PAGE);
+  };
+
+  const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => {
+    if (totalPages <= 1) return null;
+    
+    return (
+      <div className="flex items-center justify-center gap-2 mt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Side {currentPage} af {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -265,49 +312,79 @@ export function AnnouncementManager() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Nyheder</CardTitle>
-          <CardDescription>Generelle opdateringer til alle brugere</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {announcements.length === 0 ? (
-              <p className="text-muted-foreground">Ingen opdateringer endnu</p>
-            ) : (
-              announcements.map((announcement) => (
-                <Card key={announcement.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold mb-2">{announcement.title}</h3>
-                        <p className="text-muted-foreground text-sm">{announcement.message}</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {new Date(announcement.created_at).toLocaleString("da-DK")}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openReadStatusDialog('announcement', announcement.id, announcement.title, announcement.created_at)}
-                          title="Se hvem der har læst"
-                        >
-                          <Users className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(announcement.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Nyheder</CardTitle>
+              <CardDescription>Generelle opdateringer til alle brugere</CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAnnouncements(!showAnnouncements)}
+            >
+              {showAnnouncements ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-1" />
+                  Skjul
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  Vis ({announcements.length})
+                </>
+              )}
+            </Button>
           </div>
-        </CardContent>
+        </CardHeader>
+        {showAnnouncements && (
+          <CardContent>
+            <div className="space-y-4">
+              {announcements.length === 0 ? (
+                <p className="text-muted-foreground">Ingen opdateringer endnu</p>
+              ) : (
+                <>
+                  {getPaginatedAnnouncements().map((announcement) => (
+                    <Card key={announcement.id}>
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold mb-2">{announcement.title}</h3>
+                            <p className="text-muted-foreground text-sm">{announcement.message}</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {new Date(announcement.created_at).toLocaleString("da-DK")}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openReadStatusDialog('announcement', announcement.id, announcement.title, announcement.created_at)}
+                              title="Se hvem der har læst"
+                            >
+                              <Users className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(announcement.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <Pagination
+                    currentPage={announcementPage}
+                    totalPages={getAnnouncementsTotalPages()}
+                    onPageChange={setAnnouncementPage}
+                  />
+                </>
+              )}
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       <Card>
@@ -342,54 +419,61 @@ export function AnnouncementManager() {
               {routineNotifications.length === 0 ? (
                 <p className="text-muted-foreground">Ingen rutineopdateringer endnu</p>
               ) : (
-                routineNotifications.map((notification) => (
-                  <Card key={notification.id}>
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {notification.shift && (
-                              <Badge variant="secondary">{notification.shift.name}</Badge>
-                            )}
-                            {notification.routine && (
-                              <Badge variant="outline">{notification.routine.title}</Badge>
-                            )}
+                <>
+                  {getPaginatedRoutineNotifications().map((notification) => (
+                    <Card key={notification.id}>
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {notification.shift && (
+                                <Badge variant="secondary">{notification.shift.name}</Badge>
+                              )}
+                              {notification.routine && (
+                                <Badge variant="outline">{notification.routine.title}</Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <RefreshCw className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">Rutineopdatering</span>
+                            </div>
+                            <p className="text-muted-foreground text-sm">{notification.message}</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {new Date(notification.created_at).toLocaleString("da-DK")}
+                            </p>
                           </div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <RefreshCw className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">Rutineopdatering</span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openReadStatusDialog(
+                                'routine', 
+                                notification.id, 
+                                notification.routine?.title || 'Rutineopdatering',
+                                notification.created_at
+                              )}
+                              title="Se hvem der har læst"
+                            >
+                              <Users className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteRoutineNotification(notification.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <p className="text-muted-foreground text-sm">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(notification.created_at).toLocaleString("da-DK")}
-                          </p>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openReadStatusDialog(
-                              'routine', 
-                              notification.id, 
-                              notification.routine?.title || 'Rutineopdatering',
-                              notification.created_at
-                            )}
-                            title="Se hvem der har læst"
-                          >
-                            <Users className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteRoutineNotification(notification.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <Pagination
+                    currentPage={routineNotificationPage}
+                    totalPages={getRoutineNotificationsTotalPages()}
+                    onPageChange={setRoutineNotificationPage}
+                  />
+                </>
               )}
             </div>
           </CardContent>
