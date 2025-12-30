@@ -417,22 +417,22 @@ export default function AdminDashboard() {
                           isAdmin ? "bg-primary/5 border-primary" : ""
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-medium">{userItem.name}</h3>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="font-medium truncate max-w-[200px] sm:max-w-none">{userItem.name}</h3>
                               {isAdmin && (
-                                <Badge variant="default">Admin</Badge>
+                                <Badge variant="default" className="shrink-0">Admin</Badge>
                               )}
                               {userItem.has_logged_in && (
-                                <Badge variant="secondary" className="text-xs">Har logget inn</Badge>
+                                <Badge variant="secondary" className="text-xs shrink-0">Har logget inn</Badge>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-muted-foreground truncate">
                               {userItem.email}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 shrink-0">
                             <Button
                               variant="outline"
                               size="sm"
@@ -460,27 +460,29 @@ export default function AdminDashboard() {
                         </div>
                         
                         {hasPassword && (
-                          <div className="mt-3 pt-3 border-t flex items-center gap-2">
+                          <div className="mt-3 pt-3 border-t flex flex-wrap items-center gap-2">
                             <span className="text-sm text-muted-foreground">Midlertidig passord:</span>
-                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
+                            <code className="bg-muted px-2 py-1 rounded text-sm font-mono break-all">
                               {showPassword ? userItem.temp_password : "••••••••"}
                             </code>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => togglePasswordVisibility(userItem.id)}
-                            >
-                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => copyToClipboard(userItem.temp_password!)}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => togglePasswordVisibility(userItem.id)}
+                              >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => copyToClipboard(userItem.temp_password!)}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
