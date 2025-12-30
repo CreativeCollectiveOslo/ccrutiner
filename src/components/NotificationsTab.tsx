@@ -124,10 +124,16 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
     setReadAnnouncementIds(new Set(readAnnouncements?.map((r) => r.announcement_id) || []));
     setReadRoutineNotificationIds(new Set(readRoutineNotifs?.map((r) => r.notification_id) || []));
 
-    // Combine and sort all notifications
+    // Combine and sort all notifications - ONLY SHOW READ NOTIFICATIONS
+    const readAnnIds = new Set(readAnnouncements?.map((r) => r.announcement_id) || []);
+    const readRoutineIds = new Set(readRoutineNotifs?.map((r) => r.notification_id) || []);
+
+    setReadAnnouncementIds(readAnnIds);
+    setReadRoutineNotificationIds(readRoutineIds);
+
     const allNotifications: NotificationItem[] = [
-      ...(announcements?.map((a) => ({ ...a, type: "announcement" as const })) || []),
-      ...(routineNotifications?.map((r) => ({ ...r, type: "routine" as const })) || []),
+      ...(announcements?.filter((a) => readAnnIds.has(a.id)).map((a) => ({ ...a, type: "announcement" as const })) || []),
+      ...(routineNotifications?.filter((r) => readRoutineIds.has(r.id)).map((r) => ({ ...r, type: "routine" as const })) || []),
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     setNotifications(allNotifications);
