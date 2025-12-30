@@ -42,6 +42,7 @@ export function UserNotificationsView({ userId, userName }: UserNotificationsVie
   const [readRoutineNotifications, setReadRoutineNotifications] = useState<ReadRoutineNotification[]>([]);
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([]);
   const [allRoutineNotifications, setAllRoutineNotifications] = useState<RoutineNotification[]>([]);
+  const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotificationData();
@@ -50,14 +51,30 @@ export function UserNotificationsView({ userId, userName }: UserNotificationsVie
   const fetchNotificationData = async () => {
     setLoading(true);
 
-    // Fetch all announcements
-    const { data: announcements } = await supabase
+    // Fetch user's profile to get creation date
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const userCreationDate = profile?.created_at || null;
+    setUserCreatedAt(userCreationDate);
+
+    // Fetch all announcements (filter by user creation date if available)
+    let announcementsQuery = supabase
       .from("announcements")
       .select("id, title, created_at")
       .order("created_at", { ascending: false });
 
-    // Fetch all routine notifications with routine title
-    const { data: routineNotifications } = await supabase
+    if (userCreationDate) {
+      announcementsQuery = announcementsQuery.gte("created_at", userCreationDate);
+    }
+
+    const { data: announcements } = await announcementsQuery;
+
+    // Fetch all routine notifications with routine title (filter by user creation date if available)
+    let routineNotificationsQuery = supabase
       .from("routine_notifications")
       .select(`
         id,
@@ -66,6 +83,12 @@ export function UserNotificationsView({ userId, userName }: UserNotificationsVie
         routine:routines(title)
       `)
       .order("created_at", { ascending: false });
+
+    if (userCreationDate) {
+      routineNotificationsQuery = routineNotificationsQuery.gte("created_at", userCreationDate);
+    }
+
+    const { data: routineNotifications } = await routineNotificationsQuery;
 
     // Fetch user's read announcements
     const { data: userReadAnnouncements } = await supabase
