@@ -530,15 +530,13 @@ export default function EmployeeDashboard() {
               ← Tilbake
             </button>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl">{selectedShift.name}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {completions.size} av {routines.length} oppgaver fullført
-                </p>
-              </div>
+            <div>
+              <h2 className="text-2xl">{selectedShift.name}</h2>
+              <p className="text-sm text-muted-foreground">
+                {completions.size} av {routines.length} oppgaver fullført
+              </p>
               {wakeLockSupported && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-2">
                   <Smartphone className="h-4 w-4 text-muted-foreground" />
                   <label htmlFor="wake-lock" className="text-sm text-muted-foreground cursor-pointer">
                     Hold skjerm våken
