@@ -22,6 +22,7 @@ interface Shift {
   name: string;
   color_code: string;
   icon: string;
+  order_index: number;
 }
 
 interface Routine {
@@ -120,20 +121,14 @@ export default function EmployeeDashboard() {
   const fetchShifts = async () => {
     const { data, error } = await supabase
       .from("shifts")
-      .select("*");
+      .select("*")
+      .order("order_index");
 
     if (error) {
       toast.error("Kunne ikke hente vakter");
       console.error(error);
     } else if (data) {
-      // Custom sort order: Morgen, Eftermiddag, Aften
-      const sortOrder = ["Morgen", "Eftermiddag", "Aften"];
-      const sortedData = data.sort((a, b) => {
-        const indexA = sortOrder.indexOf(a.name);
-        const indexB = sortOrder.indexOf(b.name);
-        return indexA - indexB;
-      });
-      setShifts(sortedData);
+      setShifts(data);
     }
     setLoading(false);
   };

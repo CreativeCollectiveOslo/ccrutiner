@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Edit2, Loader2, ArrowLeft } from "lucide-react";
+import { LogOut, Plus, Trash2, Edit2, Loader2, ArrowLeft, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 import { ShiftManager } from "@/components/ShiftManager";
@@ -20,6 +20,7 @@ interface Shift {
   id: string;
   name: string;
   color_code: string;
+  order_index: number;
 }
 
 interface Routine {
@@ -52,9 +53,17 @@ export default function AdminDashboard() {
   const [inviteRole, setInviteRole] = useState<"admin" | "employee">("employee");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const navigate = useNavigate();
 
   const [newRoutine, setNewRoutine] = useState({
+    title: "",
+    description: "",
+    priority: 0,
+  });
+
+  const [editRoutine, setEditRoutine] = useState({
     title: "",
     description: "",
     priority: 0,
@@ -110,7 +119,7 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("shifts")
       .select("*")
-      .order("name");
+      .order("order_index");
 
     if (error) {
       toast.error("Kunne ikke hente vakter");
@@ -178,6 +187,41 @@ export default function AdminDashboard() {
       console.error(error);
     } else {
       toast.success("Rutine slettet");
+      fetchRoutines();
+    }
+  };
+
+  const handleOpenEditRoutine = (routine: Routine) => {
+    setEditingRoutine(routine);
+    setEditRoutine({
+      title: routine.title,
+      description: routine.description || "",
+      priority: routine.priority,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateRoutine = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingRoutine) return;
+
+    const { error } = await supabase
+      .from("routines")
+      .update({
+        title: editRoutine.title,
+        description: editRoutine.description || null,
+        priority: editRoutine.priority,
+      })
+      .eq("id", editingRoutine.id);
+
+    if (error) {
+      toast.error("Kunne ikke opdatere rutine");
+      console.error(error);
+    } else {
+      toast.success("Rutine opdateret!");
+      setEditDialogOpen(false);
+      setEditingRoutine(null);
       fetchRoutines();
     }
   };
@@ -454,19 +498,89 @@ export default function AdminDashboard() {
                             </p>
                           )}
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteRoutine(routine.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenEditRoutine(routine)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteRoutine(routine.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))
               )}
             </div>
+
+            {/* Edit Routine Dialog */}
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogContent>
+                <form onSubmit={handleUpdateRoutine}>
+                  <DialogHeader>
+                    <DialogTitle>Rediger rutine</DialogTitle>
+                    <DialogDescription>
+                      Opdater rutinens detaljer
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-title">Tittel *</Label>
+                      <Input
+                        id="edit-title"
+                        value={editRoutine.title}
+                        onChange={(e) =>
+                          setEditRoutine({ ...editRoutine, title: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-description">Beskrivelse</Label>
+                      <Textarea
+                        id="edit-description"
+                        value={editRoutine.description}
+                        onChange={(e) =>
+                          setEditRoutine({
+                            ...editRoutine,
+                            description: e.target.value,
+                          })
+                        }
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-priority">Prioritet</Label>
+                      <Input
+                        id="edit-priority"
+                        type="number"
+                        value={editRoutine.priority}
+                        onChange={(e) =>
+                          setEditRoutine({
+                            ...editRoutine,
+                            priority: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                      Annuller
+                    </Button>
+                    <Button type="submit">Gem ændringer</Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         ) : activeTab === "shifts" ? (

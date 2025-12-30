@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, ChevronUp, ChevronDown } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 
 interface Shift {
@@ -12,6 +12,7 @@ interface Shift {
   name: string;
   color_code: string;
   icon: string;
+  order_index: number;
 }
 
 const iconOptions = [
@@ -35,7 +36,7 @@ export function ShiftManager() {
     const { data, error } = await supabase
       .from("shifts")
       .select("*")
-      .order("name");
+      .order("order_index");
 
     if (error) {
       toast.error("Kunne ikke hente vakter");
@@ -68,9 +69,14 @@ export function ShiftManager() {
         fetchShifts();
       }
     } else {
+      // Get the highest order_index and add 1
+      const maxOrderIndex = shifts.length > 0 
+        ? Math.max(...shifts.map(s => s.order_index)) + 1 
+        : 0;
+        
       const { error } = await supabase
         .from("shifts")
-        .insert([{ name, color_code: colorCode, icon: selectedIcon }]);
+        .insert([{ name, color_code: colorCode, icon: selectedIcon, order_index: maxOrderIndex }]);
 
       if (error) {
         toast.error("Kunne ikke oprette vagt");
@@ -82,6 +88,34 @@ export function ShiftManager() {
     }
 
     setLoading(false);
+  };
+
+  const handleMoveShift = async (shiftId: string, direction: "up" | "down") => {
+    const currentIndex = shifts.findIndex(s => s.id === shiftId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= shifts.length) return;
+
+    const currentShift = shifts[currentIndex];
+    const targetShift = shifts[targetIndex];
+
+    // Swap order_index values
+    const { error: error1 } = await supabase
+      .from("shifts")
+      .update({ order_index: targetShift.order_index })
+      .eq("id", currentShift.id);
+
+    const { error: error2 } = await supabase
+      .from("shifts")
+      .update({ order_index: currentShift.order_index })
+      .eq("id", targetShift.id);
+
+    if (error1 || error2) {
+      toast.error("Kunne ikke flytte vagt");
+    } else {
+      fetchShifts();
+    }
   };
 
   const handleEdit = (shift: Shift) => {
@@ -181,11 +215,31 @@ export function ShiftManager() {
             {shifts.length === 0 ? (
               <p className="text-muted-foreground">Ingen vakter endnu</p>
             ) : (
-              shifts.map((shift) => (
+              shifts.map((shift, index) => (
                 <Card key={shift.id} style={{ borderLeftColor: shift.color_code, borderLeftWidth: 4 }}>
                   <CardContent className="pt-4">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleMoveShift(shift.id, "up")}
+                            disabled={index === 0}
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleMoveShift(shift.id, "down")}
+                            disabled={index === shifts.length - 1}
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <div style={{ color: shift.color_code }}>
                           {renderIcon(shift.icon, "h-6 w-6")}
                         </div>
