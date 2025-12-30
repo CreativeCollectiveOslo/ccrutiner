@@ -14,6 +14,7 @@ interface Announcement {
   title: string;
   message: string;
   created_at: string;
+  created_by: string;
 }
 
 interface RoutineNotification {
@@ -47,6 +48,31 @@ interface UserProfile {
 }
 
 const ITEMS_PER_PAGE = 15;
+
+// Component for collapsible text
+function CollapsibleText({ text, maxLines = 3 }: { text: string; maxLines?: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const lines = text.split('\n');
+  const needsCollapse = lines.length > maxLines || text.length > 200;
+  
+  if (!needsCollapse) {
+    return <p className="text-muted-foreground text-sm whitespace-pre-wrap">{text}</p>;
+  }
+
+  return (
+    <div>
+      <p className={`text-muted-foreground text-sm whitespace-pre-wrap ${!isExpanded ? 'line-clamp-3' : ''}`}>
+        {text}
+      </p>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="text-xs text-primary hover:underline mt-1"
+      >
+        {isExpanded ? 'Vis mindre' : 'Vis mere'}
+      </button>
+    </div>
+  );
+}
 
 export function AnnouncementManager() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -238,6 +264,11 @@ export function AnnouncementManager() {
     return eligibleUsers.filter(user => !readUserIds.includes(user.id));
   };
 
+  const getCreatorName = (createdBy: string) => {
+    const creator = allUsers.find(u => u.id === createdBy);
+    return creator?.name || 'Ukendt';
+  };
+
   // Pagination helpers
   const getAnnouncementsTotalPages = () => Math.ceil(announcements.length / ITEMS_PER_PAGE);
   const getRoutineNotificationsTotalPages = () => Math.ceil(routineNotifications.length / ITEMS_PER_PAGE);
@@ -348,13 +379,16 @@ export function AnnouncementManager() {
                       <CardContent className="pt-6">
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold mb-2">{announcement.title}</h3>
-                            <p className="text-muted-foreground text-sm">{announcement.message}</p>
+                            <h3 className="font-semibold mb-1">{announcement.title}</h3>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Af {getCreatorName(announcement.created_by)}
+                            </p>
+                            <CollapsibleText text={announcement.message} />
                             <p className="text-xs text-muted-foreground mt-2">
                               {new Date(announcement.created_at).toLocaleString("da-DK")}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex flex-col gap-1 shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -367,6 +401,7 @@ export function AnnouncementManager() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(announcement.id)}
+                              title="Slet"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -437,12 +472,12 @@ export function AnnouncementManager() {
                               <RefreshCw className="h-3 w-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">Rutineopdatering</span>
                             </div>
-                            <p className="text-muted-foreground text-sm">{notification.message}</p>
+                            <CollapsibleText text={notification.message} />
                             <p className="text-xs text-muted-foreground mt-2">
                               {new Date(notification.created_at).toLocaleString("da-DK")}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex flex-col gap-1 shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -460,6 +495,7 @@ export function AnnouncementManager() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteRoutineNotification(notification.id)}
+                              title="Slet"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
