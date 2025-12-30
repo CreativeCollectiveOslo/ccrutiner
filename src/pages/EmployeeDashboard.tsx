@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { NotificationsTab } from "@/components/NotificationsTab";
 import { UnreadNotificationsBanner } from "@/components/UnreadNotificationsBanner";
+import { Switch } from "@/components/ui/switch";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 import logo from "@/assets/logo.png";
 
 interface RoutineInfo {
@@ -84,6 +86,7 @@ export default function EmployeeDashboard() {
   const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
+  const { isSupported: wakeLockSupported, isActive: wakeLockActive, toggleWakeLock } = useWakeLock();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -527,11 +530,26 @@ export default function EmployeeDashboard() {
               ← Tilbake
             </button>
 
-            <div>
-              <h2 className="text-2xl">{selectedShift.name}</h2>
-              <p className="text-sm text-muted-foreground">
-                {completions.size} av {routines.length} oppgaver fullført
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl">{selectedShift.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {completions.size} av {routines.length} oppgaver fullført
+                </p>
+              </div>
+              {wakeLockSupported && (
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4 text-muted-foreground" />
+                  <label htmlFor="wake-lock" className="text-sm text-muted-foreground cursor-pointer">
+                    Hold skjerm våken
+                  </label>
+                  <Switch
+                    id="wake-lock"
+                    checked={wakeLockActive}
+                    onCheckedChange={toggleWakeLock}
+                  />
+                </div>
+              )}
             </div>
 
 
