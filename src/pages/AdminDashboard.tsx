@@ -445,10 +445,10 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl">
+                <h2 className="text-xl">
                   {shifts.find((s) => s.id === selectedShift)?.name} Rutiner
                 </h2>
                 <p className="text-sm text-muted-foreground">
@@ -536,11 +536,11 @@ export default function AdminDashboard() {
               </Dialog>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {routines.length === 0 ? (
                 <Card>
-                  <CardContent className="pt-6 text-center">
-                    <p className="text-muted-foreground">
+                  <CardContent className="p-6 text-center">
+                    <p className="text-sm text-muted-foreground">
                       Ingen rutiner ennå. Opprett den første!
                     </p>
                   </CardContent>
@@ -548,13 +548,13 @@ export default function AdminDashboard() {
               ) : (
                 routines.map((routine) => (
                   <Card key={routine.id}>
-                    <CardContent className="pt-6">
+                    <CardContent className="p-4">
                       <div className="flex items-start justify-between">
-                        <div className="flex-1 space-y-2">
+                        <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{routine.title}</h3>
+                            <h3 className="text-sm font-medium">{routine.title}</h3>
                             {routine.priority > 0 && (
-                              <Badge variant="secondary">
+                              <Badge variant="secondary" className="text-xs">
                                 Prioritet: {routine.priority}
                               </Badge>
                             )}
