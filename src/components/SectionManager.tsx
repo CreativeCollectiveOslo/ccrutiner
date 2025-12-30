@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FolderOpen, MoveRight, GripVertical } from "lucide-react";
+import { Plus, Trash2, Pencil, FolderOpen, MoveRight, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -375,6 +375,35 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     return routines.filter((r) => r.section_id === sectionId).length;
   };
 
+  const handleMoveSection = async (sectionId: string, direction: "up" | "down") => {
+    const currentIndex = sections.findIndex((s) => s.id === sectionId);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= sections.length) return;
+
+    const otherSection = sections[newIndex];
+    const currentSection = sections[currentIndex];
+
+    // Swap order_index values
+    const { error: error1 } = await supabase
+      .from("sections")
+      .update({ order_index: newIndex })
+      .eq("id", currentSection.id);
+
+    const { error: error2 } = await supabase
+      .from("sections")
+      .update({ order_index: currentIndex })
+      .eq("id", otherSection.id);
+
+    if (error1 || error2) {
+      toast.error("Kunne ikke flytte afsnit");
+      console.error(error1 || error2);
+    } else {
+      fetchSections();
+    }
+  };
+
   const shiftName = shifts.find((s) => s.id === shiftId)?.name || "";
 
   const renderRoutineCard = (routine: Routine) => (
@@ -510,6 +539,26 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                   </Badge>
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleMoveSection(section.id, "up")}
+                    disabled={sections.findIndex((s) => s.id === section.id) === 0}
+                    title="Flyt op"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleMoveSection(section.id, "down")}
+                    disabled={sections.findIndex((s) => s.id === section.id) === sections.length - 1}
+                    title="Flyt ned"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
