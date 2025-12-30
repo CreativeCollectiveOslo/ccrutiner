@@ -393,34 +393,49 @@ export default function EmployeeDashboard() {
           </>
         ) : (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="outline" onClick={() => setSelectedShift(null)}>
-                  ← Tilbake
-                </Button>
-                <div>
-                  <h2 className="text-2xl">{selectedShift.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {completions.size} av {routines.length} oppgaver fullført
-                  </p>
-                </div>
-              </div>
+            {/* Back button above title */}
+            <button
+              onClick={() => setSelectedShift(null)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              ← Tilbake
+            </button>
+
+            <div>
+              <h2 className="text-2xl">{selectedShift.name}</h2>
+              <p className="text-sm text-muted-foreground">
+                {completions.size} av {routines.length} oppgaver fullført
+              </p>
             </div>
 
             {isAdmin && (
-              <div className="flex gap-2">
-                <Button
-                  variant={activeTab === "tasks" ? "default" : "outline"}
+              <div className="flex border-b border-border">
+                <button
                   onClick={() => setActiveTab("tasks")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                    activeTab === "tasks"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   Mine oppgaver
-                </Button>
-                <Button
-                  variant={activeTab === "admin" ? "default" : "outline"}
+                  {activeTab === "tasks" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+                <button
                   onClick={() => setActiveTab("admin")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                    activeTab === "admin"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   Administrer rutiner
-                </Button>
+                  {activeTab === "admin" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
               </div>
             )}
 
