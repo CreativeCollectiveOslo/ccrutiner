@@ -51,18 +51,46 @@ export default function AdminDashboard() {
   const [resetLoading, setResetLoading] = useState<string | null>(null);
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
   const [selectedUserForNotifications, setSelectedUserForNotifications] = useState<UserWithRole | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const navigate = useNavigate();
 
+  // Server-side admin role verification
   useEffect(() => {
+    const verifyAdminRole = async () => {
+      if (!user) return;
+      
+      const { data: roles, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      
+      if (error || !roles) {
+        // Not an admin, redirect to employee dashboard
+        navigate("/employee");
+        return;
+      }
+      
+      setIsAdmin(true);
+    };
+
     if (!authLoading && !user) {
       navigate("/auth");
       return;
     }
     if (user) {
+      verifyAdminRole();
+    }
+  }, [user, authLoading, navigate]);
+
+  // Only fetch data after admin verification
+  useEffect(() => {
+    if (isAdmin) {
       fetchShifts();
       fetchUsers();
     }
-  }, [user, authLoading, navigate]);
+  }, [isAdmin]);
 
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
@@ -270,7 +298,7 @@ export default function AdminDashboard() {
     toast.success("Passord kopiert!");
   };
 
-  if (loading || authLoading) {
+  if (loading || authLoading || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

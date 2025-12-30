@@ -1,15 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface ResetPasswordRequest {
-  userId: string;
-}
+// Input validation schema
+const ResetPasswordSchema = z.object({
+  userId: z.string().uuid("Invalid user ID format"),
+});
 
 // Norwegian word lists for generating memorable passwords
 const adjectives = [
@@ -80,19 +83,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { userId }: ResetPasswordRequest = await req.json();
-
-    // Validate input
-    if (!userId) {
+    // Parse and validate input
+    const parseResult = ResetPasswordSchema.safeParse(await req.json());
+    
+    if (!parseResult.success) {
       return new Response(
-        JSON.stringify({ error: "userId is required" }),
+        JSON.stringify({ error: "Invalid input" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const { userId } = parseResult.data;
+
     // Generate a new memorable password
     const newPassword = generatePassword();
-    console.log(`Generated new password for user ${userId}`);
+    console.log(`Password reset initiated for user`);
 
     // Update the user's password
     const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(

@@ -1,15 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface DeleteUserRequest {
-  userId: string;
-}
+// Input validation schema
+const DeleteUserSchema = z.object({
+  userId: z.string().uuid("Invalid user ID format"),
+});
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -57,15 +60,17 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { userId }: DeleteUserRequest = await req.json();
-
-    // Validate input
-    if (!userId) {
+    // Parse and validate input
+    const parseResult = DeleteUserSchema.safeParse(await req.json());
+    
+    if (!parseResult.success) {
       return new Response(
-        JSON.stringify({ error: "User ID is required" }),
+        JSON.stringify({ error: "Invalid input" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const { userId } = parseResult.data;
 
     // Prevent admin from deleting themselves
     if (userId === user.id) {
@@ -86,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("User deleted successfully:", userId);
+    console.log("User deleted successfully");
 
     return new Response(
       JSON.stringify({ 
