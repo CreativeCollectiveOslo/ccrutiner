@@ -187,9 +187,9 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
   if (notifications.length === 0) {
     return (
       <Card>
-        <CardContent className="pt-6 text-center">
-          <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Ingen notifikationer endnu</p>
+        <CardContent className="p-6 text-center">
+          <Bell className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Ingen notifikationer endnu</p>
         </CardContent>
       </Card>
     );
@@ -219,22 +219,22 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
               </div>
 
               <div className="flex items-start gap-3">
-                <Bell className={`h-5 w-5 mt-0.5 flex-shrink-0 ${read ? "text-muted-foreground" : "text-primary"}`} />
+                <Bell className={`h-4 w-4 mt-0.5 flex-shrink-0 ${read ? "text-muted-foreground" : "text-primary"}`} />
                 <div className="flex-1">
                   {notification.type === "announcement" ? (
                     <>
-                      <h3 className="font-semibold mb-1">{notification.title}</h3>
+                      <h3 className="text-sm font-medium mb-1">{notification.title}</h3>
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                     </>
                   ) : (
                     <>
-                      <h3 className="font-semibold mb-1">{notification.message}</h3>
+                      <h3 className="text-sm font-medium mb-1">{notification.message}</h3>
 
                       {notification.routines && (
                         <div className="mt-3 p-3 rounded-lg bg-background border">
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium">{notification.routines.title}</span>
+                              <span className="text-sm font-medium">{notification.routines.title}</span>
                               {notification.routines.priority > 0 && (
                                 <Badge variant="secondary" className="text-xs">
                                   Prioritet: {notification.routines.priority}

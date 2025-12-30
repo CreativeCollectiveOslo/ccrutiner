@@ -371,10 +371,10 @@ export default function EmployeeDashboard() {
             {mainTab === "notifications" ? (
               <NotificationsTab onMarkAsRead={() => setUnreadCount((prev) => Math.max(0, prev - 1))} />
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div className="text-center space-y-2">
-                  <h2 className="text-3xl">Velg din vakt</h2>
-                  <p className="text-muted-foreground">
+                  <h2 className="text-2xl">Velg din vakt</h2>
+                  <p className="text-sm text-muted-foreground">
                     Velg hvilken vakt du har i dag
                   </p>
                 </div>
@@ -452,11 +452,11 @@ export default function EmployeeDashboard() {
             )}
 
             {activeTab === "tasks" ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {routines.length === 0 ? (
                   <Card>
-                    <CardContent className="pt-6 text-center">
-                      <p className="text-muted-foreground">
+                    <CardContent className="p-6 text-center">
+                      <p className="text-sm text-muted-foreground">
                         Ingen rutiner for denne vakten ennå
                       </p>
                     </CardContent>
@@ -472,20 +472,20 @@ export default function EmployeeDashboard() {
                         }`}
                       >
                         <TaskCompletionAnimation isCompleted={isCompleted} />
-                        <CardContent className="pt-6">
-                          <div className="flex items-start gap-4">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
                             <div className={isCompleted ? "animate-check-bounce" : ""}>
                               <Checkbox
                                 id={routine.id}
                                 checked={isCompleted}
                                 onCheckedChange={() => toggleTaskCompletion(routine.id)}
-                                className="mt-1"
+                                className="mt-0.5"
                               />
                             </div>
-                            <div className="flex-1 space-y-2">
+                            <div className="flex-1 space-y-1">
                               <label
                                 htmlFor={routine.id}
-                                className={`font-medium cursor-pointer ${
+                                className={`text-sm font-medium cursor-pointer ${
                                   isCompleted ? "line-through" : ""
                                 }`}
                               >
@@ -510,10 +510,10 @@ export default function EmployeeDashboard() {
                 )}
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium">Administrer rutiner</h3>
+                    <h3 className="text-base font-medium">Administrer rutiner</h3>
                     <p className="text-sm text-muted-foreground">
                       {routines.length} rutiner totalt
                     </p>
