@@ -167,6 +167,7 @@ export type Database = {
           multimedia_url: string | null
           order_index: number | null
           priority: number | null
+          section_id: string | null
           shift_id: string
           title: string
           updated_at: string
@@ -178,6 +179,7 @@ export type Database = {
           multimedia_url?: string | null
           order_index?: number | null
           priority?: number | null
+          section_id?: string | null
           shift_id: string
           title: string
           updated_at?: string
@@ -189,13 +191,56 @@ export type Database = {
           multimedia_url?: string | null
           order_index?: number | null
           priority?: number | null
+          section_id?: string | null
           shift_id?: string
           title?: string
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "routines_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "routines_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sections: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          order_index: number | null
+          shift_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number | null
+          shift_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number | null
+          shift_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sections_shift_id_fkey"
             columns: ["shift_id"]
             isOneToOne: false
             referencedRelation: "shifts"
