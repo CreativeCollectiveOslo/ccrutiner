@@ -1,17 +1,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface InviteUserRequest {
-  email: string;
-  name?: string;
-  role: "admin" | "employee";
-}
+// Input validation schema
+const InviteUserSchema = z.object({
+  email: z.string().email("Invalid email format").max(255, "Email too long"),
+  name: z.string().max(255, "Name too long").optional(),
+  role: z.enum(["admin", "employee"], { errorMap: () => ({ message: "Invalid role" }) }),
+});
 
 // Norwegian word lists for generating memorable passwords
 const adjectives = [
@@ -82,26 +85,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, name, role }: InviteUserRequest = await req.json();
-
-    // Validate input
-    if (!email || !role) {
+    // Parse and validate input
+    const parseResult = InviteUserSchema.safeParse(await req.json());
+    
+    if (!parseResult.success) {
       return new Response(
-        JSON.stringify({ error: "Email and role are required" }),
+        JSON.stringify({ error: "Invalid input" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!["admin", "employee"].includes(role)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid role. Must be 'admin' or 'employee'" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { email, name, role } = parseResult.data;
 
     // Generate a memorable two-word password
     const generatedPassword = generatePassword();
-    console.log(`Generated password for ${email}: ${generatedPassword}`);
+    console.log(`Password generated for user invitation: ${email}`);
 
     // Create the user
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
