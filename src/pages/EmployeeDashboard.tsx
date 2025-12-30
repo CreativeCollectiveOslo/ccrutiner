@@ -7,12 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Plus, Trash2, Settings, Bell, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import * as LucideIcons from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { NotificationsTab } from "@/components/NotificationsTab";
 import logo from "@/assets/logo.png";
@@ -53,18 +49,10 @@ export default function EmployeeDashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
-  const [activeTab, setActiveTab] = useState<"tasks" | "admin">("tasks");
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
-  const [newRoutine, setNewRoutine] = useState({
-    title: "",
-    description: "",
-    priority: 0,
-  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,35 +62,10 @@ export default function EmployeeDashboard() {
     }
     if (user) {
       fetchShifts();
-      checkAdminStatus();
       fetchUnreadCount();
     }
   }, [user, authLoading, navigate]);
 
-  const checkAdminStatus = async () => {
-    if (!user) {
-      console.log("checkAdminStatus: No user found");
-      return;
-    }
-
-    console.log("checkAdminStatus: Checking for user", user.id);
-
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-
-    console.log("checkAdminStatus result:", { data, error });
-
-    if (!error && data) {
-      console.log("Setting isAdmin to true");
-      setIsAdmin(true);
-    } else {
-      console.log("User is not admin or error occurred");
-    }
-  };
 
   useEffect(() => {
     if (selectedShift) {
@@ -301,47 +264,6 @@ export default function EmployeeDashboard() {
     }
   };
 
-  const handleCreateRoutine = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedShift) {
-      toast.error("Velg en vakt først");
-      return;
-    }
-
-    const { error } = await supabase.from("routines").insert({
-      shift_id: selectedShift.id,
-      title: newRoutine.title,
-      description: newRoutine.description || null,
-      priority: newRoutine.priority,
-      order_index: routines.length,
-    });
-
-    if (error) {
-      toast.error("Kunne ikke opprette rutine");
-      console.error(error);
-    } else {
-      toast.success("Rutine opprettet!");
-      setDialogOpen(false);
-      setNewRoutine({ title: "", description: "", priority: 0 });
-      fetchRoutines();
-    }
-  };
-
-  const handleDeleteRoutine = async (id: string) => {
-    const { error } = await supabase
-      .from("routines")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast.error("Kunne ikke slette rutine");
-      console.error(error);
-    } else {
-      toast.success("Rutine slettet");
-      fetchRoutines();
-    }
-  };
 
   const renderIcon = (iconName: string, className?: string) => {
     const IconComponent = (LucideIcons as any)[iconName];
@@ -461,53 +383,104 @@ export default function EmployeeDashboard() {
               </p>
             </div>
 
-            {isAdmin && (
-              <div className="flex border-b border-border">
-                <button
-                  onClick={() => setActiveTab("tasks")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                    activeTab === "tasks"
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Mine oppgaver
-                  {activeTab === "tasks" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("admin")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                    activeTab === "admin"
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Administrer rutiner
-                  {activeTab === "admin" && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                  )}
-                </button>
-              </div>
-            )}
 
-            {activeTab === "tasks" ? (
-              <div className="space-y-6">
-                {routines.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-6 text-center">
-                      <p className="text-sm text-muted-foreground">
-                        Ingen rutiner for denne vakten ennå
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <>
-                    {/* Unsorted routines (no section) */}
-                    {getRoutinesBySection(null).length > 0 && (
-                      <div className="space-y-3">
-                        {getRoutinesBySection(null).map((routine) => {
+            <div className="space-y-6">
+              {routines.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Ingen rutiner for denne vakten ennå
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {/* Unsorted routines (no section) */}
+                  {getRoutinesBySection(null).length > 0 && (
+                    <div className="space-y-3">
+                      {getRoutinesBySection(null).map((routine) => {
+                        const isCompleted = completions.has(routine.id);
+                        const isExpanded = expandedDescriptions.has(routine.id);
+                        return (
+                          <Card
+                            key={routine.id}
+                            className={`relative transition-all ${
+                              isCompleted ? "opacity-60 animate-celebrate" : ""
+                            }`}
+                          >
+                            <TaskCompletionAnimation isCompleted={isCompleted} />
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <div className={isCompleted ? "animate-check-bounce" : ""}>
+                                  <Checkbox
+                                    id={routine.id}
+                                    checked={isCompleted}
+                                    onCheckedChange={() => toggleTaskCompletion(routine.id)}
+                                    className="mt-0.5"
+                                  />
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                  <label
+                                    htmlFor={routine.id}
+                                    className={`text-sm font-medium cursor-pointer ${
+                                      isCompleted ? "line-through" : ""
+                                    }`}
+                                  >
+                                    {routine.title}
+                                  </label>
+                                  {routine.description && (
+                                    <div>
+                                      <p
+                                        className={`text-sm text-muted-foreground ${
+                                          !isExpanded ? "line-clamp-3" : ""
+                                        }`}
+                                      >
+                                        {routine.description}
+                                      </p>
+                                      {routine.description.length > 150 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleDescription(routine.id)}
+                                          className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
+                                        >
+                                          {isExpanded ? (
+                                            <>
+                                              Vis mindre <ChevronUp className="h-3 w-3" />
+                                            </>
+                                          ) : (
+                                            <>
+                                              Vis mer <ChevronDown className="h-3 w-3" />
+                                            </>
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                  {routine.priority > 0 && (
+                                    <Badge variant="secondary">
+                                      Prioritet: {routine.priority}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Sections with their routines */}
+                  {sections.map((section) => {
+                    const sectionRoutines = getRoutinesBySection(section.id);
+                    if (sectionRoutines.length === 0) return null;
+                    
+                    return (
+                      <div key={section.id} className="space-y-3">
+                        <h3 className="text-base font-medium text-foreground border-b pb-2">
+                          {section.name}
+                        </h3>
+                        {sectionRoutines.map((routine) => {
                           const isCompleted = completions.has(routine.id);
                           const isExpanded = expandedDescriptions.has(routine.id);
                           return (
@@ -577,225 +550,14 @@ export default function EmployeeDashboard() {
                           );
                         })}
                       </div>
-                    )}
-
-                    {/* Sections with their routines */}
-                    {sections.map((section) => {
-                      const sectionRoutines = getRoutinesBySection(section.id);
-                      if (sectionRoutines.length === 0) return null;
-                      
-                      return (
-                        <div key={section.id} className="space-y-3">
-                          <h3 className="text-base font-medium text-foreground border-b pb-2">
-                            {section.name}
-                          </h3>
-                          {sectionRoutines.map((routine) => {
-                            const isCompleted = completions.has(routine.id);
-                            const isExpanded = expandedDescriptions.has(routine.id);
-                            return (
-                              <Card
-                                key={routine.id}
-                                className={`relative transition-all ${
-                                  isCompleted ? "opacity-60 animate-celebrate" : ""
-                                }`}
-                              >
-                                <TaskCompletionAnimation isCompleted={isCompleted} />
-                                <CardContent className="p-4">
-                                  <div className="flex items-start gap-3">
-                                    <div className={isCompleted ? "animate-check-bounce" : ""}>
-                                      <Checkbox
-                                        id={routine.id}
-                                        checked={isCompleted}
-                                        onCheckedChange={() => toggleTaskCompletion(routine.id)}
-                                        className="mt-0.5"
-                                      />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                      <label
-                                        htmlFor={routine.id}
-                                        className={`text-sm font-medium cursor-pointer ${
-                                          isCompleted ? "line-through" : ""
-                                        }`}
-                                      >
-                                        {routine.title}
-                                      </label>
-                                      {routine.description && (
-                                        <div>
-                                          <p
-                                            className={`text-sm text-muted-foreground ${
-                                              !isExpanded ? "line-clamp-3" : ""
-                                            }`}
-                                          >
-                                            {routine.description}
-                                          </p>
-                                          {routine.description.length > 150 && (
-                                            <button
-                                              type="button"
-                                              onClick={() => toggleDescription(routine.id)}
-                                              className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
-                                            >
-                                              {isExpanded ? (
-                                                <>
-                                                  Vis mindre <ChevronUp className="h-3 w-3" />
-                                                </>
-                                              ) : (
-                                                <>
-                                                  Vis mer <ChevronDown className="h-3 w-3" />
-                                                </>
-                                              )}
-                                            </button>
-                                          )}
-                                        </div>
-                                      )}
-                                      {routine.priority > 0 && (
-                                        <Badge variant="secondary">
-                                          Prioritet: {routine.priority}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-medium">Administrer rutiner</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {routines.length} rutiner totalt
-                    </p>
-                  </div>
-
-                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ny Rutine
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <form onSubmit={handleCreateRoutine}>
-                        <DialogHeader>
-                          <DialogTitle>Opprett ny rutine</DialogTitle>
-                          <DialogDescription>
-                            Legg til en ny rutine til {selectedShift.name}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="title">Tittel *</Label>
-                            <Input
-                              id="title"
-                              value={newRoutine.title}
-                              onChange={(e) =>
-                                setNewRoutine({ ...newRoutine, title: e.target.value })
-                              }
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="description">Beskrivelse</Label>
-                            <Textarea
-                              id="description"
-                              value={newRoutine.description}
-                              onChange={(e) =>
-                                setNewRoutine({
-                                  ...newRoutine,
-                                  description: e.target.value,
-                                })
-                              }
-                              rows={3}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="priority">Prioritet</Label>
-                            <Input
-                              id="priority"
-                              type="number"
-                              value={newRoutine.priority}
-                              onChange={(e) =>
-                                setNewRoutine({
-                                  ...newRoutine,
-                                  priority: parseInt(e.target.value) || 0,
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button type="submit">Opprett rutine</Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-
-                <div className="space-y-3">
-                  {routines.length === 0 ? (
-                    <Card>
-                      <CardContent className="pt-6 text-center">
-                        <p className="text-muted-foreground">
-                          Ingen rutiner ennå. Opprett den første!
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    routines.map((routine) => (
-                      <Card key={routine.id}>
-                        <CardContent className="pt-6">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-medium">{routine.title}</h3>
-                                {routine.priority > 0 && (
-                                  <Badge variant="secondary">
-                                    Prioritet: {routine.priority}
-                                  </Badge>
-                                )}
-                              </div>
-                              {routine.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {routine.description}
-                                </p>
-                              )}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteRoutine(routine.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+                    );
+                  })}
+                </>
+              )}
+            </div>
           </div>
         )}
       </main>
-
-      {isAdmin && (
-        <footer className="fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur">
-          <div className="container mx-auto px-4 py-3 flex justify-center">
-            <Button variant="outline" onClick={() => navigate("/admin")}>
-              <Settings className="h-4 w-4 mr-2" />
-              Admin Dashboard
-            </Button>
-          </div>
-        </footer>
-      )}
     </div>
   );
 }
