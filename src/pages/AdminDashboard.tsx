@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { LogOut, Plus, Trash2, Edit2, Loader2, ArrowLeft, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -61,12 +62,14 @@ export default function AdminDashboard() {
     title: "",
     description: "",
     priority: 0,
+    sendNotification: false,
   });
 
   const [editRoutine, setEditRoutine] = useState({
     title: "",
     description: "",
     priority: 0,
+    sendNotification: false,
   });
 
   useEffect(() => {
@@ -157,21 +160,31 @@ export default function AdminDashboard() {
       return;
     }
 
-    const { error } = await supabase.from("routines").insert({
+    const { data: routineData, error } = await supabase.from("routines").insert({
       shift_id: selectedShift,
       title: newRoutine.title,
       description: newRoutine.description || null,
       priority: newRoutine.priority,
       order_index: routines.length,
-    });
+    }).select().single();
 
     if (error) {
       toast.error("Kunne ikke opprette rutine");
       console.error(error);
     } else {
+      // Create notification if switch is enabled
+      if (newRoutine.sendNotification && routineData) {
+        const shiftName = shifts.find(s => s.id === selectedShift)?.name || "";
+        await supabase.from("routine_notifications").insert({
+          routine_id: routineData.id,
+          shift_id: selectedShift,
+          message: `Ny rutine tilføjet til ${shiftName}: "${newRoutine.title}"`,
+        });
+      }
+      
       toast.success("Rutine opprettet!");
       setDialogOpen(false);
-      setNewRoutine({ title: "", description: "", priority: 0 });
+      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false });
       fetchRoutines();
     }
   };
@@ -197,6 +210,7 @@ export default function AdminDashboard() {
       title: routine.title,
       description: routine.description || "",
       priority: routine.priority,
+      sendNotification: false,
     });
     setEditDialogOpen(true);
   };
@@ -219,6 +233,16 @@ export default function AdminDashboard() {
       toast.error("Kunne ikke opdatere rutine");
       console.error(error);
     } else {
+      // Create notification if switch is enabled
+      if (editRoutine.sendNotification) {
+        const shiftName = shifts.find(s => s.id === selectedShift)?.name || "";
+        await supabase.from("routine_notifications").insert({
+          routine_id: editingRoutine.id,
+          shift_id: selectedShift,
+          message: `Rutine opdateret i ${shiftName}: "${editRoutine.title}"`,
+        });
+      }
+      
       toast.success("Rutine opdateret!");
       setEditDialogOpen(false);
       setEditingRoutine(null);
@@ -460,6 +484,21 @@ export default function AdminDashboard() {
                           }
                         />
                       </div>
+                      <div className="flex items-center justify-between py-2">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="send-notification">Send notifikation</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Notificér medarbejdere om denne nye rutine
+                          </p>
+                        </div>
+                        <Switch
+                          id="send-notification"
+                          checked={newRoutine.sendNotification}
+                          onCheckedChange={(checked) =>
+                            setNewRoutine({ ...newRoutine, sendNotification: checked })
+                          }
+                        />
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button type="submit">Opprett rutine</Button>
@@ -568,6 +607,21 @@ export default function AdminDashboard() {
                             ...editRoutine,
                             priority: parseInt(e.target.value) || 0,
                           })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between py-2">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="edit-send-notification">Send notifikation</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Notificér medarbejdere om denne ændring
+                        </p>
+                      </div>
+                      <Switch
+                        id="edit-send-notification"
+                        checked={editRoutine.sendNotification}
+                        onCheckedChange={(checked) =>
+                          setEditRoutine({ ...editRoutine, sendNotification: checked })
                         }
                       />
                     </div>

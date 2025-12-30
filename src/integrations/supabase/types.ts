@@ -91,6 +91,74 @@ export type Database = {
         }
         Relationships: []
       }
+      routine_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          routine_id: string
+          shift_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          routine_id: string
+          shift_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          routine_id?: string
+          shift_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routine_notifications_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routine_notifications_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routine_notifications_read: {
+        Row: {
+          id: string
+          notification_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          notification_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          notification_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routine_notifications_read_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "routine_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       routines: {
         Row: {
           created_at: string
