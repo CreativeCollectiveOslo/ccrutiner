@@ -96,59 +96,48 @@ export function RoutineNotificationBanner() {
   }
 
   return (
-    <div className="space-y-3 mb-6">
+    <div className="space-y-4 mb-6">
       {notifications.map((notification) => (
         <Card key={notification.id} className="border-primary/50 bg-primary/5">
-          <CardContent className="pt-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-primary/10 p-2 shrink-0">
-                  <Bell className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="font-medium text-sm">{notification.message}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(notification.created_at).toLocaleDateString("da-DK", {
-                      day: "numeric",
-                      month: "long",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-
-              {notification.routines && (
-                <div className="ml-11 p-3 rounded-lg bg-background border">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold">{notification.routines.title}</h4>
-                      {notification.routines.priority > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          Prioritet: {notification.routines.priority}
-                        </Badge>
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4 mb-4">
+              <Bell className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-semibold mb-1">{notification.message}</h3>
+                
+                {notification.routines && (
+                  <div className="mt-3 p-3 rounded-lg bg-background border">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{notification.routines.title}</span>
+                        {notification.routines.priority > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            Prioritet: {notification.routines.priority}
+                          </Badge>
+                        )}
+                      </div>
+                      {notification.routines.description && (
+                        <p className="text-sm text-muted-foreground">
+                          {notification.routines.description}
+                        </p>
                       )}
                     </div>
-                    {notification.routines.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {notification.routines.description}
-                      </p>
-                    )}
                   </div>
-                </div>
-              )}
-
-              <div className="ml-11">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => markAsRead(notification.id)}
-                  className="gap-2"
-                >
-                  <Check className="h-4 w-4" />
-                  Læst
-                </Button>
+                )}
+                
+                <p className="text-xs text-muted-foreground mt-2">
+                  {new Date(notification.created_at).toLocaleDateString("da-DK")}
+                </p>
               </div>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => markAsRead(notification.id)}
+              >
+                Læst
+              </Button>
             </div>
           </CardContent>
         </Card>
