@@ -19,6 +19,7 @@ interface Announcement {
   title: string;
   message: string;
   created_at: string;
+  created_by: string;
   type: "announcement";
 }
 
@@ -28,21 +29,34 @@ interface RoutineNotification {
   shift_id: string;
   message: string;
   created_at: string;
+  created_by: string | null;
   routines: Routine | null;
   type: "routine";
 }
 
 type NotificationItem = (Announcement & { type: "announcement" }) | (RoutineNotification & { type: "routine" });
 
+interface UserProfile {
+  id: string;
+  name: string;
+}
+
 interface UnreadNotificationsBannerProps {
   notifications: NotificationItem[];
+  profiles: UserProfile[];
   onMarkAsRead: (notification: NotificationItem) => void;
 }
 
-export function UnreadNotificationsBanner({ notifications, onMarkAsRead }: UnreadNotificationsBannerProps) {
+export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRead }: UnreadNotificationsBannerProps) {
   const { user } = useAuth();
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const [markingAsRead, setMarkingAsRead] = useState<Set<string>>(new Set());
+
+  const getCreatorName = (createdBy: string | null) => {
+    if (!createdBy) return null;
+    const creator = profiles.find(p => p.id === createdBy);
+    return creator?.name || null;
+  };
 
   const toggleExpanded = (id: string) => {
     setExpandedNotifications((prev) => {
@@ -223,6 +237,12 @@ export function UnreadNotificationsBanner({ notifications, onMarkAsRead }: Unrea
                       month: "long",
                       year: "numeric",
                     })}
+                    {notification.type === "announcement" && notification.created_by && getCreatorName(notification.created_by) && (
+                      <> · Af {getCreatorName(notification.created_by)}</>
+                    )}
+                    {notification.type === "routine" && notification.created_by && getCreatorName(notification.created_by) && (
+                      <> · Af {getCreatorName(notification.created_by)}</>
+                    )}
                   </p>
                 </div>
               </div>

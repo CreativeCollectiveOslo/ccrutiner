@@ -19,6 +19,7 @@ interface Announcement {
   title: string;
   message: string;
   created_at: string;
+  created_by: string;
   type: "announcement";
 }
 
@@ -28,11 +29,17 @@ interface RoutineNotification {
   shift_id: string;
   message: string;
   created_at: string;
+  created_by: string | null;
   routines: Routine | null;
   type: "routine";
 }
 
 type NotificationItem = (Announcement & { type: "announcement" }) | (RoutineNotification & { type: "routine" });
+
+interface UserProfile {
+  id: string;
+  name: string;
+}
 
 interface NotificationsTabProps {
   onMarkAsRead?: () => void;
@@ -41,10 +48,17 @@ interface NotificationsTabProps {
 export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [readAnnouncementIds, setReadAnnouncementIds] = useState<Set<string>>(new Set());
   const [readRoutineNotificationIds, setReadRoutineNotificationIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
+
+  const getCreatorName = (createdBy: string | null) => {
+    if (!createdBy) return null;
+    const creator = profiles.find(p => p.id === createdBy);
+    return creator?.name || null;
+  };
 
   useEffect(() => {
     if (user) {
@@ -55,8 +69,19 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
   useEffect(() => {
     if (user && userCreatedAt) {
       fetchAllNotifications();
+      fetchProfiles();
     }
   }, [user, userCreatedAt]);
+
+  const fetchProfiles = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, name");
+
+    if (!error && data) {
+      setProfiles(data);
+    }
+  };
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -264,6 +289,12 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
                       month: "long",
                       year: "numeric",
                     })}
+                    {notification.type === "announcement" && notification.created_by && getCreatorName(notification.created_by) && (
+                      <> · Af {getCreatorName(notification.created_by)}</>
+                    )}
+                    {notification.type === "routine" && notification.created_by && getCreatorName(notification.created_by) && (
+                      <> · Af {getCreatorName(notification.created_by)}</>
+                    )}
                   </p>
                 </div>
               </div>
