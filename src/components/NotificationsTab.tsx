@@ -205,38 +205,30 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
             key={`${notification.type}-${notification.id}`}
             className={`border-primary/50 transition-opacity ${read ? "opacity-60" : "bg-primary/5"}`}
           >
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4 mb-4">
+            <CardContent className="p-4">
+              {/* Chips above header */}
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="outline" className="text-xs">
+                  {notification.type === "announcement" ? "Opdatering" : "Rutine"}
+                </Badge>
+                {read && (
+                  <Badge variant="secondary" className="text-xs">
+                    Læst
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex items-start gap-3">
                 <Bell className={`h-5 w-5 mt-0.5 flex-shrink-0 ${read ? "text-muted-foreground" : "text-primary"}`} />
                 <div className="flex-1">
                   {notification.type === "announcement" ? (
                     <>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{notification.title}</h3>
-                        <Badge variant="outline" className="text-xs">
-                          Opdatering
-                        </Badge>
-                        {read && (
-                          <Badge variant="secondary" className="text-xs">
-                            Læst
-                          </Badge>
-                        )}
-                      </div>
+                      <h3 className="font-semibold mb-1">{notification.title}</h3>
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{notification.message}</h3>
-                        <Badge variant="outline" className="text-xs">
-                          Rutine
-                        </Badge>
-                        {read && (
-                          <Badge variant="secondary" className="text-xs">
-                            Læst
-                          </Badge>
-                        )}
-                      </div>
+                      <h3 className="font-semibold mb-1">{notification.message}</h3>
 
                       {notification.routines && (
                         <div className="mt-3 p-3 rounded-lg bg-background border">
@@ -260,7 +252,7 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
                     </>
                   )}
 
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-muted-foreground mt-3">
                     {new Date(notification.created_at).toLocaleDateString("da-DK", {
                       day: "numeric",
                       month: "long",
@@ -271,7 +263,7 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
               </div>
 
               {!read && (
-                <div className="flex justify-end">
+                <div className="flex justify-end mt-4">
                   <Button
                     variant="default"
                     size="sm"
