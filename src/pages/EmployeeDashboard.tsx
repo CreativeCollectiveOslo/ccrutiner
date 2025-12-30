@@ -54,6 +54,7 @@ export default function EmployeeDashboard() {
   const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
+  const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function EmployeeDashboard() {
       fetchShifts();
       checkAdminStatus();
       fetchUnreadCount();
+      fetchAllShiftProgress();
     }
   }, [user, authLoading, navigate]);
 
@@ -185,6 +187,51 @@ export default function EmployeeDashboard() {
     setLoading(false);
   };
 
+  const fetchAllShiftProgress = async () => {
+    if (!user) return;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // Fetch all routines grouped by shift
+    const { data: allRoutines, error: routinesError } = await supabase
+      .from("routines")
+      .select("id, shift_id");
+
+    if (routinesError) {
+      console.error(routinesError);
+      return;
+    }
+
+    // Fetch today's completions for the user
+    const { data: todayCompletions, error: completionsError } = await supabase
+      .from("task_completions")
+      .select("routine_id")
+      .eq("user_id", user.id)
+      .eq("shift_date", today);
+
+    if (completionsError) {
+      console.error(completionsError);
+      return;
+    }
+
+    const completedRoutineIds = new Set(todayCompletions?.map((c) => c.routine_id) || []);
+
+    // Calculate progress per shift
+    const progress: Record<string, { completed: number; total: number }> = {};
+    
+    allRoutines?.forEach((routine) => {
+      if (!progress[routine.shift_id]) {
+        progress[routine.shift_id] = { completed: 0, total: 0 };
+      }
+      progress[routine.shift_id].total += 1;
+      if (completedRoutineIds.has(routine.id)) {
+        progress[routine.shift_id].completed += 1;
+      }
+    });
+
+    setShiftProgress(progress);
+  };
+
   const fetchRoutines = async () => {
     if (!selectedShift) return;
 
@@ -237,7 +284,7 @@ export default function EmployeeDashboard() {
   };
 
   const toggleTaskCompletion = async (routineId: string) => {
-    if (!user) return;
+    if (!user || !selectedShift) return;
 
     const isCompleted = completions.has(routineId);
     const today = new Date().toISOString().split("T")[0];
@@ -257,6 +304,15 @@ export default function EmployeeDashboard() {
         const newCompletions = new Set(completions);
         newCompletions.delete(routineId);
         setCompletions(newCompletions);
+        
+        // Update shift progress
+        setShiftProgress((prev) => ({
+          ...prev,
+          [selectedShift.id]: {
+            ...prev[selectedShift.id],
+            completed: Math.max(0, (prev[selectedShift.id]?.completed || 1) - 1),
+          },
+        }));
       }
     } else {
       const { error } = await supabase.from("task_completions").insert({
@@ -272,6 +328,15 @@ export default function EmployeeDashboard() {
         const newCompletions = new Set(completions);
         newCompletions.add(routineId);
         setCompletions(newCompletions);
+        
+        // Update shift progress
+        setShiftProgress((prev) => ({
+          ...prev,
+          [selectedShift.id]: {
+            ...prev[selectedShift.id],
+            completed: (prev[selectedShift.id]?.completed || 0) + 1,
+          },
+        }));
         
         // Show celebration toast
         toast.success("Bra jobba! 🎉", {
@@ -361,6 +426,10 @@ export default function EmployeeDashboard() {
 
                 <div className="grid gap-4 md:grid-cols-3">
                   {shifts.map((shift) => {
+                    const progress = shiftProgress[shift.id];
+                    const hasProgress = progress && progress.total > 0;
+                    const isComplete = hasProgress && progress.completed === progress.total;
+                    
                     return (
                       <Card
                         key={shift.id}
@@ -375,6 +444,13 @@ export default function EmployeeDashboard() {
                             {renderIcon(shift.icon || "Sun", "h-8 w-8 text-white")}
                           </div>
                           <CardTitle>{shift.name}</CardTitle>
+                          {hasProgress && (
+                            <CardDescription className="mt-2">
+                              <span className={isComplete ? "text-green-600 font-medium" : ""}>
+                                {progress.completed} / {progress.total} oppgaver
+                              </span>
+                            </CardDescription>
+                          )}
                         </CardHeader>
                       </Card>
                     );
