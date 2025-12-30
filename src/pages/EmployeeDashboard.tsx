@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Plus, Trash2, Settings } from "lucide-react";
+import { LogOut, Loader2, Plus, Trash2, Settings, Bell, Calendar } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { RoutineNotificationBanner } from "@/components/RoutineNotificationBanner";
+import { NotificationsTab } from "@/components/NotificationsTab";
 import logo from "@/assets/logo.png";
 
 interface Shift {
@@ -48,6 +49,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
   const [activeTab, setActiveTab] = useState<"tasks" | "admin">("tasks");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newRoutine, setNewRoutine] = useState({
@@ -286,40 +288,64 @@ export default function EmployeeDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl pb-20">
-        <AnnouncementBanner />
-        <RoutineNotificationBanner />
-        {!selectedShift ? (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl">Velg din vakt</h2>
-              <p className="text-muted-foreground">
-                Velg hvilken vakt du har i dag
-              </p>
-            </div>
+        {/* Main tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={mainTab === "shifts" ? "default" : "outline"}
+            onClick={() => setMainTab("shifts")}
+            className="gap-2"
+          >
+            <Calendar className="h-4 w-4" />
+            Vakter
+          </Button>
+          <Button
+            variant={mainTab === "notifications" ? "default" : "outline"}
+            onClick={() => setMainTab("notifications")}
+            className="gap-2"
+          >
+            <Bell className="h-4 w-4" />
+            Notifikationer
+          </Button>
+        </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              {shifts.map((shift) => {
-                return (
-                  <Card
-                    key={shift.id}
-                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
-                    onClick={() => setSelectedShift(shift)}
-                  >
-                    <CardHeader className="text-center">
-                      <div
-                        className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                        style={{ backgroundColor: shift.color_code }}
-                      >
-                        {renderIcon(shift.icon || "Sun", "h-8 w-8 text-white")}
-                      </div>
-                      <CardTitle>{shift.name}</CardTitle>
-                    </CardHeader>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
+        {mainTab === "notifications" ? (
+          <NotificationsTab />
         ) : (
+          <>
+            <AnnouncementBanner />
+            <RoutineNotificationBanner />
+            {!selectedShift ? (
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <h2 className="text-3xl">Velg din vakt</h2>
+                  <p className="text-muted-foreground">
+                    Velg hvilken vakt du har i dag
+                  </p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  {shifts.map((shift) => {
+                    return (
+                      <Card
+                        key={shift.id}
+                        className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                        onClick={() => setSelectedShift(shift)}
+                      >
+                        <CardHeader className="text-center">
+                          <div
+                            className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                            style={{ backgroundColor: shift.color_code }}
+                          >
+                            {renderIcon(shift.icon || "Sun", "h-8 w-8 text-white")}
+                          </div>
+                          <CardTitle>{shift.name}</CardTitle>
+                        </CardHeader>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -530,6 +556,8 @@ export default function EmployeeDashboard() {
             )}
           </div>
         )}
+        </>
+      )}
       </main>
 
       {isAdmin && (
