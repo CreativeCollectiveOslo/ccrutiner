@@ -1,211 +1,248 @@
 
-# Design Oprydning
+# Global Søgefunktion til Dashboard
 
 ## Oversigt
-En gennemgående gennemgang af hele appen for at sikre konsistent spacing, klar hierarkisk struktur og minimale tekststile. Dette vil give en mere professionel og samlet brugeroplevelse.
+Tilføjer en søgefunktion tilgængelig fra forsiden af dashboardet, hvor brugere kan søge på tværs af:
+- **Rutiner** (alle vagter)
+- **Notifikationer** (announcements og routine notifications)
+- **Opslagstavle** (bulletin posts)
+
+Når man klikker på et søgeresultat, bliver man transporteret direkte til det sted, hvor resultatet blev fundet.
 
 ---
 
-## Identificerede problemer
+## Hvad der ændres for dig
 
-### 1. Inkonsistent spacing
-- **Headers**: Varierende padding (`py-4`, `py-8`) på forskellige sider
-- **Cards**: Blandet brug af `p-3`, `p-4`, `p-6`, `pt-6`
-- **Sektioner**: Nogle bruger `space-y-4`, andre `space-y-6`
-- **Main container**: Varierer mellem `py-8` og andre værdier
+### Ny funktionalitet
+- En søgeknap i headeren (forstørrelsesglas-ikon)
+- Når du klikker, åbnes en søgedialog med et tekstfelt
+- Resultater vises live mens du skriver
+- Resultater er grupperet efter type (Rutiner, Notifikationer, Opslagstavle)
+- Klik på et resultat fører dig direkte til det:
+  - Rutine → Åbner den pågældende vagt og viser rutinen
+  - Notifikation → Skifter til notifikations-fanen
+  - Opslagstavle → Skifter til opslagstavle-fanen
 
-### 2. Inkonsistent teksthierarki
-- **Overskrifter**: Blanding af `text-xl`, `text-2xl` for samme niveau
-- **Labels/descriptions**: Inkonsistent brug af `text-sm`, `text-xs`
-- **Font-weight**: Blanding af `font-medium`, `font-semibold` for samme type elementer
-
-### 3. Inkonsistente komponentstile
-- **Tab-styling**: Admin-tabs og Employee-tabs har forskellig styling
-- **Kort-indhold**: Forskellige CardContent padding-værdier
-- **Knapper**: Inkonsistent størrelse og placering
-
----
-
-## Løsningsplan
-
-### 1. Standardiseret spacing-system
-
-**Header (alle sider):**
-- Container: `px-4 py-4`
-- Logo + titel gap: `gap-3`
-
-**Main content:**
-- Container: `px-4 py-6` (mobil) / `py-8` (desktop) 
-- Section spacing: `space-y-6` (konsistent)
-- Card spacing i lister: `space-y-4`
-
-**Cards:**
-- CardHeader: standard (beholder shadcn default)
-- CardContent: `p-4` som standard
-- Kompakte kort (rutiner/posts): `p-4`
-
-### 2. Standardiseret teksthierarki
-
-**Niveau 1 - Sidetitler:**
-- `text-xl` (h1 i header)
-
-**Niveau 2 - Sektionsoverskrifter:**
-- `text-lg` eller `text-xl` for CardTitle
-- Ingen font-weight override (bruger font-display fra design system)
-
-**Niveau 3 - Korttitler/labels:**
-- `text-sm font-medium`
-
-**Niveau 4 - Body tekst:**
-- `text-sm` for normal tekst
-- `text-sm text-muted-foreground` for beskrivelser
-
-**Niveau 5 - Metadata:**
-- `text-xs text-muted-foreground`
-
-### 3. Konsistente tabs
-
-Ensartet tab-styling på tværs af Admin og Employee dashboards:
-- Desktop: `px-4 py-2 text-sm font-medium`
-- Mobil: `flex-1 px-2 py-3 text-xs` med ikoner
+### Brugeroplevelse
+- Tryk på søgeknappen i headeren
+- Skriv dit søgeord (f.eks. "klud")
+- Se grupperede resultater med matchende tekst fremhævet
+- Klik på resultatet for at blive ført til det
 
 ---
 
-## Filer der skal opdateres
+## Tekniske detaljer
 
-### EmployeeDashboard.tsx
-- Standardiser main padding til `py-6`
-- Ensret sektionsoverskrifter til `text-lg`
-- Fjern inkonsistente `space-y-2` til fordel for `space-y-4`
-- Standardiser "Tilbake" knap styling
+### 1. Ny komponent: SearchDialog.tsx
 
-### AdminDashboard.tsx
-- Matcher header styling med EmployeeDashboard
-- Ensret tab-styling med employee version
-- Standardiser CardContent padding
+Opretter `src/components/SearchDialog.tsx` der håndterer:
 
-### BulletinBoard.tsx
-- Ensret CardContent til `p-4` (allerede gjort)
-- Standardiser empty state padding til `py-12` og centered tekst
+**Props:**
+- `open: boolean` - om dialogen er åben
+- `onOpenChange: (open: boolean) => void` - callback ved åbning/lukning
+- `onNavigateToShift: (shiftId: string, routineId?: string) => void` - navigation til vagt
+- `onNavigateToNotifications: () => void` - navigation til notifikationer
+- `onNavigateToBulletin: () => void` - navigation til opslagstavle
 
-### NotificationsTab.tsx
-- Standardiser CardContent til `p-4`
-- Ensret badge styling
-- Konsistent metadata format
+**Funktionalitet:**
+- Inputfelt til søgetekst med debounce (300ms)
+- Søgning på tværs af alle datakilder
+- Gruppering af resultater efter type
+- Fremhævning af matchende tekst
+- Keyboard navigation (pil op/ned, Enter)
 
-### UnreadNotificationsBanner.tsx
-- Matcher NotificationsTab styling
-- Ensret spacing
+**Datakilder der søges i:**
+1. `routines` - title og description
+2. `announcements` - title og message  
+3. `routine_notifications` - message
+4. `bulletin_posts` - message
 
-### Auth.tsx
-- Allerede velstruktureret, mindre justeringer
+**Resultat-struktur:**
+```typescript
+interface SearchResult {
+  id: string;
+  type: 'routine' | 'notification' | 'bulletin';
+  title: string;
+  description?: string;
+  context?: string; // f.eks. vagtens navn
+  shiftId?: string;
+  routineId?: string;
+}
+```
 
-### SectionManager.tsx
-- Standardiser CardContent padding
-- Ensret overskrift hierarki
+### 2. UI-struktur for SearchDialog
 
-### AnnouncementManager.tsx
-- Standardiser CardContent padding (ændre `pt-6` til `p-4`)
-- Ensret overskrift hierarki
+```text
++------------------------------------------+
+|  [X]                                     |
+|  +--------------------------------------+|
+|  | [Søgeikon] Søg efter rutiner...      ||
+|  +--------------------------------------+|
+|                                          |
+|  RUTINER                                 |
+|  +--------------------------------------+|
+|  | Rengør med klud                       |
+|  | Åbne vagt                             |
+|  +--------------------------------------+|
+|  +--------------------------------------+|
+|  | Tør støv af med klud                  |
+|  | Lukke vagt                            |
+|  +--------------------------------------+|
+|                                          |
+|  NOTIFIKATIONER                          |
+|  +--------------------------------------+|
+|  | Husk at bruge ren klud hver dag       |
+|  | 15. januar 2026                       |
+|  +--------------------------------------+|
+|                                          |
+|  OPSLAGSTAVLE                            |
+|  +--------------------------------------+|
+|  | Vi har fået nye klude på lager        |
+|  | Anna · 10. januar 2026                |
+|  +--------------------------------------+|
++------------------------------------------+
+```
 
----
+Empty state (ingen resultater):
+```text
++------------------------------------------+
+|           [Søgeikon]                     |
+|     Ingen resultater fundet              |
+|   Prøv et andet søgeord                  |
++------------------------------------------+
+```
 
-## Specifikke ændringer
+### 3. Opdateringer til EmployeeDashboard.tsx
 
-### EmployeeDashboard.tsx
+**Nye imports:**
+- `Search` fra lucide-react
+- `SearchDialog` komponent
 
-1. **Main container** (linje 480):
-   - Ændre `py-8` til `py-6` for bedre mobil spacing
+**Nye state variabler:**
+- `searchOpen: boolean` - om søgedialog er åben
+- `highlightedRoutineId: string | null` - for at highlighte specifik rutine efter navigation
 
-2. **Vagt-valg sektion** (linje 547-552):
-   - Ændre `text-2xl` til `text-xl` for konsistens
-   - Behold `text-sm text-muted-foreground` for undertekst
+**Header ændringer:**
+- Tilføj søgeknap ved siden af log-ud knappen
+- Søgeknappen åbner SearchDialog
 
-3. **Vagt-detaljer header** (linje 599-602):
-   - Ændre `text-2xl` til `text-xl`
-   - Grupper wake-lock og clear-button tættere sammen
+**Navigation callbacks:**
+- `handleSearchNavigateToShift(shiftId, routineId)`:
+  - Sætter `selectedShift` til den valgte vagt
+  - Sætter `highlightedRoutineId` for at scrolle til og highlighte rutinen
+  - Lukker søgedialog
+- `handleSearchNavigateToNotifications()`:
+  - Sætter `mainTab` til "notifications"
+  - Lukker søgedialog
+- `handleSearchNavigateToBulletin()`:
+  - Sætter `mainTab` til "bulletin"
+  - Lukker søgedialog
 
-4. **Sektions-overskrifter** (linje 737):
-   - Ændre `text-base font-medium` til `text-sm font-semibold uppercase tracking-wide text-muted-foreground` for klarere hierarki
+**Rutine highlighting:**
+- Når en rutine matches via søgning, scroll til den og giv den en kort highlight-animation
+- Fjern highlight efter 2 sekunder
 
-5. **Rutine-kort**:
-   - Behold `p-4` (allerede korrekt)
-   - Sørg for konsistent `space-y-1` i indholdet
+### 4. Søgelogik i SearchDialog
 
-### AdminDashboard.tsx
+**Søgning:**
+```typescript
+const search = async (query: string) => {
+  if (query.length < 2) {
+    setResults([]);
+    return;
+  }
+  
+  const lowerQuery = query.toLowerCase();
+  
+  // Søg i rutiner (med vagt-info)
+  const { data: routinesData } = await supabase
+    .from('routines')
+    .select('id, title, description, shift_id, shifts(name)')
+    .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+  
+  // Søg i announcements
+  const { data: announcementsData } = await supabase
+    .from('announcements')
+    .select('id, title, message, created_at')
+    .or(`title.ilike.%${query}%,message.ilike.%${query}%`);
+  
+  // Søg i routine notifications
+  const { data: routineNotifsData } = await supabase
+    .from('routine_notifications')
+    .select('id, message, created_at')
+    .ilike('message', `%${query}%`);
+  
+  // Søg i bulletin posts
+  const { data: bulletinData } = await supabase
+    .from('bulletin_posts')
+    .select('id, message, created_at, user_id')
+    .ilike('message', `%${query}%`);
+  
+  // Kombiner og formater resultater
+  // ...
+};
+```
 
-1. **Tab-styling** (linje 308-348):
-   - Tilføj responsive klasser som i EmployeeDashboard
-   - `flex-1` på hver tab for bedre mobil
+### 5. Debounce implementation
 
-2. **Bruger-kort** (linje 426-472):
-   - Ændre `p-4` til konsistent padding
-   - Allerede godt struktureret
+```typescript
+const [searchQuery, setSearchQuery] = useState('');
+const [debouncedQuery, setDebouncedQuery] = useState('');
 
-3. **CardContent** (linje 378):
-   - Tilføj eksplicit `p-4` for konsistens
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedQuery(searchQuery);
+  }, 300);
+  return () => clearTimeout(timer);
+}, [searchQuery]);
 
-### BulletinBoard.tsx
+useEffect(() => {
+  if (debouncedQuery) {
+    search(debouncedQuery);
+  }
+}, [debouncedQuery]);
+```
 
-1. **Post-kort** (linje 217-218):
-   - Allerede `p-4` - korrekt
+### 6. Tekst-highlighting
 
-2. **Empty state** (linje 205-213):
-   - Ændre `p-12` til `py-12 px-4` for responsivitet
-
-### NotificationsTab.tsx
-
-1. **Notification kort** (linje 239):
-   - Allerede `p-4` - korrekt
-
-2. **Empty state** (linje 221-226):
-   - Ændre `p-6` til `py-12` for at matche BulletinBoard
-
-### AnnouncementManager.tsx
-
-1. **Announcement kort** (linje 379):
-   - Ændre `pt-6` til `p-4` for konsistens
-
-2. **Routine notification kort** (linje 457):
-   - Ændre `pt-6` til `p-4` for konsistens
+For at fremhæve matchende tekst:
+```typescript
+const highlightMatch = (text: string, query: string) => {
+  if (!query) return text;
+  const regex = new RegExp(`(${query})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, i) => 
+    part.toLowerCase() === query.toLowerCase() 
+      ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-800">{part}</mark>
+      : part
+  );
+};
+```
 
 ---
 
 ## Implementeringsrækkefølge
 
-1. Start med EmployeeDashboard.tsx - hovedsiden
-2. Opdater AdminDashboard.tsx til at matche
-3. Gennemgå og opdater BulletinBoard.tsx
-4. Gennemgå og opdater NotificationsTab.tsx  
-5. Opdater UnreadNotificationsBanner.tsx
-6. Opdater AnnouncementManager.tsx
-7. Opdater SectionManager.tsx
-8. Verificer Auth.tsx
+1. Opret `SearchDialog.tsx` komponent med:
+   - Dialog-struktur (bruger eksisterende Dialog-komponent)
+   - Søgeinput med debounce
+   - Søgelogik for alle datakilder
+   - Grupperede resultater med highlighting
+   - Navigation callbacks
+
+2. Opdater `EmployeeDashboard.tsx`:
+   - Tilføj søgeknap i header
+   - Tilføj state for søgedialog og highlighted rutine
+   - Implementer navigation handlers
+   - Tilføj highlight-effekt på rutiner
+   - Scroll-to-element funktionalitet
 
 ---
 
-## Design tokens (reference)
+## Edge cases
 
-For fremtidig konsistens, her er de standardiserede værdier:
-
-```text
-SPACING:
-- Container padding: px-4
-- Section spacing: space-y-6
-- Card list spacing: space-y-4
-- Inner card spacing: space-y-3
-- Content padding: p-4
-
-TYPOGRAPHY:
-- Page title: text-xl (font-display via h1)
-- Section header: text-lg (font-display via h2/h3)
-- Card title: text-sm font-medium
-- Body: text-sm
-- Description: text-sm text-muted-foreground  
-- Metadata: text-xs text-muted-foreground
-
-COMPONENTS:
-- Tabs: flex-1 px-2 py-3 text-xs (mobil), px-4 py-2 text-sm (desktop)
-- Cards: rounded-lg border, CardContent p-4
-- Empty states: py-12 text-center
-```
+- **Søgeord under 2 tegn**: Viser ingen resultater (for at undgå for mange matches)
+- **Ingen resultater**: Viser venlig besked
+- **Lange tekster**: Trunkeres med "..." og viser kontekst omkring match
+- **Vagt ikke valgt**: Hvis man søger og klikker på en rutine, navigeres til vagten først
+- **Keyboard navigation**: Escape lukker dialogen
