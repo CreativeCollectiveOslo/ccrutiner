@@ -1,196 +1,143 @@
 
-# Highlight søgetekst på destinationsstedet
+
+# Auto-scroll til søgeresultat + Søgedialog mobiloptimering
 
 ## Oversigt
-Når du klikker på et søgeresultat, skal søgeordet (f.eks. "klud") blive highlightet i den tekst, hvor det blev fundet - uanset om det er i en rutine, notifikation eller på opslagstavlen.
+Denne plan løser tre ting:
+1. **Auto-scroll**: Når du klikker på et søgeresultat, scroller siden automatisk ned til det sted, hvor søgeteksten fremgår
+2. **Mobil padding**: Søgeboksen får lidt luft i siderne på mobil
+3. **Luk-knap oprydning**: Lukknappen i søgedialogens header positioneres pænere
 
 ---
 
 ## Hvad der ændres for dig
 
-### Brugeroplevelse
-1. Søg efter f.eks. "klud" og klik på et resultat
-2. Du bliver transporteret til destinationen
-3. Søgeordet "klud" er nu fremhævet med en accent-farve i selve teksten
-4. Highlightingen forsvinder automatisk efter 5 sekunder
+### Forbedret brugeroplevelse
+- Når du klikker på et søgeresultat og bliver ført til destinationen, scroller siden automatisk ned til det første element, der matcher
+- Søgeboksen fylder ikke længere hele skærmbredden på mobil - der er nu luft i siderne
+- Lukknappen i søgedialogen er placeret mere naturligt ved siden af søgefeltet
 
 ---
 
 ## Tekniske ændringer
 
-### 1. Udvid SearchDialog props
+### 1. SearchDialog - Mobil padding og luk-knap
 
-Ændr navigation-callbacks til også at videregive søgeordet:
+**Nuværende problemer:**
+- `DialogContent` har `p-0` som fjerner al padding
+- Luk-knappen fra shadcn/ui Dialog er absolut positioneret `right-4 top-4` men kolliderer med vores custom header
+
+**Løsning:**
+- Tilføj `mx-4 sm:mx-0` til DialogContent for at give margin på mobil
+- Skjul den indbyggede luk-knap og tilføj en custom luk-knap i headeren ved siden af søgefeltet
+- Brug `DialogClose` komponent for semantisk korrekt lukkeknap
 
 ```typescript
-interface SearchDialogProps {
-  // ... eksisterende props
-  onNavigateToShift: (shiftId: string, routineId?: string, searchTerm?: string) => void;
-  onNavigateToNotifications: (searchTerm?: string) => void;
-  onNavigateToBulletin: (searchTerm?: string) => void;
-}
+// Opdateret DialogContent styling
+<DialogContent className="sm:max-w-md mx-4 sm:mx-0 p-0 gap-0 [&>button:last-child]:hidden">
+  <DialogHeader className="p-4 pb-2">
+    <DialogTitle className="sr-only">Søg</DialogTitle>
+    <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background">
+      <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+      <Input ... />
+      {isSearching && <Loader2 ... />}
+      <DialogClose asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Luk</span>
+        </Button>
+      </DialogClose>
+    </div>
+  </DialogHeader>
+  ...
+</DialogContent>
 ```
 
-### 2. Opdater handleResultClick i SearchDialog
+### 2. Auto-scroll til første match - NotificationsTab
+
+Tilføj scroll-logik når `searchHighlightTerm` er sat:
 
 ```typescript
-const handleResultClick = (result: SearchResult) => {
-  onOpenChange(false);
-  
-  if (result.type === "routine" && result.shiftId) {
-    onNavigateToShift(result.shiftId, result.routineId, debouncedQuery);
-  } else if (result.type === "notification") {
-    onNavigateToNotifications(debouncedQuery);
-  } else if (result.type === "bulletin") {
-    onNavigateToBulletin(debouncedQuery);
+import { useEffect, useRef } from "react";
+
+// I NotificationsTab komponenten:
+const firstMatchRef = useRef<HTMLDivElement>(null);
+const hasScrolledRef = useRef(false);
+
+useEffect(() => {
+  if (searchHighlightTerm && firstMatchRef.current && !hasScrolledRef.current) {
+    setTimeout(() => {
+      firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      hasScrolledRef.current = true;
+    }, 100);
   }
-};
-```
-
-### 3. Ny state i EmployeeDashboard
-
-Tilføj `searchHighlightTerm` state til at gemme søgeordet:
-
-```typescript
-const [searchHighlightTerm, setSearchHighlightTerm] = useState<string | null>(null);
-```
-
-### 4. Opdater navigation handlers i EmployeeDashboard
-
-```typescript
-const handleSearchNavigateToShift = async (shiftId: string, routineId?: string, searchTerm?: string) => {
-  const shift = shifts.find((s) => s.id === shiftId);
-  if (shift) {
-    setSelectedShift(shift);
-    if (searchTerm) {
-      setSearchHighlightTerm(searchTerm);
-      setTimeout(() => setSearchHighlightTerm(null), 5000);
-    }
-    // ... resten af eksisterende logik
+  if (!searchHighlightTerm) {
+    hasScrolledRef.current = false;
   }
-};
+}, [searchHighlightTerm, notifications]);
 
-const handleSearchNavigateToNotifications = (searchTerm?: string) => {
-  setSelectedShift(null);
-  setMainTab("notifications");
-  if (searchTerm) {
-    setSearchHighlightTerm(searchTerm);
-    setTimeout(() => setSearchHighlightTerm(null), 5000);
+// Ved rendering - find første match og tilføj ref:
+const firstMatchId = searchHighlightTerm 
+  ? notifications.find(n => {
+      const text = n.type === "announcement" 
+        ? `${n.title} ${n.message}`
+        : n.message;
+      return text.toLowerCase().includes(searchHighlightTerm.toLowerCase());
+    })?.id
+  : null;
+
+// I JSX:
+<div 
+  ref={notification.id === firstMatchId ? firstMatchRef : undefined}
+  ...
+>
+```
+
+### 3. Auto-scroll til første match - BulletinBoard
+
+Samme logik som NotificationsTab:
+
+```typescript
+const firstMatchRef = useRef<HTMLDivElement>(null);
+const hasScrolledRef = useRef(false);
+
+useEffect(() => {
+  if (searchHighlightTerm && firstMatchRef.current && !hasScrolledRef.current) {
+    setTimeout(() => {
+      firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      hasScrolledRef.current = true;
+    }, 100);
   }
-};
-
-const handleSearchNavigateToBulletin = (searchTerm?: string) => {
-  setSelectedShift(null);
-  setMainTab("bulletin");
-  if (searchTerm) {
-    setSearchHighlightTerm(searchTerm);
-    setTimeout(() => setSearchHighlightTerm(null), 5000);
+  if (!searchHighlightTerm) {
+    hasScrolledRef.current = false;
   }
-};
+}, [searchHighlightTerm, posts]);
+
+// Find første matchende post
+const firstMatchId = searchHighlightTerm 
+  ? posts.find(p => p.message.toLowerCase().includes(searchHighlightTerm.toLowerCase()))?.id
+  : null;
+
+// I JSX ved post-kort:
+<Card 
+  key={post.id} 
+  ref={post.id === firstMatchId ? firstMatchRef : undefined}
+>
 ```
 
-### 5. Opret delt highlightMatch utility
+### 4. EmployeeDashboard - Rutine scroll allerede implementeret
 
-Opretter `src/lib/highlightText.tsx` med genbrugelig highlight-funktion:
-
+Rutine-scroll er allerede implementeret i `handleSearchNavigateToShift`:
 ```typescript
-export function highlightSearchTerm(text: string, searchTerm: string | null): React.ReactNode {
-  if (!searchTerm || !text) return text;
-  
-  try {
-    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`(${escapedTerm})`, "gi");
-    const parts = text.split(regex);
-    
-    return parts.map((part, i) =>
-      part.toLowerCase() === searchTerm.toLowerCase() ? (
-        <mark key={i} className="bg-accent text-accent-foreground rounded px-0.5">
-          {part}
-        </mark>
-      ) : (
-        part
-      )
-    );
-  } catch {
-    return text;
+setTimeout(() => {
+  const element = document.getElementById(`routine-${routineId}`);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
   }
-}
+}, 100);
 ```
 
-### 6. Opdater rutine-visning i EmployeeDashboard
-
-Brug `highlightSearchTerm` på rutinens titel og beskrivelse:
-
-```typescript
-<label className={`text-sm font-medium cursor-pointer ${isCompleted ? "line-through" : ""}`}>
-  {highlightSearchTerm(routine.title, searchHighlightTerm)}
-</label>
-// ...
-<p className={`text-sm text-muted-foreground ${!isExpanded ? "line-clamp-3" : ""}`}>
-  {highlightSearchTerm(routine.description, searchHighlightTerm)}
-</p>
-```
-
-### 7. Tilføj searchHighlightTerm prop til NotificationsTab
-
-Opdater NotificationsTab interface:
-
-```typescript
-interface NotificationsTabProps {
-  onMarkAsRead?: () => void;
-  searchHighlightTerm?: string | null;
-}
-```
-
-Brug highlight-funktionen på notification-tekster:
-
-```typescript
-// For announcements
-<h3 className="text-sm font-medium mb-1">
-  {highlightSearchTerm(notification.title, searchHighlightTerm)}
-</h3>
-<p className="text-sm text-muted-foreground">
-  {highlightSearchTerm(notification.message, searchHighlightTerm)}
-</p>
-
-// For routine notifications
-<h3 className="text-sm font-medium mb-1">
-  {highlightSearchTerm(notification.message, searchHighlightTerm)}
-</h3>
-```
-
-### 8. Tilføj searchHighlightTerm prop til BulletinBoard
-
-Opdater BulletinBoard interface:
-
-```typescript
-interface BulletinBoardProps {
-  searchHighlightTerm?: string | null;
-}
-```
-
-Brug highlight-funktionen på post-beskeder:
-
-```typescript
-<p className="text-sm whitespace-pre-wrap mb-3">
-  {highlightSearchTerm(post.message, searchHighlightTerm)}
-</p>
-```
-
-### 9. Videregiv prop i EmployeeDashboard
-
-```typescript
-{mainTab === "notifications" && (
-  <NotificationsTab 
-    onMarkAsRead={() => fetchUnreadCount()} 
-    searchHighlightTerm={searchHighlightTerm}
-  />
-)}
-
-{mainTab === "bulletin" && (
-  <BulletinBoard searchHighlightTerm={searchHighlightTerm} />
-)}
-```
+Men vi skal også håndtere scroll baseret på `searchHighlightTerm` for de tilfælde hvor flere rutiner matcher. Vi tilføjer en `useEffect` der finder og scroller til første match.
 
 ---
 
@@ -198,58 +145,61 @@ Brug highlight-funktionen på post-beskeder:
 
 | Fil | Ændringer |
 |-----|-----------|
-| `src/lib/highlightText.tsx` | **Ny fil** - Delt utility til tekst-highlighting |
-| `src/components/SearchDialog.tsx` | Opdater navigation callbacks til at inkludere søgeordet |
-| `src/pages/EmployeeDashboard.tsx` | Tilføj `searchHighlightTerm` state, opdater handlers, brug highlight på rutiner |
-| `src/components/NotificationsTab.tsx` | Tilføj prop og highlight på notifikationstekst |
-| `src/components/BulletinBoard.tsx` | Tilføj prop og highlight på postbeskeder |
+| `src/components/SearchDialog.tsx` | Tilføj mobil margin, skjul indbygget luk-knap, tilføj custom luk-knap i header |
+| `src/components/NotificationsTab.tsx` | Tilføj auto-scroll til første match |
+| `src/components/BulletinBoard.tsx` | Tilføj auto-scroll til første match |
+| `src/pages/EmployeeDashboard.tsx` | Tilføj auto-scroll til første matchende rutine baseret på søgeterm |
 
 ---
 
-## Flowdiagram
+## Visuelt før/efter
 
+### Søgedialog på mobil
+
+**Før:**
 ```text
-Søgedialog
-    │
-    ├─ Klik på rutine-resultat
-    │       │
-    │       └─► handleSearchNavigateToShift(shiftId, routineId, "klud")
-    │                   │
-    │                   └─► setSearchHighlightTerm("klud")
-    │                   └─► Rutine vises med "klud" highlightet
-    │
-    ├─ Klik på notifikation-resultat  
-    │       │
-    │       └─► handleSearchNavigateToNotifications("klud")
-    │                   │
-    │                   └─► NotificationsTab med prop searchHighlightTerm="klud"
-    │                   └─► Notifikationstekst vises med "klud" highlightet
-    │
-    └─ Klik på opslagstavle-resultat
-            │
-            └─► handleSearchNavigateToBulletin("klud")
-                        │
-                        └─► BulletinBoard med prop searchHighlightTerm="klud"
-                        └─► Post-besked vises med "klud" highlightet
+|--------------------------------------|
+|  [X]                                 |
+|  +----------------------------------+|
+|  | [🔍] Søg efter rutiner...       ||
+|  +----------------------------------+|
 ```
 
+**Efter:**
+```text
+|    --------------------------------  |
+|    | [🔍] Søg...           [X]    |  |
+|    --------------------------------  |
+|                                      |
+```
+
+- Luft i siderne (margin)
+- Luk-knap integreret i søgefeltet
+- Renere og mere mobilvennigt design
+
 ---
 
-## Highlight-styling
+## Scroll-flow
 
-Bruger samme styling som i SearchDialog:
-- Baggrund: `bg-accent` (følger tema)
-- Tekstfarve: `text-accent-foreground`
-- Afrunding: `rounded`
-- Padding: `px-0.5`
+```text
+Bruger klikker på søgeresultat
+         │
+         ▼
+    Navigation sker
+    (tab skifter/vagt åbnes)
+         │
+         ▼
+    searchHighlightTerm sættes
+         │
+         ▼
+    useEffect i destination-komponent
+    finder første match
+         │
+         ▼
+    scrollIntoView({ behavior: "smooth", block: "center" })
+         │
+         ▼
+    Elementet er centreret på skærmen
+    med highlighting synligt
+```
 
-Dette sikrer konsistens mellem highlightet i søgeresultaterne og på destinationen.
-
----
-
-## Timeout-logik
-
-Highlighten forsvinder automatisk efter 5 sekunder via `setTimeout`:
-- Lang nok til at brugeren ser og finder det
-- Kort nok til at siden ser normal ud igen
-- Ryddes også hvis brugeren navigerer væk
