@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone, Trash2 } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone, Trash2, ClipboardList } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ import {
 import * as LucideIcons from "lucide-react";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { NotificationsTab } from "@/components/NotificationsTab";
+import { BulletinBoard } from "@/components/BulletinBoard";
 import { UnreadNotificationsBanner } from "@/components/UnreadNotificationsBanner";
 import { Switch } from "@/components/ui/switch";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -99,7 +100,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [mainTab, setMainTab] = useState<"shifts" | "notifications">("shifts");
+  const [mainTab, setMainTab] = useState<"shifts" | "notifications" | "bulletin">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -509,10 +510,26 @@ export default function EmployeeDashboard() {
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
+              <button
+                onClick={() => setMainTab("bulletin")}
+                className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                  mainTab === "bulletin"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ClipboardList className="h-4 w-4" />
+                Opslagstavle
+                {mainTab === "bulletin" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
             </div>
 
             {mainTab === "notifications" ? (
               <NotificationsTab />
+            ) : mainTab === "bulletin" ? (
+              <BulletinBoard />
             ) : (
               <div className="space-y-6">
                 {/* Unread notifications banner above shifts */}
