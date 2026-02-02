@@ -484,42 +484,42 @@ export default function EmployeeDashboard() {
             <div className="flex border-b border-border mb-6">
               <button
                 onClick={() => setMainTab("shifts")}
-                className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
                   mainTab === "shifts"
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Calendar className="h-4 w-4" />
-                Vakter
+                <Calendar className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span>Vakter</span>
                 {mainTab === "shifts" && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
               <button
                 onClick={() => setMainTab("notifications")}
-                className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
                   mainTab === "notifications"
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Bell className="h-4 w-4" />
-                Læste notifikationer
+                <Bell className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span className="text-center leading-tight">Notifikationer</span>
                 {mainTab === "notifications" && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
               <button
                 onClick={() => setMainTab("bulletin")}
-                className={`px-4 py-2 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
                   mainTab === "bulletin"
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <ClipboardList className="h-4 w-4" />
-                Opslagstavle
+                <ClipboardList className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span>Opslagstavle</span>
                 {mainTab === "bulletin" && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
