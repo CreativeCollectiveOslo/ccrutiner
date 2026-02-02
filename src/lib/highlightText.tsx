@@ -10,7 +10,7 @@ export function highlightSearchTerm(text: string, searchTerm: string | null): Re
     
     return parts.map((part, i) =>
       part.toLowerCase() === searchTerm.toLowerCase() ? (
-        <mark key={i} className="bg-accent text-accent-foreground rounded px-0.5">
+        <mark key={i} className="bg-yellow-300 text-yellow-900 rounded px-0.5">
           {part}
         </mark>
       ) : (
