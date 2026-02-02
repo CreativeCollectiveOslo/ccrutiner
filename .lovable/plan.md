@@ -1,174 +1,211 @@
 
-# Opslagstavle til Medarbejder Dashboard
+# Design Oprydning
 
 ## Oversigt
-Tilføjer en ny "Opslagstavle" fane på forsiden af medarbejder-dashboardet, hvor alle brugere kan skrive indlæg og se andres indlæg. Brugere kan redigere deres egne indlæg. Indlæg kan ikke slettes og vises med nyeste først, med paginering hvis der er mange.
-
-## Hvad der ændres for dig
-
-### Ny funktionalitet
-- En ny fane "Opslagstavle" på forsiden (ved siden af "Vakter" og "Læste notifikationer")
-- Du kan skrive og dele indlæg med alle kolleger
-- Du kan redigere dine egne indlæg
-- Du kan se alle indlæg fra andre brugere
-- Nyeste indlæg vises i toppen
-- Der vises hvem der har skrevet hvert indlæg og hvornår
-- Hvis der er mange indlæg, kan du bladre igennem med "side frem/tilbage"
-
-### Brugeroplevelse
-- Skriv dit indlæg i et tekstfelt og klik "Del indlæg"
-- Indlæg vises med forfatterens navn og dato
-- Ved dine egne indlæg vises en "Rediger" knap
-- Ingen kan slette indlæg - de er permanente
-- 10 indlæg per side med paginering
+En gennemgående gennemgang af hele appen for at sikre konsistent spacing, klar hierarkisk struktur og minimale tekststile. Dette vil give en mere professionel og samlet brugeroplevelse.
 
 ---
 
-## Tekniske detaljer
+## Identificerede problemer
 
-### 1. Database: Ny tabel til indlæg
+### 1. Inkonsistent spacing
+- **Headers**: Varierende padding (`py-4`, `py-8`) på forskellige sider
+- **Cards**: Blandet brug af `p-3`, `p-4`, `p-6`, `pt-6`
+- **Sektioner**: Nogle bruger `space-y-4`, andre `space-y-6`
+- **Main container**: Varierer mellem `py-8` og andre værdier
 
-Opretter en `bulletin_posts` tabel:
-- `id` (uuid) - unik identifikator
-- `user_id` (uuid) - hvem skrev indlægget
-- `message` (text) - selve indlægget
-- `created_at` (timestamp) - hvornår det blev oprettet
-- `updated_at` (timestamp) - hvornår det sidst blev redigeret
+### 2. Inkonsistent teksthierarki
+- **Overskrifter**: Blanding af `text-xl`, `text-2xl` for samme niveau
+- **Labels/descriptions**: Inkonsistent brug af `text-sm`, `text-xs`
+- **Font-weight**: Blanding af `font-medium`, `font-semibold` for samme type elementer
 
-Sikkerhedsregler (RLS):
-- SELECT: Alle autentificerede brugere kan læse alle indlæg
-- INSERT: Brugere kan kun oprette indlæg i eget navn
-- UPDATE: Brugere kan kun redigere egne indlæg
-- DELETE: Ingen kan slette (ingen policy)
+### 3. Inkonsistente komponentstile
+- **Tab-styling**: Admin-tabs og Employee-tabs har forskellig styling
+- **Kort-indhold**: Forskellige CardContent padding-værdier
+- **Knapper**: Inkonsistent størrelse og placering
 
-SQL-migration:
-```sql
-CREATE TABLE public.bulletin_posts (
-  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid NOT NULL,
-  message text NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now()
-);
+---
 
-ALTER TABLE public.bulletin_posts ENABLE ROW LEVEL SECURITY;
+## Løsningsplan
 
--- Alle autentificerede brugere kan se alle indlæg
-CREATE POLICY "Authenticated users can view all bulletin posts"
-  ON public.bulletin_posts FOR SELECT
-  USING (auth.uid() IS NOT NULL);
+### 1. Standardiseret spacing-system
 
--- Brugere kan kun oprette indlæg i eget navn
-CREATE POLICY "Users can insert own bulletin posts"
-  ON public.bulletin_posts FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+**Header (alle sider):**
+- Container: `px-4 py-4`
+- Logo + titel gap: `gap-3`
 
--- Brugere kan kun redigere egne indlæg
-CREATE POLICY "Users can update own bulletin posts"
-  ON public.bulletin_posts FOR UPDATE
-  USING (auth.uid() = user_id);
+**Main content:**
+- Container: `px-4 py-6` (mobil) / `py-8` (desktop) 
+- Section spacing: `space-y-6` (konsistent)
+- Card spacing i lister: `space-y-4`
 
--- Trigger til at opdatere updated_at ved ændringer
-CREATE TRIGGER update_bulletin_posts_updated_at
-  BEFORE UPDATE ON public.bulletin_posts
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-```
+**Cards:**
+- CardHeader: standard (beholder shadcn default)
+- CardContent: `p-4` som standard
+- Kompakte kort (rutiner/posts): `p-4`
 
-### 2. Ny komponent: BulletinBoard.tsx
+### 2. Standardiseret teksthierarki
 
-Opretter en ny komponent `src/components/BulletinBoard.tsx` der håndterer:
-- Hentning af indlæg med paginering (10 per side)
-- Visning af indlæg med forfatter og dato
-- Formular til at skrive nye indlæg
-- Redigering af egne indlæg (inline editing)
-- Empty state når der ingen indlæg er
-- Paginering med eksisterende Pagination-komponenter
+**Niveau 1 - Sidetitler:**
+- `text-xl` (h1 i header)
 
-Struktur:
+**Niveau 2 - Sektionsoverskrifter:**
+- `text-lg` eller `text-xl` for CardTitle
+- Ingen font-weight override (bruger font-display fra design system)
+
+**Niveau 3 - Korttitler/labels:**
+- `text-sm font-medium`
+
+**Niveau 4 - Body tekst:**
+- `text-sm` for normal tekst
+- `text-sm text-muted-foreground` for beskrivelser
+
+**Niveau 5 - Metadata:**
+- `text-xs text-muted-foreground`
+
+### 3. Konsistente tabs
+
+Ensartet tab-styling på tværs af Admin og Employee dashboards:
+- Desktop: `px-4 py-2 text-sm font-medium`
+- Mobil: `flex-1 px-2 py-3 text-xs` med ikoner
+
+---
+
+## Filer der skal opdateres
+
+### EmployeeDashboard.tsx
+- Standardiser main padding til `py-6`
+- Ensret sektionsoverskrifter til `text-lg`
+- Fjern inkonsistente `space-y-2` til fordel for `space-y-4`
+- Standardiser "Tilbake" knap styling
+
+### AdminDashboard.tsx
+- Matcher header styling med EmployeeDashboard
+- Ensret tab-styling med employee version
+- Standardiser CardContent padding
+
+### BulletinBoard.tsx
+- Ensret CardContent til `p-4` (allerede gjort)
+- Standardiser empty state padding til `py-12` og centered tekst
+
+### NotificationsTab.tsx
+- Standardiser CardContent til `p-4`
+- Ensret badge styling
+- Konsistent metadata format
+
+### UnreadNotificationsBanner.tsx
+- Matcher NotificationsTab styling
+- Ensret spacing
+
+### Auth.tsx
+- Allerede velstruktureret, mindre justeringer
+
+### SectionManager.tsx
+- Standardiser CardContent padding
+- Ensret overskrift hierarki
+
+### AnnouncementManager.tsx
+- Standardiser CardContent padding (ændre `pt-6` til `p-4`)
+- Ensret overskrift hierarki
+
+---
+
+## Specifikke ændringer
+
+### EmployeeDashboard.tsx
+
+1. **Main container** (linje 480):
+   - Ændre `py-8` til `py-6` for bedre mobil spacing
+
+2. **Vagt-valg sektion** (linje 547-552):
+   - Ændre `text-2xl` til `text-xl` for konsistens
+   - Behold `text-sm text-muted-foreground` for undertekst
+
+3. **Vagt-detaljer header** (linje 599-602):
+   - Ændre `text-2xl` til `text-xl`
+   - Grupper wake-lock og clear-button tættere sammen
+
+4. **Sektions-overskrifter** (linje 737):
+   - Ændre `text-base font-medium` til `text-sm font-semibold uppercase tracking-wide text-muted-foreground` for klarere hierarki
+
+5. **Rutine-kort**:
+   - Behold `p-4` (allerede korrekt)
+   - Sørg for konsistent `space-y-1` i indholdet
+
+### AdminDashboard.tsx
+
+1. **Tab-styling** (linje 308-348):
+   - Tilføj responsive klasser som i EmployeeDashboard
+   - `flex-1` på hver tab for bedre mobil
+
+2. **Bruger-kort** (linje 426-472):
+   - Ændre `p-4` til konsistent padding
+   - Allerede godt struktureret
+
+3. **CardContent** (linje 378):
+   - Tilføj eksplicit `p-4` for konsistens
+
+### BulletinBoard.tsx
+
+1. **Post-kort** (linje 217-218):
+   - Allerede `p-4` - korrekt
+
+2. **Empty state** (linje 205-213):
+   - Ændre `p-12` til `py-12 px-4` for responsivitet
+
+### NotificationsTab.tsx
+
+1. **Notification kort** (linje 239):
+   - Allerede `p-4` - korrekt
+
+2. **Empty state** (linje 221-226):
+   - Ændre `p-6` til `py-12` for at matche BulletinBoard
+
+### AnnouncementManager.tsx
+
+1. **Announcement kort** (linje 379):
+   - Ændre `pt-6` til `p-4` for konsistens
+
+2. **Routine notification kort** (linje 457):
+   - Ændre `pt-6` til `p-4` for konsistens
+
+---
+
+## Implementeringsrækkefølge
+
+1. Start med EmployeeDashboard.tsx - hovedsiden
+2. Opdater AdminDashboard.tsx til at matche
+3. Gennemgå og opdater BulletinBoard.tsx
+4. Gennemgå og opdater NotificationsTab.tsx  
+5. Opdater UnreadNotificationsBanner.tsx
+6. Opdater AnnouncementManager.tsx
+7. Opdater SectionManager.tsx
+8. Verificer Auth.tsx
+
+---
+
+## Design tokens (reference)
+
+For fremtidig konsistens, her er de standardiserede værdier:
+
 ```text
-+-------------------------------------+
-| Skriv et indlaeg                    |
-| +----------------------------------+|
-| | [Tekstfelt...]                   ||
-| +----------------------------------+|
-| [Del indlaeg]                       |
-+-------------------------------------+
-|                                     |
-| +----------------------------------+|
-| | Indlaeg fra bruger         [Red] || <-- Kun synlig hvis eget indlaeg
-| | "Husk at tjekke koeleskabet..."  ||
-| | 2. februar 2026 - Af Anna        ||
-| +----------------------------------+|
-|                                     |
-| +----------------------------------+|
-| | Indlaeg fra bruger               ||
-| | "God vagt alle sammen!"          ||
-| | 1. februar 2026 - Af Peter       ||
-| +----------------------------------+|
-|                                     |
-|      <- Forrige | 1 | 2 | Naeste ->|
-+-------------------------------------+
+SPACING:
+- Container padding: px-4
+- Section spacing: space-y-6
+- Card list spacing: space-y-4
+- Inner card spacing: space-y-3
+- Content padding: p-4
+
+TYPOGRAPHY:
+- Page title: text-xl (font-display via h1)
+- Section header: text-lg (font-display via h2/h3)
+- Card title: text-sm font-medium
+- Body: text-sm
+- Description: text-sm text-muted-foreground  
+- Metadata: text-xs text-muted-foreground
+
+COMPONENTS:
+- Tabs: flex-1 px-2 py-3 text-xs (mobil), px-4 py-2 text-sm (desktop)
+- Cards: rounded-lg border, CardContent p-4
+- Empty states: py-12 text-center
 ```
-
-Redigeringstilstand:
-```text
-+-------------------------------------+
-| +----------------------------------+|
-| | [Tekstfelt med eksisterende...] ||
-| | [Gem] [Annuller]                 ||
-| +----------------------------------+|
-+-------------------------------------+
-```
-
-Empty state:
-```text
-+-------------------------------------+
-|          (clipboard icon)           |
-|   Ingen indlaeg endnu               |
-|   Vaer den foerste til at skrive!   |
-+-------------------------------------+
-```
-
-### 3. Frontend: Opdateret EmployeeDashboard.tsx
-
-**AEndringer:**
-- Tilfoej ny tab "Opslagstavle" i tab-baren (ved siden af "Vakter" og "Laeste notifikationer")
-- Importere og rendere BulletinBoard-komponenten naar tabben er aktiv
-- Tilfoej `ClipboardList` icon fra lucide-react
-
-Tab-struktur:
-```text
-+------------+---------------------+--------------+
-|  Vakter    | Laeste notifikationer| Opslagstavle |
-+------------+---------------------+--------------+
-```
-
-### 4. Implementeringsraekkefoelge
-
-1. Oprette `bulletin_posts` tabel med RLS-policies
-2. Oprette ny `BulletinBoard.tsx` komponent med:
-   - Fetch indlaeg med paginering
-   - Formular til nyt indlaeg
-   - Visning af indlaeg
-   - Redigering af egne indlaeg
-   - Empty state
-   - Paginering
-3. Tilfoeje ny tab i EmployeeDashboard.tsx
-4. Importere og rendere BulletinBoard komponenten
-
-### 5. Paginering detaljer
-
-- 10 indlaeg per side
-- Bruger Supabase `.range()` til server-side paginering
-- Henter total count med `.count()` for at beregne antal sider
-- Viser kun paginering hvis der er mere end 1 side
-
-### 6. Redigering detaljer
-
-- "Rediger" knap vises kun paa egne indlaeg
-- Ved klik skiftes til redigeringstilstand med tekstfelt
-- "Gem" opdaterer indlaegget og lukker redigeringstilstand
-- "Annuller" lukker redigeringstilstand uden at gemme
-- `updated_at` opdateres automatisk via database trigger
-- Viser "(redigeret)" tekst hvis `updated_at` er forskellig fra `created_at`
