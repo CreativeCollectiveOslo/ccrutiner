@@ -203,7 +203,7 @@ export function BulletinBoard() {
       {/* Posts list */}
       {posts.length === 0 ? (
         <Card>
-          <CardContent className="p-12 text-center">
+          <CardContent className="py-12 px-4 text-center">
             <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Ingen indlæg endnu</h3>
             <p className="text-sm text-muted-foreground">

@@ -412,7 +412,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const renderRoutineCard = (routine: Routine) => (
     <Card key={routine.id} className="group">
-      <CardContent className="p-3">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-2 flex-wrap">
