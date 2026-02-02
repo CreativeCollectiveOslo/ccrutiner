@@ -54,10 +54,23 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   // Auto-scroll to first match when searchHighlightTerm is set
   useEffect(() => {
     if (searchHighlightTerm && firstMatchRef.current && !hasScrolledRef.current) {
+      // Use longer delay on mobile for DOM to settle
+      const scrollDelay = window.innerWidth < 768 ? 300 : 100;
       setTimeout(() => {
-        firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-        hasScrolledRef.current = true;
-      }, 100);
+        if (firstMatchRef.current) {
+          // Use scrollTo with offset calculation for better mobile support
+          const element = firstMatchRef.current;
+          const elementRect = element.getBoundingClientRect();
+          const absoluteElementTop = elementRect.top + window.scrollY;
+          const middle = absoluteElementTop - (window.innerHeight / 2) + (elementRect.height / 2);
+          
+          window.scrollTo({
+            top: middle,
+            behavior: "smooth"
+          });
+          hasScrolledRef.current = true;
+        }
+      }, scrollDelay);
     }
     if (!searchHighlightTerm) {
       hasScrolledRef.current = false;
