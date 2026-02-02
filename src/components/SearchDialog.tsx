@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, FileText, Bell, ClipboardList, Loader2 } from "lucide-react";
+import { Search, FileText, Bell, ClipboardList, Loader2, X } from "lucide-react";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
 
@@ -207,7 +208,7 @@ export function SearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 gap-0">
+      <DialogContent className="sm:max-w-md mx-4 sm:mx-0 p-0 gap-0 [&>button:last-child]:hidden">
         <DialogHeader className="p-4 pb-2">
           <DialogTitle className="sr-only">Søg</DialogTitle>
           <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background">
@@ -221,6 +222,12 @@ export function SearchDialog({
               className="border-0 p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             {isSearching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            <DialogClose asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Luk</span>
+              </Button>
+            </DialogClose>
           </div>
         </DialogHeader>
 

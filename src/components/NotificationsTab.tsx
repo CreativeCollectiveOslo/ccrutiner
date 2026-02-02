@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,21 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
   const [readRoutineNotificationIds, setReadRoutineNotificationIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [userCreatedAt, setUserCreatedAt] = useState<string | null>(null);
+  const firstMatchRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
+
+  // Auto-scroll to first match when searchHighlightTerm is set
+  useEffect(() => {
+    if (searchHighlightTerm && firstMatchRef.current && !hasScrolledRef.current) {
+      setTimeout(() => {
+        firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        hasScrolledRef.current = true;
+      }, 100);
+    }
+    if (!searchHighlightTerm) {
+      hasScrolledRef.current = false;
+    }
+  }, [searchHighlightTerm, notifications]);
 
   const getCreatorName = (createdBy: string | null) => {
     if (!createdBy) return null;
@@ -228,14 +243,26 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
     );
   }
 
+  // Find first matching notification for scroll
+  const firstMatchId = searchHighlightTerm 
+    ? notifications.find(n => {
+        const text = n.type === "announcement" 
+          ? `${n.title} ${n.message}`
+          : n.message;
+        return text.toLowerCase().includes(searchHighlightTerm.toLowerCase());
+      })?.id
+    : null;
+
   return (
     <div className="space-y-4">
       {notifications.map((notification) => {
         const read = isRead(notification);
+        const isFirstMatch = notification.id === firstMatchId;
 
         return (
           <Card
             key={`${notification.type}-${notification.id}`}
+            ref={isFirstMatch ? firstMatchRef : undefined}
             className={`border-primary/50 transition-opacity ${read ? "opacity-60" : "bg-primary/5"}`}
           >
             <CardContent className="p-4">
