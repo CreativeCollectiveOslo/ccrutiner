@@ -698,7 +698,7 @@ export default function EmployeeDashboard() {
                         onCheckedChange={toggleWakeLock}
                       />
                       <label htmlFor="wake-lock" className="text-sm text-muted-foreground cursor-pointer">
-                        Hold skærmen vågen
+                        Skærm vågen
                       </label>
                     </div>
                     
