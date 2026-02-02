@@ -128,18 +128,18 @@ export function SearchDialog({
         });
       }
 
-      // Search bulletin posts
+      // Search bulletin posts (including title)
       const { data: bulletinData } = await supabase
         .from("bulletin_posts")
-        .select("id, message, created_at")
-        .ilike("message", `%${query}%`);
+        .select("id, title, message, created_at")
+        .or(`title.ilike.%${query}%,message.ilike.%${query}%`);
 
       if (bulletinData) {
-        bulletinData.forEach((post) => {
+        bulletinData.forEach((post: any) => {
           allResults.push({
             id: post.id,
             type: "bulletin",
-            title: truncateText(post.message, 50),
+            title: post.title || truncateText(post.message, 50),
             description: post.message,
             createdAt: post.created_at,
           });
@@ -309,7 +309,7 @@ export function SearchDialog({
               {bulletinResults.length > 0 && (
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-2 py-1">
-                    Opslagstavle
+                    Logbog
                   </h3>
                   <div className="space-y-1">
                     {bulletinResults.map((result) => (
