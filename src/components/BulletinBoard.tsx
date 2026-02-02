@@ -3,7 +3,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ClipboardList, Loader2, Pencil, X, Check } from "lucide-react";
 import { format } from "date-fns";
@@ -21,6 +23,7 @@ import { highlightSearchTerm } from "@/lib/highlightText";
 interface BulletinPost {
   id: string;
   user_id: string;
+  title: string;
   message: string;
   created_at: string;
   updated_at: string;
@@ -43,10 +46,12 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   const [profiles, setProfiles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
   const [editMessage, setEditMessage] = useState("");
   const firstMatchRef = useRef<HTMLDivElement>(null);
   const hasScrolledRef = useRef(false);
@@ -135,12 +140,13 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newMessage.trim()) return;
+    if (!user || !newTitle.trim() || !newMessage.trim()) return;
 
     setSubmitting(true);
 
     const { error } = await supabase.from("bulletin_posts").insert({
       user_id: user.id,
+      title: newTitle.trim(),
       message: newMessage.trim(),
     });
 
@@ -148,7 +154,8 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       toast.error("Kunne ikke oprette indlæg");
       console.error(error);
     } else {
-      toast.success("Indlæg delt!");
+      toast.success("Indlæg tilføjet til logbogen!");
+      setNewTitle("");
       setNewMessage("");
       setCurrentPage(1);
       fetchPosts();
@@ -159,20 +166,25 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
 
   const startEditing = (post: BulletinPost) => {
     setEditingPostId(post.id);
+    setEditTitle(post.title);
     setEditMessage(post.message);
   };
 
   const cancelEditing = () => {
     setEditingPostId(null);
+    setEditTitle("");
     setEditMessage("");
   };
 
   const saveEdit = async (postId: string) => {
-    if (!editMessage.trim()) return;
+    if (!editTitle.trim() || !editMessage.trim()) return;
 
     const { error } = await supabase
       .from("bulletin_posts")
-      .update({ message: editMessage.trim() })
+      .update({ 
+        title: editTitle.trim(),
+        message: editMessage.trim() 
+      })
       .eq("id", postId);
 
     if (error) {
@@ -181,6 +193,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
     } else {
       toast.success("Indlæg opdateret!");
       setEditingPostId(null);
+      setEditTitle("");
       setEditMessage("");
       fetchPosts();
     }
@@ -212,21 +225,28 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       <Card>
         <CardContent className="p-4">
           <form onSubmit={handleSubmit} className="space-y-3">
-            <label className="text-sm font-medium">Skriv et indlæg</label>
-            <Textarea
-              placeholder="Del noget med dine kolleger..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="min-h-[100px]"
-            />
-            <Button type="submit" disabled={submitting || !newMessage.trim()}>
+            <Label className="text-sm font-medium">Skriv i logbogen</Label>
+            <div className="space-y-2">
+              <Input
+                placeholder="Overskrift"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+              />
+              <Textarea
+                placeholder="Skriv din besked her..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+            <Button type="submit" disabled={submitting || !newTitle.trim() || !newMessage.trim()}>
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deler...
+                  Gemmer...
                 </>
               ) : (
-                "Del indlæg"
+                "Tilføj til logbog"
               )}
             </Button>
           </form>
@@ -238,18 +258,21 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
         <Card>
           <CardContent className="py-12 px-4 text-center">
             <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Ingen indlæg endnu</h3>
+            <h3 className="text-lg font-medium mb-2">Ingen indlæg i logbogen</h3>
             <p className="text-sm text-muted-foreground">
-              Vær den første til at skrive et indlæg!
+              Vær den første til at skrive i logbogen!
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
           {(() => {
-            // Find first matching post for scroll
+            // Find first matching post for scroll (search in title and message)
             const firstMatchId = searchHighlightTerm 
-              ? posts.find(p => p.message.toLowerCase().includes(searchHighlightTerm.toLowerCase()))?.id
+              ? posts.find(p => 
+                  p.title.toLowerCase().includes(searchHighlightTerm.toLowerCase()) ||
+                  p.message.toLowerCase().includes(searchHighlightTerm.toLowerCase())
+                )?.id
               : null;
             
             return posts.map((post) => (
@@ -260,6 +283,11 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
               <CardContent className="p-4">
                 {editingPostId === post.id ? (
                   <div className="space-y-3">
+                    <Input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Overskrift"
+                    />
                     <Textarea
                       value={editMessage}
                       onChange={(e) => setEditMessage(e.target.value)}
@@ -269,7 +297,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                       <Button
                         size="sm"
                         onClick={() => saveEdit(post.id)}
-                        disabled={!editMessage.trim()}
+                        disabled={!editTitle.trim() || !editMessage.trim()}
                       >
                         <Check className="h-4 w-4 mr-1" />
                         Gem
@@ -297,6 +325,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                         </Button>
                       )}
                     </div>
+                    <h4 className="font-semibold text-sm mb-1">{highlightSearchTerm(post.title, searchHighlightTerm)}</h4>
                     <p className="text-sm whitespace-pre-wrap mb-3">{highlightSearchTerm(post.message, searchHighlightTerm)}</p>
                     <p className="text-xs text-muted-foreground">
                       {formatDate(post.created_at)}
