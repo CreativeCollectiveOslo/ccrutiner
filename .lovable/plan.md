@@ -1,93 +1,116 @@
 
 
-# Justering af værktøjslinjen i vagt-visning
+# Omdøb Opslagstavle til Logbog + tilføj overskrift
 
-## Hvad der ændres
+## Oversigt
 
-### Nuværende layout:
-```
-📱 Hold skjerm våken [○]     [↺] Nulstil
-```
-
-### Nyt layout:
-```
-[○] Hold skærmen vågen  |  ↺ Nulstil
-```
+Denne ændring omdøber "Opslagstavle" til "Logbog" i hele appen og tilføjer et overskriftsfelt til alle logbog-indlæg.
 
 ---
 
 ## Ændringer
 
-1. **Fjern telefonikon** - Smartphone-ikonet fjernes
-2. **Switch først** - Switchen flyttes til venstre for teksten
-3. **Tekst altid synlig på nulstil** - Fjern `hidden sm:inline` så "Nulstil" altid vises
-4. **Lodret separator** - Tilføj en `Separator` komponent med `orientation="vertical"` mellem de to funktioner
+### 1. UI-tekst ændringer
+
+**Filen `EmployeeDashboard.tsx`:**
+- Ændre tab-teksten fra "Opslagstavle" til "Logbog"
+
+**Filen `SearchDialog.tsx`:**
+- Ændre søgeresultat-overskriften fra "Opslagstavle" til "Logbog"
+
+**Filen `BulletinBoard.tsx`:**
+- Opdatere formular-labels og placeholders til at reflektere "Logbog"
+- Ændre "Skriv et indlæg" til "Skriv i logbogen"
+- Ændre empty state tekster
+
+### 2. Database-ændring
+
+Tilføj en `title` kolonne til `bulletin_posts` tabellen:
+
+```sql
+ALTER TABLE bulletin_posts 
+ADD COLUMN title TEXT NOT NULL DEFAULT '';
+```
+
+### 3. Formular-opdatering (BulletinBoard.tsx)
+
+Tilføj et input-felt til overskrift:
+- Nyt `Input` felt til overskrift (påkrævet)
+- Opdater state til at håndtere `newTitle` og `editTitle`
+- Opdater insert og update queries til at inkludere title
+
+### 4. Visning af indlæg
+
+Vis overskriften som en fed titel over hvert indlæg:
+- Overskrift vises med `font-semibold` styling
+- Besked vises under overskriften som før
 
 ---
 
-## Teknisk implementation
-
-**Fil: `src/pages/EmployeeDashboard.tsx`**
-
-Linjer 690-727 opdateres:
-
-```typescript
-<div className="flex items-center justify-between gap-4 py-2 px-3 bg-muted/50 rounded-lg">
-  {wakeLockSupported && (
-    <>
-      <div className="flex items-center gap-2">
-        <Switch
-          id="wake-lock"
-          checked={wakeLockActive}
-          onCheckedChange={toggleWakeLock}
-        />
-        <label htmlFor="wake-lock" className="text-sm text-muted-foreground cursor-pointer">
-          Hold skærmen vågen
-        </label>
-      </div>
-      
-      <Separator orientation="vertical" className="h-6 bg-border" />
-    </>
-  )}
-  
-  <AlertDialog>
-    <AlertDialogTrigger asChild>
-      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive ml-auto">
-        <RotateCcw className="h-4 w-4 mr-2" />
-        Nulstil
-      </Button>
-    </AlertDialogTrigger>
-    {/* ... resten af AlertDialog uændret */}
-  </AlertDialogContent>
-  </AlertDialog>
-</div>
-```
-
-**Import tilføjes:**
-```typescript
-import { Separator } from "@/components/ui/separator";
-```
-
----
-
-## Visuelt resultat
-
-```
-┌─────────────────────────────────────────────────┐
-│  [○] Hold skærmen vågen  │  ↺ Nulstil           │
-└─────────────────────────────────────────────────┘
-```
-
-- Switch til venstre
-- Tekst "Hold skærmen vågen" til højre for switch
-- Lodret separator (|) mellem de to funktioner
-- "Nulstil" med ikon og tekst altid synlig
-
----
-
-## Fil der ændres
+## Filer der ændres
 
 | Fil | Ændring |
 |-----|---------|
-| `src/pages/EmployeeDashboard.tsx` | Omstrukturér værktøjslinje, tilføj Separator import |
+| `src/pages/EmployeeDashboard.tsx` | Omdøb tab fra "Opslagstavle" til "Logbog" |
+| `src/components/SearchDialog.tsx` | Omdøb søgekategori til "Logbog" |
+| `src/components/BulletinBoard.tsx` | Tilføj overskriftsfelt + opdater tekster |
+| Database migration | Tilføj `title` kolonne til `bulletin_posts` |
+
+---
+
+## Tekniske detaljer
+
+### Ny formular-struktur
+
+```text
+┌─────────────────────────────────────┐
+│  Skriv i logbogen                   │
+├─────────────────────────────────────┤
+│  Overskrift: [________________]     │
+│                                     │
+│  Besked:                            │
+│  ┌─────────────────────────────┐    │
+│  │                             │    │
+│  │                             │    │
+│  └─────────────────────────────┘    │
+│                                     │
+│  [Tilføj til logbog]                │
+└─────────────────────────────────────┘
+```
+
+### Visning af indlæg
+
+```text
+┌─────────────────────────────────────┐
+│  Bruger navn                    ✏️  │
+│                                     │
+│  **Overskrift her**                 │
+│  Besked tekst her...                │
+│                                     │
+│  2. februar 2026 kl. 15:30          │
+└─────────────────────────────────────┘
+```
+
+### Database migration SQL
+
+```sql
+-- Tilføj title kolonne med default værdi for eksisterende data
+ALTER TABLE bulletin_posts 
+ADD COLUMN title TEXT NOT NULL DEFAULT '';
+
+-- Opdater eksisterende posts med en standard-overskrift baseret på beskedens første linje
+UPDATE bulletin_posts 
+SET title = CASE 
+  WHEN position(chr(10) in message) > 0 
+  THEN left(message, position(chr(10) in message) - 1)
+  ELSE left(message, 50)
+END
+WHERE title = '';
+```
+
+---
+
+## Søgefunktion
+
+Søgefunktionen opdateres til også at søge i overskrifter, så brugere kan finde logbog-indlæg baseret på både titel og besked.
 
