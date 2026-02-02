@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone, Trash2, ClipboardList } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone, Trash2, ClipboardList, Search } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ import { BulletinBoard } from "@/components/BulletinBoard";
 import { UnreadNotificationsBanner } from "@/components/UnreadNotificationsBanner";
 import { Switch } from "@/components/ui/switch";
 import { useWakeLock } from "@/hooks/use-wake-lock";
+import { SearchDialog } from "@/components/SearchDialog";
 import logo from "@/assets/logo.png";
 
 interface RoutineInfo {
@@ -107,6 +108,8 @@ export default function EmployeeDashboard() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [highlightedRoutineId, setHighlightedRoutineId] = useState<string | null>(null);
   const { isSupported: wakeLockSupported, isActive: wakeLockActive, toggleWakeLock } = useWakeLock();
   const navigate = useNavigate();
 
@@ -460,6 +463,36 @@ export default function EmployeeDashboard() {
     }
   };
 
+  // Search navigation handlers
+  const handleSearchNavigateToShift = async (shiftId: string, routineId?: string) => {
+    const shift = shifts.find((s) => s.id === shiftId);
+    if (shift) {
+      setSelectedShift(shift);
+      if (routineId) {
+        setHighlightedRoutineId(routineId);
+        // Clear highlight after animation
+        setTimeout(() => setHighlightedRoutineId(null), 2000);
+        // Scroll to routine after shift loads
+        setTimeout(() => {
+          const element = document.getElementById(`routine-${routineId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 100);
+      }
+    }
+  };
+
+  const handleSearchNavigateToNotifications = () => {
+    setSelectedShift(null);
+    setMainTab("notifications");
+  };
+
+  const handleSearchNavigateToBulletin = () => {
+    setSelectedShift(null);
+    setMainTab("bulletin");
+  };
+
 
   const renderIcon = (iconName: string, className?: string) => {
     const IconComponent = (LucideIcons as any)[iconName];
@@ -482,12 +515,26 @@ export default function EmployeeDashboard() {
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
             <h1 className="text-xl">Mine Rutiner</h1>
           </div>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logg ut
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
+              <Search className="h-4 w-4" />
+              <span className="sr-only">Søg</span>
+            </Button>
+            <Button variant="ghost" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logg ut
+            </Button>
+          </div>
         </div>
       </header>
+
+      <SearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        onNavigateToShift={handleSearchNavigateToShift}
+        onNavigateToNotifications={handleSearchNavigateToNotifications}
+        onNavigateToBulletin={handleSearchNavigateToBulletin}
+      />
 
       <main className="container mx-auto px-4 py-6 max-w-4xl pb-20">
         {!selectedShift ? (
@@ -671,12 +718,16 @@ export default function EmployeeDashboard() {
                         const isCompleted = completions.has(routine.id);
                         const wasJustCompleted = recentlyCompleted.has(routine.id);
                         const isExpanded = expandedDescriptions.has(routine.id);
+                        const isHighlighted = highlightedRoutineId === routine.id;
                         return (
                           <Card
                             key={routine.id}
+                            id={`routine-${routine.id}`}
                             className={`relative transition-all ${
                               isCompleted ? "opacity-60" : ""
-                            } ${wasJustCompleted ? "animate-celebrate" : ""}`}
+                            } ${wasJustCompleted ? "animate-celebrate" : ""} ${
+                              isHighlighted ? "ring-2 ring-primary ring-offset-2 animate-pulse" : ""
+                            }`}
                           >
                             <TaskCompletionAnimation isCompleted={wasJustCompleted} />
                             <CardContent className="p-4">
@@ -754,12 +805,16 @@ export default function EmployeeDashboard() {
                           const isCompleted = completions.has(routine.id);
                           const wasJustCompleted = recentlyCompleted.has(routine.id);
                           const isExpanded = expandedDescriptions.has(routine.id);
+                          const isHighlighted = highlightedRoutineId === routine.id;
                           return (
                             <Card
                               key={routine.id}
+                              id={`routine-${routine.id}`}
                               className={`relative transition-all ${
                                 isCompleted ? "opacity-60" : ""
-                              } ${wasJustCompleted ? "animate-celebrate" : ""}`}
+                              } ${wasJustCompleted ? "animate-celebrate" : ""} ${
+                                isHighlighted ? "ring-2 ring-primary ring-offset-2 animate-pulse" : ""
+                              }`}
                             >
                               <TaskCompletionAnimation isCompleted={wasJustCompleted} />
                               <CardContent className="p-4">
