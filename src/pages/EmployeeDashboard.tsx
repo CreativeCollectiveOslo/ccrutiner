@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone, Trash2, ClipboardList, Search } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone, RotateCcw, ClipboardList, Search } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -705,7 +705,7 @@ export default function EmployeeDashboard() {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive ml-auto">
-                      <Trash2 className="h-4 w-4 mr-1" />
+                      <RotateCcw className="h-4 w-4 mr-1" />
                       <span className="hidden sm:inline">Nulstil</span>
                     </Button>
                   </AlertDialogTrigger>
