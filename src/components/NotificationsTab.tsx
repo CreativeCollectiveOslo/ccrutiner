@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bell, Check, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { highlightSearchTerm } from "@/lib/highlightText";
 
 interface Routine {
   id: string;
@@ -43,9 +44,10 @@ interface UserProfile {
 
 interface NotificationsTabProps {
   onMarkAsRead?: () => void;
+  searchHighlightTerm?: string | null;
 }
 
-export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
+export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: NotificationsTabProps) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -254,12 +256,12 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
                 <div className="flex-1">
                   {notification.type === "announcement" ? (
                     <>
-                      <h3 className="text-sm font-medium mb-1">{notification.title}</h3>
-                      <p className="text-sm text-muted-foreground">{notification.message}</p>
+                      <h3 className="text-sm font-medium mb-1">{highlightSearchTerm(notification.title, searchHighlightTerm)}</h3>
+                      <p className="text-sm text-muted-foreground">{highlightSearchTerm(notification.message, searchHighlightTerm)}</p>
                     </>
                   ) : (
                     <>
-                      <h3 className="text-sm font-medium mb-1">{notification.message}</h3>
+                      <h3 className="text-sm font-medium mb-1">{highlightSearchTerm(notification.message, searchHighlightTerm)}</h3>
 
                       {notification.routines && (
                         <div className="mt-3 p-3 rounded-lg bg-background border">

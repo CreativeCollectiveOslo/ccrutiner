@@ -16,6 +16,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { highlightSearchTerm } from "@/lib/highlightText";
 
 interface BulletinPost {
   id: string;
@@ -32,7 +33,11 @@ interface UserProfile {
 
 const POSTS_PER_PAGE = 10;
 
-export function BulletinBoard() {
+interface BulletinBoardProps {
+  searchHighlightTerm?: string | null;
+}
+
+export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [profiles, setProfiles] = useState<Map<string, string>>(new Map());
@@ -255,7 +260,7 @@ export function BulletinBoard() {
                         </Button>
                       )}
                     </div>
-                    <p className="text-sm whitespace-pre-wrap mb-3">{post.message}</p>
+                    <p className="text-sm whitespace-pre-wrap mb-3">{highlightSearchTerm(post.message, searchHighlightTerm)}</p>
                     <p className="text-xs text-muted-foreground">
                       {formatDate(post.created_at)}
                       {isEdited(post) && (

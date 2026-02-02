@@ -21,9 +21,9 @@ interface SearchResult {
 interface SearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onNavigateToShift: (shiftId: string, routineId?: string) => void;
-  onNavigateToNotifications: () => void;
-  onNavigateToBulletin: () => void;
+  onNavigateToShift: (shiftId: string, routineId?: string, searchTerm?: string) => void;
+  onNavigateToNotifications: (searchTerm?: string) => void;
+  onNavigateToBulletin: (searchTerm?: string) => void;
 }
 
 export function SearchDialog({
@@ -182,11 +182,11 @@ export function SearchDialog({
     onOpenChange(false);
     
     if (result.type === "routine" && result.shiftId) {
-      onNavigateToShift(result.shiftId, result.routineId);
+      onNavigateToShift(result.shiftId, result.routineId, debouncedQuery);
     } else if (result.type === "notification") {
-      onNavigateToNotifications();
+      onNavigateToNotifications(debouncedQuery);
     } else if (result.type === "bulletin") {
-      onNavigateToBulletin();
+      onNavigateToBulletin(debouncedQuery);
     }
   };
 
