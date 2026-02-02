@@ -669,48 +669,62 @@ export default function EmployeeDashboard() {
               ← Tilbake
             </button>
 
-            <div>
-              <h2 className="text-xl">{selectedShift.name}</h2>
-              <p className="text-sm text-muted-foreground">
-                {completions.size} av {routines.length} oppgaver fullført
-              </p>
-              {wakeLockSupported && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Smartphone className="h-4 w-4 text-muted-foreground" />
-                  <label htmlFor="wake-lock" className="text-sm text-muted-foreground cursor-pointer">
-                    Hold skjerm våken
-                  </label>
-                  <Switch
-                    id="wake-lock"
-                    checked={wakeLockActive}
-                    onCheckedChange={toggleWakeLock}
-                  />
+            <div className="space-y-4">
+              {/* Title and progress */}
+              <div>
+                <h2 className="text-2xl font-semibold">{selectedShift.name}</h2>
+                <div className="mt-2 flex items-center gap-3">
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${routines.length > 0 ? (completions.size / routines.length) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {completions.size} / {routines.length}
+                  </span>
                 </div>
-              )}
-              
-              {/* Clear all completions button */}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="mt-3 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Fjern alle afkrydsninger
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Fjern alle afkrydsninger?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Dette vil fjerne alle afkrydsninger for denne vagt. Handlingen kan ikke fortrydes.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annuller</AlertDialogCancel>
-                    <AlertDialogAction onClick={clearAllCompletions} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                      Fjern alle
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              </div>
+
+              {/* Tools row - subtle, grouped together */}
+              <div className="flex items-center justify-between gap-4 py-2 px-3 bg-muted/50 rounded-lg">
+                {wakeLockSupported && (
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="h-4 w-4 text-muted-foreground" />
+                    <label htmlFor="wake-lock" className="text-sm text-muted-foreground cursor-pointer">
+                      Hold skjerm våken
+                    </label>
+                    <Switch
+                      id="wake-lock"
+                      checked={wakeLockActive}
+                      onCheckedChange={toggleWakeLock}
+                    />
+                  </div>
+                )}
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive ml-auto">
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Nulstil</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Fjern alle afkrydsninger?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Dette vil fjerne alle afkrydsninger for denne vagt. Handlingen kan ikke fortrydes.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuller</AlertDialogCancel>
+                      <AlertDialogAction onClick={clearAllCompletions} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Fjern alle
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
 
 

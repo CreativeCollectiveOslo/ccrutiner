@@ -208,7 +208,7 @@ export function SearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md mx-4 sm:mx-0 p-0 gap-0 [&>button:last-child]:hidden">
+      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto sm:w-full sm:mx-0 p-0 gap-0 [&>button:last-child]:hidden">
         <DialogHeader className="p-4 pb-2">
           <DialogTitle className="sr-only">Søg</DialogTitle>
           <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background">
