@@ -218,7 +218,7 @@ export function NotificationsTab({ onMarkAsRead }: NotificationsTabProps) {
   if (notifications.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
+        <CardContent className="py-12 px-4 text-center">
           <Bell className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Ingen notifikationer endnu</p>
         </CardContent>

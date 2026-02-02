@@ -477,7 +477,7 @@ export default function EmployeeDashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl pb-20">
+      <main className="container mx-auto px-4 py-6 max-w-4xl pb-20">
         {!selectedShift ? (
           <>
             {/* Main tabs - only visible on front page */}
@@ -545,7 +545,7 @@ export default function EmployeeDashboard() {
                 />
 
                 <div className="text-center space-y-2">
-                  <h2 className="text-2xl">Velg din vakt</h2>
+                  <h2 className="text-xl">Velg din vakt</h2>
                   <p className="text-sm text-muted-foreground">
                     Velg hvilken vakt du har i dag
                   </p>
@@ -597,7 +597,7 @@ export default function EmployeeDashboard() {
             </button>
 
             <div>
-              <h2 className="text-2xl">{selectedShift.name}</h2>
+              <h2 className="text-xl">{selectedShift.name}</h2>
               <p className="text-sm text-muted-foreground">
                 {completions.size} av {routines.length} oppgaver fullført
               </p>
@@ -734,7 +734,7 @@ export default function EmployeeDashboard() {
                     
                     return (
                       <div key={section.id} className="space-y-3">
-                        <h3 className="text-base font-medium text-foreground border-b pb-2">
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground border-b pb-2">
                           {section.name}
                         </h3>
                         {sectionRoutines.map((routine) => {

@@ -303,12 +303,12 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl pb-20">
+      <main className="container mx-auto px-4 py-6 max-w-6xl pb-20">
         <div className="mb-6">
           <div className="flex border-b border-border">
             <button
               onClick={() => setActiveTab("routines")}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
                 activeTab === "routines"
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -321,7 +321,7 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("announcements")}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
                 activeTab === "announcements"
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -334,13 +334,13 @@ export default function AdminDashboard() {
             </button>
             <button
               onClick={() => setActiveTab("users")}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
                 activeTab === "users"
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Brukere & Roller
+              Brukere
               {activeTab === "users" && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
@@ -375,7 +375,7 @@ export default function AdminDashboard() {
                   </SheetContent>
                 </Sheet>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="p-4 space-y-2">
                 {shifts.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Ingen vakter endnu. Klik på tandhjulet for at oprette.

@@ -376,7 +376,7 @@ export function AnnouncementManager() {
                 <>
                   {getPaginatedAnnouncements().map((announcement) => (
                     <Card key={announcement.id}>
-                      <CardContent className="pt-6">
+                      <CardContent className="p-4">
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold mb-2">{announcement.title}</h3>
@@ -454,7 +454,7 @@ export function AnnouncementManager() {
                 <>
                   {getPaginatedRoutineNotifications().map((notification) => (
                     <Card key={notification.id}>
-                      <CardContent className="pt-6">
+                      <CardContent className="p-4">
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap gap-2 mb-2">
