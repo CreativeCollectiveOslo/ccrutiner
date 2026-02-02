@@ -97,6 +97,7 @@ export default function EmployeeDashboard() {
   const [sections, setSections] = useState<Section[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [completions, setCompletions] = useState<Set<string>>(new Set());
+  const [recentlyCompleted, setRecentlyCompleted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -431,6 +432,17 @@ export default function EmployeeDashboard() {
         newCompletions.add(routineId);
         setCompletions(newCompletions);
         
+        // Track recently completed for animation
+        setRecentlyCompleted(prev => new Set(prev).add(routineId));
+        // Clear from recently completed after animation
+        setTimeout(() => {
+          setRecentlyCompleted(prev => {
+            const updated = new Set(prev);
+            updated.delete(routineId);
+            return updated;
+          });
+        }, 1000);
+        
         // Update shift progress
         setShiftProgress((prev) => ({
           ...prev,
@@ -657,18 +669,19 @@ export default function EmployeeDashboard() {
                     <div className="space-y-3">
                       {getRoutinesBySection(null).map((routine) => {
                         const isCompleted = completions.has(routine.id);
+                        const wasJustCompleted = recentlyCompleted.has(routine.id);
                         const isExpanded = expandedDescriptions.has(routine.id);
                         return (
                           <Card
                             key={routine.id}
                             className={`relative transition-all ${
-                              isCompleted ? "opacity-60 animate-celebrate" : ""
-                            }`}
+                              isCompleted ? "opacity-60" : ""
+                            } ${wasJustCompleted ? "animate-celebrate" : ""}`}
                           >
-                            <TaskCompletionAnimation isCompleted={isCompleted} />
+                            <TaskCompletionAnimation isCompleted={wasJustCompleted} />
                             <CardContent className="p-4">
                               <div className="flex items-start gap-3">
-                                <div className={isCompleted ? "animate-check-bounce" : ""}>
+                                <div className={wasJustCompleted ? "animate-check-bounce" : ""}>
                                   <Checkbox
                                     id={routine.id}
                                     checked={isCompleted}
@@ -739,18 +752,19 @@ export default function EmployeeDashboard() {
                         </h3>
                         {sectionRoutines.map((routine) => {
                           const isCompleted = completions.has(routine.id);
+                          const wasJustCompleted = recentlyCompleted.has(routine.id);
                           const isExpanded = expandedDescriptions.has(routine.id);
                           return (
                             <Card
                               key={routine.id}
                               className={`relative transition-all ${
-                                isCompleted ? "opacity-60 animate-celebrate" : ""
-                              }`}
+                                isCompleted ? "opacity-60" : ""
+                              } ${wasJustCompleted ? "animate-celebrate" : ""}`}
                             >
-                              <TaskCompletionAnimation isCompleted={isCompleted} />
+                              <TaskCompletionAnimation isCompleted={wasJustCompleted} />
                               <CardContent className="p-4">
                                 <div className="flex items-start gap-3">
-                                  <div className={isCompleted ? "animate-check-bounce" : ""}>
+                                  <div className={wasJustCompleted ? "animate-check-bounce" : ""}>
                                     <Checkbox
                                       id={routine.id}
                                       checked={isCompleted}
