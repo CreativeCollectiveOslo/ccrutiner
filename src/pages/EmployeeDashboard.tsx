@@ -27,6 +27,7 @@ import { UnreadNotificationsBanner } from "@/components/UnreadNotificationsBanne
 import { Switch } from "@/components/ui/switch";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { SearchDialog } from "@/components/SearchDialog";
+import { highlightSearchTerm } from "@/lib/highlightText";
 import logo from "@/assets/logo.png";
 
 interface RoutineInfo {
@@ -110,6 +111,7 @@ export default function EmployeeDashboard() {
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
   const [searchOpen, setSearchOpen] = useState(false);
   const [highlightedRoutineId, setHighlightedRoutineId] = useState<string | null>(null);
+  const [searchHighlightTerm, setSearchHighlightTerm] = useState<string | null>(null);
   const { isSupported: wakeLockSupported, isActive: wakeLockActive, toggleWakeLock } = useWakeLock();
   const navigate = useNavigate();
 
@@ -464,7 +466,7 @@ export default function EmployeeDashboard() {
   };
 
   // Search navigation handlers
-  const handleSearchNavigateToShift = async (shiftId: string, routineId?: string) => {
+  const handleSearchNavigateToShift = async (shiftId: string, routineId?: string, searchTerm?: string) => {
     const shift = shifts.find((s) => s.id === shiftId);
     if (shift) {
       setSelectedShift(shift);
@@ -480,17 +482,29 @@ export default function EmployeeDashboard() {
           }
         }, 100);
       }
+      if (searchTerm) {
+        setSearchHighlightTerm(searchTerm);
+        setTimeout(() => setSearchHighlightTerm(null), 5000);
+      }
     }
   };
 
-  const handleSearchNavigateToNotifications = () => {
+  const handleSearchNavigateToNotifications = (searchTerm?: string) => {
     setSelectedShift(null);
     setMainTab("notifications");
+    if (searchTerm) {
+      setSearchHighlightTerm(searchTerm);
+      setTimeout(() => setSearchHighlightTerm(null), 5000);
+    }
   };
 
-  const handleSearchNavigateToBulletin = () => {
+  const handleSearchNavigateToBulletin = (searchTerm?: string) => {
     setSelectedShift(null);
     setMainTab("bulletin");
+    if (searchTerm) {
+      setSearchHighlightTerm(searchTerm);
+      setTimeout(() => setSearchHighlightTerm(null), 5000);
+    }
   };
 
 
@@ -586,9 +600,9 @@ export default function EmployeeDashboard() {
             </div>
 
             {mainTab === "notifications" ? (
-              <NotificationsTab />
+              <NotificationsTab searchHighlightTerm={searchHighlightTerm} />
             ) : mainTab === "bulletin" ? (
-              <BulletinBoard />
+              <BulletinBoard searchHighlightTerm={searchHighlightTerm} />
             ) : (
               <div className="space-y-6">
                 {/* Unread notifications banner above shifts */}
@@ -741,14 +755,14 @@ export default function EmployeeDashboard() {
                                   />
                                 </div>
                                 <div className="flex-1 space-y-1">
-                                  <label
-                                    htmlFor={routine.id}
-                                    className={`text-sm font-medium cursor-pointer ${
-                                      isCompleted ? "line-through" : ""
-                                    }`}
-                                  >
-                                    {routine.title}
-                                  </label>
+                                    <label
+                                      htmlFor={routine.id}
+                                      className={`text-sm font-medium cursor-pointer ${
+                                        isCompleted ? "line-through" : ""
+                                      }`}
+                                    >
+                                      {highlightSearchTerm(routine.title, searchHighlightTerm)}
+                                    </label>
                                   {routine.description && (
                                     <div>
                                       <p
@@ -756,7 +770,7 @@ export default function EmployeeDashboard() {
                                           !isExpanded ? "line-clamp-3" : ""
                                         }`}
                                       >
-                                        {routine.description}
+                                        {highlightSearchTerm(routine.description, searchHighlightTerm)}
                                       </p>
                                       {routine.description.length > 150 && (
                                         <button
@@ -834,17 +848,17 @@ export default function EmployeeDashboard() {
                                         isCompleted ? "line-through" : ""
                                       }`}
                                     >
-                                      {routine.title}
+                                      {highlightSearchTerm(routine.title, searchHighlightTerm)}
                                     </label>
-                                    {routine.description && (
-                                      <div>
-                                        <p
-                                          className={`text-sm text-muted-foreground ${
-                                            !isExpanded ? "line-clamp-3" : ""
-                                          }`}
-                                        >
-                                          {routine.description}
-                                        </p>
+                                  {routine.description && (
+                                    <div>
+                                      <p
+                                        className={`text-sm text-muted-foreground ${
+                                          !isExpanded ? "line-clamp-3" : ""
+                                        }`}
+                                      >
+                                        {highlightSearchTerm(routine.description, searchHighlightTerm)}
+                                      </p>
                                         {routine.description.length > 150 && (
                                           <button
                                             type="button"
