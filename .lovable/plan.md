@@ -1,143 +1,130 @@
 
 
-# Auto-scroll til søgeresultat + Søgedialog mobiloptimering
+# Oprydning af vagt-header + Søgedialog padding-fix
 
 ## Oversigt
-Denne plan løser tre ting:
-1. **Auto-scroll**: Når du klikker på et søgeresultat, scroller siden automatisk ned til det sted, hvor søgeteksten fremgår
-2. **Mobil padding**: Søgeboksen får lidt luft i siderne på mobil
-3. **Luk-knap oprydning**: Lukknappen i søgedialogens header positioneres pænere
+Denne plan rydder op i layoutet af vagt-headeren og fikser padding-problemet i søgedialogen på mobil.
 
 ---
 
-## Hvad der ændres for dig
+## 1. Vagt-header oprydning
 
-### Forbedret brugeroplevelse
-- Når du klikker på et søgeresultat og bliver ført til destinationen, scroller siden automatisk ned til det første element, der matcher
-- Søgeboksen fylder ikke længere hele skærmbredden på mobil - der er nu luft i siderne
-- Lukknappen i søgedialogen er placeret mere naturligt ved siden af søgefeltet
+### Nuværende problemer
+- Alle elementer er stablet lodret uden visuel gruppering
+- Ingen klar prioritet mellem elementer
+- Wake lock og "Fjern alle afkrydsninger" føles tilfældigt placeret
+- "Fjern alle afkrydsninger"-knappen er for fremtrædende med rød styling
 
----
+### Forslag til nyt layout
 
-## Tekniske ændringer
+**Prioriteret struktur:**
+1. **Primært**: Vagtens navn (stor, tydelig)
+2. **Sekundært**: Fremdriftsindikator (kompakt, under navn)
+3. **Tertiært**: Værktøjer (wake lock + fjern afkrydsninger) grupperet i et diskret område
 
-### 1. SearchDialog - Mobil padding og luk-knap
+**Visuelt layout:**
 
-**Nuværende problemer:**
-- `DialogContent` har `p-0` som fjerner al padding
-- Luk-knappen fra shadcn/ui Dialog er absolut positioneret `right-4 top-4` men kolliderer med vores custom header
+```text
+┌─────────────────────────────────────────────────┐
+│  ← Tilbake                                      │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  Åbne vagt                                      │  ← Stor titel
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/10            │  ← Progress bar + tal
+│                                                 │
+│  ┌─────────────────────────────────────────┐   │
+│  │ 📱 Hold skjerm våken  [○]    [Nulstil]  │   │  ← Værktøjslinje
+│  └─────────────────────────────────────────┘   │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
 
-**Løsning:**
-- Tilføj `mx-4 sm:mx-0` til DialogContent for at give margin på mobil
-- Skjul den indbyggede luk-knap og tilføj en custom luk-knap i headeren ved siden af søgefeltet
-- Brug `DialogClose` komponent for semantisk korrekt lukkeknap
+### Tekniske ændringer
+
+**Ny struktur for vagt-header (linjer 672-714):**
 
 ```typescript
-// Opdateret DialogContent styling
-<DialogContent className="sm:max-w-md mx-4 sm:mx-0 p-0 gap-0 [&>button:last-child]:hidden">
-  <DialogHeader className="p-4 pb-2">
-    <DialogTitle className="sr-only">Søg</DialogTitle>
-    <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background">
-      <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-      <Input ... />
-      {isSearching && <Loader2 ... />}
-      <DialogClose asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Luk</span>
-        </Button>
-      </DialogClose>
+<div className="space-y-4">
+  {/* Title and progress */}
+  <div>
+    <h2 className="text-2xl font-semibold">{selectedShift.name}</h2>
+    <div className="mt-2 flex items-center gap-3">
+      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-primary transition-all duration-300"
+          style={{ width: `${routines.length > 0 ? (completions.size / routines.length) * 100 : 0}%` }}
+        />
+      </div>
+      <span className="text-sm text-muted-foreground whitespace-nowrap">
+        {completions.size} / {routines.length}
+      </span>
     </div>
-  </DialogHeader>
-  ...
-</DialogContent>
+  </div>
+
+  {/* Tools row - subtle, grouped together */}
+  <div className="flex items-center justify-between gap-4 py-2 px-3 bg-muted/50 rounded-lg">
+    {wakeLockSupported && (
+      <div className="flex items-center gap-2">
+        <Smartphone className="h-4 w-4 text-muted-foreground" />
+        <label htmlFor="wake-lock" className="text-sm text-muted-foreground cursor-pointer">
+          Hold skjerm våken
+        </label>
+        <Switch
+          id="wake-lock"
+          checked={wakeLockActive}
+          onCheckedChange={toggleWakeLock}
+        />
+      </div>
+    )}
+    
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+          <Trash2 className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Nulstil</span>
+        </Button>
+      </AlertDialogTrigger>
+      {/* ... AlertDialog content unchanged */}
+    </AlertDialog>
+  </div>
+</div>
 ```
 
-### 2. Auto-scroll til første match - NotificationsTab
+### Forbedringer
+- **Progress bar**: Visuel indikator i stedet for kun tekst
+- **Værktøjslinje**: Wake lock og nulstil er samlet i en diskret container
+- **Nulstil-knap**: Mindre fremtrædende (ghost variant), kun rød ved hover
+- **Responsivt**: "Nulstil" tekst skjult på små skærme, kun ikon vises
 
-Tilføj scroll-logik når `searchHighlightTerm` er sat:
+---
+
+## 2. Søgedialog padding-fix
+
+### Nuværende problem
+- `DialogContent` har `mx-4` for margin, men dialogen kan stadig ramme højre kant
+- Der mangler ensartet padding inde i headeren
+
+### Løsning
+
+Opdater styling i `SearchDialog.tsx`:
 
 ```typescript
-import { useEffect, useRef } from "react";
+// Nuværende:
+<DialogContent className="sm:max-w-md mx-4 sm:mx-0 p-0 gap-0 [&>button:last-child]:hidden">
 
-// I NotificationsTab komponenten:
-const firstMatchRef = useRef<HTMLDivElement>(null);
-const hasScrolledRef = useRef(false);
-
-useEffect(() => {
-  if (searchHighlightTerm && firstMatchRef.current && !hasScrolledRef.current) {
-    setTimeout(() => {
-      firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      hasScrolledRef.current = true;
-    }, 100);
-  }
-  if (!searchHighlightTerm) {
-    hasScrolledRef.current = false;
-  }
-}, [searchHighlightTerm, notifications]);
-
-// Ved rendering - find første match og tilføj ref:
-const firstMatchId = searchHighlightTerm 
-  ? notifications.find(n => {
-      const text = n.type === "announcement" 
-        ? `${n.title} ${n.message}`
-        : n.message;
-      return text.toLowerCase().includes(searchHighlightTerm.toLowerCase());
-    })?.id
-  : null;
-
-// I JSX:
-<div 
-  ref={notification.id === firstMatchId ? firstMatchRef : undefined}
-  ...
->
+// Ændres til:
+<DialogContent className="sm:max-w-md w-[calc(100%-2rem)] mx-auto sm:mx-0 p-0 gap-0 [&>button:last-child]:hidden">
 ```
 
-### 3. Auto-scroll til første match - BulletinBoard
-
-Samme logik som NotificationsTab:
+Alternativt, hvis problemet er inde i headeren:
 
 ```typescript
-const firstMatchRef = useRef<HTMLDivElement>(null);
-const hasScrolledRef = useRef(false);
+// Nuværende:
+<DialogHeader className="p-4 pb-2">
 
-useEffect(() => {
-  if (searchHighlightTerm && firstMatchRef.current && !hasScrolledRef.current) {
-    setTimeout(() => {
-      firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      hasScrolledRef.current = true;
-    }, 100);
-  }
-  if (!searchHighlightTerm) {
-    hasScrolledRef.current = false;
-  }
-}, [searchHighlightTerm, posts]);
-
-// Find første matchende post
-const firstMatchId = searchHighlightTerm 
-  ? posts.find(p => p.message.toLowerCase().includes(searchHighlightTerm.toLowerCase()))?.id
-  : null;
-
-// I JSX ved post-kort:
-<Card 
-  key={post.id} 
-  ref={post.id === firstMatchId ? firstMatchRef : undefined}
->
+// Tjek at padding er ensartet - evt. ændre til:
+<DialogHeader className="px-4 pt-4 pb-2">
 ```
-
-### 4. EmployeeDashboard - Rutine scroll allerede implementeret
-
-Rutine-scroll er allerede implementeret i `handleSearchNavigateToShift`:
-```typescript
-setTimeout(() => {
-  const element = document.getElementById(`routine-${routineId}`);
-  if (element) {
-    element.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-}, 100);
-```
-
-Men vi skal også håndtere scroll baseret på `searchHighlightTerm` for de tilfælde hvor flere rutiner matcher. Vi tilføjer en `useEffect` der finder og scroller til første match.
 
 ---
 
@@ -145,61 +132,19 @@ Men vi skal også håndtere scroll baseret på `searchHighlightTerm` for de tilf
 
 | Fil | Ændringer |
 |-----|-----------|
-| `src/components/SearchDialog.tsx` | Tilføj mobil margin, skjul indbygget luk-knap, tilføj custom luk-knap i header |
-| `src/components/NotificationsTab.tsx` | Tilføj auto-scroll til første match |
-| `src/components/BulletinBoard.tsx` | Tilføj auto-scroll til første match |
-| `src/pages/EmployeeDashboard.tsx` | Tilføj auto-scroll til første matchende rutine baseret på søgeterm |
+| `src/pages/EmployeeDashboard.tsx` | Refaktor vagt-header med progress bar og værktøjslinje |
+| `src/components/SearchDialog.tsx` | Fix padding på mobil |
 
 ---
 
-## Visuelt før/efter
+## Sammenfatning af forbedringer
 
-### Søgedialog på mobil
+### Vagt-header
+- Tydeligere visuel hierarki med stor titel øverst
+- Progress bar giver bedre overblik end kun tal
+- Værktøjer samlet i diskret container
+- "Fjern alle afkrydsninger" mindre aggressiv styling
 
-**Før:**
-```text
-|--------------------------------------|
-|  [X]                                 |
-|  +----------------------------------+|
-|  | [🔍] Søg efter rutiner...       ||
-|  +----------------------------------+|
-```
-
-**Efter:**
-```text
-|    --------------------------------  |
-|    | [🔍] Søg...           [X]    |  |
-|    --------------------------------  |
-|                                      |
-```
-
-- Luft i siderne (margin)
-- Luk-knap integreret i søgefeltet
-- Renere og mere mobilvennigt design
-
----
-
-## Scroll-flow
-
-```text
-Bruger klikker på søgeresultat
-         │
-         ▼
-    Navigation sker
-    (tab skifter/vagt åbnes)
-         │
-         ▼
-    searchHighlightTerm sættes
-         │
-         ▼
-    useEffect i destination-komponent
-    finder første match
-         │
-         ▼
-    scrollIntoView({ behavior: "smooth", block: "center" })
-         │
-         ▼
-    Elementet er centreret på skærmen
-    med highlighting synligt
-```
+### Søgedialog
+- Ensartet luft på begge sider af dialogen på mobil
 
