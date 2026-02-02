@@ -1,248 +1,255 @@
 
-# Global Søgefunktion til Dashboard
+# Highlight søgetekst på destinationsstedet
 
 ## Oversigt
-Tilføjer en søgefunktion tilgængelig fra forsiden af dashboardet, hvor brugere kan søge på tværs af:
-- **Rutiner** (alle vagter)
-- **Notifikationer** (announcements og routine notifications)
-- **Opslagstavle** (bulletin posts)
-
-Når man klikker på et søgeresultat, bliver man transporteret direkte til det sted, hvor resultatet blev fundet.
+Når du klikker på et søgeresultat, skal søgeordet (f.eks. "klud") blive highlightet i den tekst, hvor det blev fundet - uanset om det er i en rutine, notifikation eller på opslagstavlen.
 
 ---
 
 ## Hvad der ændres for dig
 
-### Ny funktionalitet
-- En søgeknap i headeren (forstørrelsesglas-ikon)
-- Når du klikker, åbnes en søgedialog med et tekstfelt
-- Resultater vises live mens du skriver
-- Resultater er grupperet efter type (Rutiner, Notifikationer, Opslagstavle)
-- Klik på et resultat fører dig direkte til det:
-  - Rutine → Åbner den pågældende vagt og viser rutinen
-  - Notifikation → Skifter til notifikations-fanen
-  - Opslagstavle → Skifter til opslagstavle-fanen
-
 ### Brugeroplevelse
-- Tryk på søgeknappen i headeren
-- Skriv dit søgeord (f.eks. "klud")
-- Se grupperede resultater med matchende tekst fremhævet
-- Klik på resultatet for at blive ført til det
+1. Søg efter f.eks. "klud" og klik på et resultat
+2. Du bliver transporteret til destinationen
+3. Søgeordet "klud" er nu fremhævet med en accent-farve i selve teksten
+4. Highlightingen forsvinder automatisk efter 5 sekunder
 
 ---
 
-## Tekniske detaljer
+## Tekniske ændringer
 
-### 1. Ny komponent: SearchDialog.tsx
+### 1. Udvid SearchDialog props
 
-Opretter `src/components/SearchDialog.tsx` der håndterer:
+Ændr navigation-callbacks til også at videregive søgeordet:
 
-**Props:**
-- `open: boolean` - om dialogen er åben
-- `onOpenChange: (open: boolean) => void` - callback ved åbning/lukning
-- `onNavigateToShift: (shiftId: string, routineId?: string) => void` - navigation til vagt
-- `onNavigateToNotifications: () => void` - navigation til notifikationer
-- `onNavigateToBulletin: () => void` - navigation til opslagstavle
-
-**Funktionalitet:**
-- Inputfelt til søgetekst med debounce (300ms)
-- Søgning på tværs af alle datakilder
-- Gruppering af resultater efter type
-- Fremhævning af matchende tekst
-- Keyboard navigation (pil op/ned, Enter)
-
-**Datakilder der søges i:**
-1. `routines` - title og description
-2. `announcements` - title og message  
-3. `routine_notifications` - message
-4. `bulletin_posts` - message
-
-**Resultat-struktur:**
 ```typescript
-interface SearchResult {
-  id: string;
-  type: 'routine' | 'notification' | 'bulletin';
-  title: string;
-  description?: string;
-  context?: string; // f.eks. vagtens navn
-  shiftId?: string;
-  routineId?: string;
+interface SearchDialogProps {
+  // ... eksisterende props
+  onNavigateToShift: (shiftId: string, routineId?: string, searchTerm?: string) => void;
+  onNavigateToNotifications: (searchTerm?: string) => void;
+  onNavigateToBulletin: (searchTerm?: string) => void;
 }
 ```
 
-### 2. UI-struktur for SearchDialog
+### 2. Opdater handleResultClick i SearchDialog
 
-```text
-+------------------------------------------+
-|  [X]                                     |
-|  +--------------------------------------+|
-|  | [Søgeikon] Søg efter rutiner...      ||
-|  +--------------------------------------+|
-|                                          |
-|  RUTINER                                 |
-|  +--------------------------------------+|
-|  | Rengør med klud                       |
-|  | Åbne vagt                             |
-|  +--------------------------------------+|
-|  +--------------------------------------+|
-|  | Tør støv af med klud                  |
-|  | Lukke vagt                            |
-|  +--------------------------------------+|
-|                                          |
-|  NOTIFIKATIONER                          |
-|  +--------------------------------------+|
-|  | Husk at bruge ren klud hver dag       |
-|  | 15. januar 2026                       |
-|  +--------------------------------------+|
-|                                          |
-|  OPSLAGSTAVLE                            |
-|  +--------------------------------------+|
-|  | Vi har fået nye klude på lager        |
-|  | Anna · 10. januar 2026                |
-|  +--------------------------------------+|
-+------------------------------------------+
-```
-
-Empty state (ingen resultater):
-```text
-+------------------------------------------+
-|           [Søgeikon]                     |
-|     Ingen resultater fundet              |
-|   Prøv et andet søgeord                  |
-+------------------------------------------+
-```
-
-### 3. Opdateringer til EmployeeDashboard.tsx
-
-**Nye imports:**
-- `Search` fra lucide-react
-- `SearchDialog` komponent
-
-**Nye state variabler:**
-- `searchOpen: boolean` - om søgedialog er åben
-- `highlightedRoutineId: string | null` - for at highlighte specifik rutine efter navigation
-
-**Header ændringer:**
-- Tilføj søgeknap ved siden af log-ud knappen
-- Søgeknappen åbner SearchDialog
-
-**Navigation callbacks:**
-- `handleSearchNavigateToShift(shiftId, routineId)`:
-  - Sætter `selectedShift` til den valgte vagt
-  - Sætter `highlightedRoutineId` for at scrolle til og highlighte rutinen
-  - Lukker søgedialog
-- `handleSearchNavigateToNotifications()`:
-  - Sætter `mainTab` til "notifications"
-  - Lukker søgedialog
-- `handleSearchNavigateToBulletin()`:
-  - Sætter `mainTab` til "bulletin"
-  - Lukker søgedialog
-
-**Rutine highlighting:**
-- Når en rutine matches via søgning, scroll til den og giv den en kort highlight-animation
-- Fjern highlight efter 2 sekunder
-
-### 4. Søgelogik i SearchDialog
-
-**Søgning:**
 ```typescript
-const search = async (query: string) => {
-  if (query.length < 2) {
-    setResults([]);
-    return;
+const handleResultClick = (result: SearchResult) => {
+  onOpenChange(false);
+  
+  if (result.type === "routine" && result.shiftId) {
+    onNavigateToShift(result.shiftId, result.routineId, debouncedQuery);
+  } else if (result.type === "notification") {
+    onNavigateToNotifications(debouncedQuery);
+  } else if (result.type === "bulletin") {
+    onNavigateToBulletin(debouncedQuery);
   }
-  
-  const lowerQuery = query.toLowerCase();
-  
-  // Søg i rutiner (med vagt-info)
-  const { data: routinesData } = await supabase
-    .from('routines')
-    .select('id, title, description, shift_id, shifts(name)')
-    .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
-  
-  // Søg i announcements
-  const { data: announcementsData } = await supabase
-    .from('announcements')
-    .select('id, title, message, created_at')
-    .or(`title.ilike.%${query}%,message.ilike.%${query}%`);
-  
-  // Søg i routine notifications
-  const { data: routineNotifsData } = await supabase
-    .from('routine_notifications')
-    .select('id, message, created_at')
-    .ilike('message', `%${query}%`);
-  
-  // Søg i bulletin posts
-  const { data: bulletinData } = await supabase
-    .from('bulletin_posts')
-    .select('id, message, created_at, user_id')
-    .ilike('message', `%${query}%`);
-  
-  // Kombiner og formater resultater
-  // ...
 };
 ```
 
-### 5. Debounce implementation
+### 3. Ny state i EmployeeDashboard
+
+Tilføj `searchHighlightTerm` state til at gemme søgeordet:
 
 ```typescript
-const [searchQuery, setSearchQuery] = useState('');
-const [debouncedQuery, setDebouncedQuery] = useState('');
-
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setDebouncedQuery(searchQuery);
-  }, 300);
-  return () => clearTimeout(timer);
-}, [searchQuery]);
-
-useEffect(() => {
-  if (debouncedQuery) {
-    search(debouncedQuery);
-  }
-}, [debouncedQuery]);
+const [searchHighlightTerm, setSearchHighlightTerm] = useState<string | null>(null);
 ```
 
-### 6. Tekst-highlighting
+### 4. Opdater navigation handlers i EmployeeDashboard
 
-For at fremhæve matchende tekst:
 ```typescript
-const highlightMatch = (text: string, query: string) => {
-  if (!query) return text;
-  const regex = new RegExp(`(${query})`, 'gi');
-  const parts = text.split(regex);
-  return parts.map((part, i) => 
-    part.toLowerCase() === query.toLowerCase() 
-      ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-800">{part}</mark>
-      : part
-  );
+const handleSearchNavigateToShift = async (shiftId: string, routineId?: string, searchTerm?: string) => {
+  const shift = shifts.find((s) => s.id === shiftId);
+  if (shift) {
+    setSelectedShift(shift);
+    if (searchTerm) {
+      setSearchHighlightTerm(searchTerm);
+      setTimeout(() => setSearchHighlightTerm(null), 5000);
+    }
+    // ... resten af eksisterende logik
+  }
 };
+
+const handleSearchNavigateToNotifications = (searchTerm?: string) => {
+  setSelectedShift(null);
+  setMainTab("notifications");
+  if (searchTerm) {
+    setSearchHighlightTerm(searchTerm);
+    setTimeout(() => setSearchHighlightTerm(null), 5000);
+  }
+};
+
+const handleSearchNavigateToBulletin = (searchTerm?: string) => {
+  setSelectedShift(null);
+  setMainTab("bulletin");
+  if (searchTerm) {
+    setSearchHighlightTerm(searchTerm);
+    setTimeout(() => setSearchHighlightTerm(null), 5000);
+  }
+};
+```
+
+### 5. Opret delt highlightMatch utility
+
+Opretter `src/lib/highlightText.tsx` med genbrugelig highlight-funktion:
+
+```typescript
+export function highlightSearchTerm(text: string, searchTerm: string | null): React.ReactNode {
+  if (!searchTerm || !text) return text;
+  
+  try {
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escapedTerm})`, "gi");
+    const parts = text.split(regex);
+    
+    return parts.map((part, i) =>
+      part.toLowerCase() === searchTerm.toLowerCase() ? (
+        <mark key={i} className="bg-accent text-accent-foreground rounded px-0.5">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  } catch {
+    return text;
+  }
+}
+```
+
+### 6. Opdater rutine-visning i EmployeeDashboard
+
+Brug `highlightSearchTerm` på rutinens titel og beskrivelse:
+
+```typescript
+<label className={`text-sm font-medium cursor-pointer ${isCompleted ? "line-through" : ""}`}>
+  {highlightSearchTerm(routine.title, searchHighlightTerm)}
+</label>
+// ...
+<p className={`text-sm text-muted-foreground ${!isExpanded ? "line-clamp-3" : ""}`}>
+  {highlightSearchTerm(routine.description, searchHighlightTerm)}
+</p>
+```
+
+### 7. Tilføj searchHighlightTerm prop til NotificationsTab
+
+Opdater NotificationsTab interface:
+
+```typescript
+interface NotificationsTabProps {
+  onMarkAsRead?: () => void;
+  searchHighlightTerm?: string | null;
+}
+```
+
+Brug highlight-funktionen på notification-tekster:
+
+```typescript
+// For announcements
+<h3 className="text-sm font-medium mb-1">
+  {highlightSearchTerm(notification.title, searchHighlightTerm)}
+</h3>
+<p className="text-sm text-muted-foreground">
+  {highlightSearchTerm(notification.message, searchHighlightTerm)}
+</p>
+
+// For routine notifications
+<h3 className="text-sm font-medium mb-1">
+  {highlightSearchTerm(notification.message, searchHighlightTerm)}
+</h3>
+```
+
+### 8. Tilføj searchHighlightTerm prop til BulletinBoard
+
+Opdater BulletinBoard interface:
+
+```typescript
+interface BulletinBoardProps {
+  searchHighlightTerm?: string | null;
+}
+```
+
+Brug highlight-funktionen på post-beskeder:
+
+```typescript
+<p className="text-sm whitespace-pre-wrap mb-3">
+  {highlightSearchTerm(post.message, searchHighlightTerm)}
+</p>
+```
+
+### 9. Videregiv prop i EmployeeDashboard
+
+```typescript
+{mainTab === "notifications" && (
+  <NotificationsTab 
+    onMarkAsRead={() => fetchUnreadCount()} 
+    searchHighlightTerm={searchHighlightTerm}
+  />
+)}
+
+{mainTab === "bulletin" && (
+  <BulletinBoard searchHighlightTerm={searchHighlightTerm} />
+)}
 ```
 
 ---
 
-## Implementeringsrækkefølge
+## Filer der ændres
 
-1. Opret `SearchDialog.tsx` komponent med:
-   - Dialog-struktur (bruger eksisterende Dialog-komponent)
-   - Søgeinput med debounce
-   - Søgelogik for alle datakilder
-   - Grupperede resultater med highlighting
-   - Navigation callbacks
-
-2. Opdater `EmployeeDashboard.tsx`:
-   - Tilføj søgeknap i header
-   - Tilføj state for søgedialog og highlighted rutine
-   - Implementer navigation handlers
-   - Tilføj highlight-effekt på rutiner
-   - Scroll-to-element funktionalitet
+| Fil | Ændringer |
+|-----|-----------|
+| `src/lib/highlightText.tsx` | **Ny fil** - Delt utility til tekst-highlighting |
+| `src/components/SearchDialog.tsx` | Opdater navigation callbacks til at inkludere søgeordet |
+| `src/pages/EmployeeDashboard.tsx` | Tilføj `searchHighlightTerm` state, opdater handlers, brug highlight på rutiner |
+| `src/components/NotificationsTab.tsx` | Tilføj prop og highlight på notifikationstekst |
+| `src/components/BulletinBoard.tsx` | Tilføj prop og highlight på postbeskeder |
 
 ---
 
-## Edge cases
+## Flowdiagram
 
-- **Søgeord under 2 tegn**: Viser ingen resultater (for at undgå for mange matches)
-- **Ingen resultater**: Viser venlig besked
-- **Lange tekster**: Trunkeres med "..." og viser kontekst omkring match
-- **Vagt ikke valgt**: Hvis man søger og klikker på en rutine, navigeres til vagten først
-- **Keyboard navigation**: Escape lukker dialogen
+```text
+Søgedialog
+    │
+    ├─ Klik på rutine-resultat
+    │       │
+    │       └─► handleSearchNavigateToShift(shiftId, routineId, "klud")
+    │                   │
+    │                   └─► setSearchHighlightTerm("klud")
+    │                   └─► Rutine vises med "klud" highlightet
+    │
+    ├─ Klik på notifikation-resultat  
+    │       │
+    │       └─► handleSearchNavigateToNotifications("klud")
+    │                   │
+    │                   └─► NotificationsTab med prop searchHighlightTerm="klud"
+    │                   └─► Notifikationstekst vises med "klud" highlightet
+    │
+    └─ Klik på opslagstavle-resultat
+            │
+            └─► handleSearchNavigateToBulletin("klud")
+                        │
+                        └─► BulletinBoard med prop searchHighlightTerm="klud"
+                        └─► Post-besked vises med "klud" highlightet
+```
+
+---
+
+## Highlight-styling
+
+Bruger samme styling som i SearchDialog:
+- Baggrund: `bg-accent` (følger tema)
+- Tekstfarve: `text-accent-foreground`
+- Afrunding: `rounded`
+- Padding: `px-0.5`
+
+Dette sikrer konsistens mellem highlightet i søgeresultaterne og på destinationen.
+
+---
+
+## Timeout-logik
+
+Highlighten forsvinder automatisk efter 5 sekunder via `setTimeout`:
+- Lang nok til at brugeren ser og finder det
+- Kort nok til at siden ser normal ud igen
+- Ryddes også hvis brugeren navigerer væk
