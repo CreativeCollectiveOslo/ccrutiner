@@ -1,118 +1,174 @@
 
-
-# Delt Opgave-Fremskridt
+# Opslagstavle til Medarbejder Dashboard
 
 ## Oversigt
-Ændrer opgavesystemet så alle brugere kan se den samlede fremgang på en vagt, og afkrydsninger ikke længere nulstilles automatisk. En ny knap tilføjes for manuelt at rydde alle afkrydsninger.
+Tilføjer en ny "Opslagstavle" fane på forsiden af medarbejder-dashboardet, hvor alle brugere kan skrive indlæg og se andres indlæg. Brugere kan redigere deres egne indlæg. Indlæg kan ikke slettes og vises med nyeste først, med paginering hvis der er mange.
 
 ## Hvad der ændres for dig
 
 ### Ny funktionalitet
-- Alle afkrydsninger på en vagt er nu synlige for alle brugere
-- Opgaver nulstilles IKKE automatisk ved midnat
-- Ny knap i toppen af vagten: **Fjern alle afkrydsninger**
-- Når du klikker på knappen, fjernes alle afkrydsninger på vagten (fra alle brugere)
+- En ny fane "Opslagstavle" på forsiden (ved siden af "Vakter" og "Læste notifikationer")
+- Du kan skrive og dele indlæg med alle kolleger
+- Du kan redigere dine egne indlæg
+- Du kan se alle indlæg fra andre brugere
+- Nyeste indlæg vises i toppen
+- Der vises hvem der har skrevet hvert indlæg og hvornår
+- Hvis der er mange indlæg, kan du bladre igennem med "side frem/tilbage"
 
 ### Brugeroplevelse
-- Du kan se hvad dine kolleger allerede har krydset af
-- Fremgangen på forsiden viser den samlede status for vagten
-- Knappen til at fjerne afkrydsninger viser en bekræftelsesdialog før den rydder
+- Skriv dit indlæg i et tekstfelt og klik "Del indlæg"
+- Indlæg vises med forfatterens navn og dato
+- Ved dine egne indlæg vises en "Rediger" knap
+- Ingen kan slette indlæg - de er permanente
+- 10 indlæg per side med paginering
 
 ---
 
 ## Tekniske detaljer
 
-### 1. Database: Opdaterede sikkerhedsregler (RLS)
+### 1. Database: Ny tabel til indlæg
 
-**Nuværende policies på `task_completions`:**
-- SELECT: Brugere kan kun se egne afkrydsninger
-- INSERT: Brugere kan kun oprette egne afkrydsninger  
-- DELETE: Brugere kan kun slette egne afkrydsninger
-- Admins kan se alle
+Opretter en `bulletin_posts` tabel:
+- `id` (uuid) - unik identifikator
+- `user_id` (uuid) - hvem skrev indlægget
+- `message` (text) - selve indlægget
+- `created_at` (timestamp) - hvornår det blev oprettet
+- `updated_at` (timestamp) - hvornår det sidst blev redigeret
 
-**Nye policies:**
-- SELECT: Alle autentificerede brugere kan se ALLE afkrydsninger
-- INSERT: Brugere kan kun oprette i eget navn (uændret)
-- DELETE: Alle autentificerede brugere kan slette alle afkrydsninger for en given vagt
+Sikkerhedsregler (RLS):
+- SELECT: Alle autentificerede brugere kan læse alle indlæg
+- INSERT: Brugere kan kun oprette indlæg i eget navn
+- UPDATE: Brugere kan kun redigere egne indlæg
+- DELETE: Ingen kan slette (ingen policy)
 
 SQL-migration:
 ```sql
--- Drop eksisterende SELECT policies
-DROP POLICY IF EXISTS "Users can view own completions" ON task_completions;
-DROP POLICY IF EXISTS "Admins can view all completions" ON task_completions;
+CREATE TABLE public.bulletin_posts (
+  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid NOT NULL,
+  message text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
 
--- Ny SELECT policy - alle kan se alle afkrydsninger
-CREATE POLICY "Authenticated users can view all completions"
-  ON task_completions FOR SELECT
+ALTER TABLE public.bulletin_posts ENABLE ROW LEVEL SECURITY;
+
+-- Alle autentificerede brugere kan se alle indlæg
+CREATE POLICY "Authenticated users can view all bulletin posts"
+  ON public.bulletin_posts FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
--- Opdater DELETE policy så alle kan fjerne afkrydsninger
-DROP POLICY IF EXISTS "Users can delete own completions" ON task_completions;
-CREATE POLICY "Authenticated users can delete completions"
-  ON task_completions FOR DELETE
-  USING (auth.uid() IS NOT NULL);
+-- Brugere kan kun oprette indlæg i eget navn
+CREATE POLICY "Users can insert own bulletin posts"
+  ON public.bulletin_posts FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Brugere kan kun redigere egne indlæg
+CREATE POLICY "Users can update own bulletin posts"
+  ON public.bulletin_posts FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Trigger til at opdatere updated_at ved ændringer
+CREATE TRIGGER update_bulletin_posts_updated_at
+  BEFORE UPDATE ON public.bulletin_posts
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
 ```
 
-### 2. Frontend: Ændringer i EmployeeDashboard.tsx
+### 2. Ny komponent: BulletinBoard.tsx
 
-**Fjernede funktioner:**
-- Midnight-reset timer (linje 163-180) fjernes helt
+Opretter en ny komponent `src/components/BulletinBoard.tsx` der håndterer:
+- Hentning af indlæg med paginering (10 per side)
+- Visning af indlæg med forfatter og dato
+- Formular til at skrive nye indlæg
+- Redigering af egne indlæg (inline editing)
+- Empty state når der ingen indlæg er
+- Paginering med eksisterende Pagination-komponenter
 
-**Nye funktioner:**
-- `clearAllCompletions()`: Sletter alle afkrydsninger for den valgte vagt
-- Bekræftelsesdialog før sletning
-
-**Opdaterede funktioner:**
-- `fetchTodayCompletions()`: Henter ALLE brugeres afkrydsninger (ikke kun egne)
-- `fetchAllShiftProgress()`: Beregner fremgang baseret på alle afkrydsninger
-
-**UI-ændringer:**
-
+Struktur:
 ```text
-┌─────────────────────────────────────┐
-│ ← Tilbake                           │
-│                                     │
-│ Åpne                                │
-│ 2 av 10 oppgaver fullført           │
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ 🗑️ Fjern alle afkrydsninger     │ │  <-- Ny knap
-│ └─────────────────────────────────┘ │
-│                                     │
-│ 📱 Hold skjerm våken  [Toggle]      │
-│                                     │
-│ (Opgaveliste)                       │
-└─────────────────────────────────────┘
++-------------------------------------+
+| Skriv et indlaeg                    |
+| +----------------------------------+|
+| | [Tekstfelt...]                   ||
+| +----------------------------------+|
+| [Del indlaeg]                       |
++-------------------------------------+
+|                                     |
+| +----------------------------------+|
+| | Indlaeg fra bruger         [Red] || <-- Kun synlig hvis eget indlaeg
+| | "Husk at tjekke koeleskabet..."  ||
+| | 2. februar 2026 - Af Anna        ||
+| +----------------------------------+|
+|                                     |
+| +----------------------------------+|
+| | Indlaeg fra bruger               ||
+| | "God vagt alle sammen!"          ||
+| | 1. februar 2026 - Af Peter       ||
+| +----------------------------------+|
+|                                     |
+|      <- Forrige | 1 | 2 | Naeste ->|
++-------------------------------------+
 ```
 
-### 3. Vigtig overvejelse: shift_date kolonnen
-
-Da afkrydsninger ikke længere nulstilles automatisk, skal vi beslutte hvordan `shift_date` skal håndteres:
-
-**Anbefaling**: Behold `shift_date` men fjern den fra filtrering. Dette bevarer historik og giver mulighed for fremtidig analyse.
-
-De opdaterede queries vil hente afkrydsninger for den valgte vagt UANSET dato:
-```typescript
-// Før (kun dagens afkrydsninger)
-.eq("shift_date", today)
-
-// Efter (alle afkrydsninger for vagten)
-// (ingen shift_date filter)
+Redigeringstilstand:
+```text
++-------------------------------------+
+| +----------------------------------+|
+| | [Tekstfelt med eksisterende...] ||
+| | [Gem] [Annuller]                 ||
+| +----------------------------------+|
++-------------------------------------+
 ```
 
-### 4. Implementeringsrækkefølge
-
-1. Opdater RLS-policies i databasen
-2. Fjern midnight-reset timer fra EmployeeDashboard
-3. Opdater `fetchTodayCompletions()` til at hente alle afkrydsninger (uden dato-filter)
-4. Opdater `fetchAllShiftProgress()` til at beregne samlet fremgang
-5. Tilføj "Fjern alle afkrydsninger" knap med bekræftelsesdialog
-6. Implementer `clearAllCompletions()` funktion
-
-### 5. Realtime overvejelser (fremtidigt)
-
-For at andre brugere kan se ændringer i realtid, kunne man tilføje Supabase Realtime på `task_completions` tabellen. Dette er ikke inkluderet i denne implementering, men kan tilføjes senere ved at:
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.task_completions;
+Empty state:
+```text
++-------------------------------------+
+|          (clipboard icon)           |
+|   Ingen indlaeg endnu               |
+|   Vaer den foerste til at skrive!   |
++-------------------------------------+
 ```
 
+### 3. Frontend: Opdateret EmployeeDashboard.tsx
+
+**AEndringer:**
+- Tilfoej ny tab "Opslagstavle" i tab-baren (ved siden af "Vakter" og "Laeste notifikationer")
+- Importere og rendere BulletinBoard-komponenten naar tabben er aktiv
+- Tilfoej `ClipboardList` icon fra lucide-react
+
+Tab-struktur:
+```text
++------------+---------------------+--------------+
+|  Vakter    | Laeste notifikationer| Opslagstavle |
++------------+---------------------+--------------+
+```
+
+### 4. Implementeringsraekkefoelge
+
+1. Oprette `bulletin_posts` tabel med RLS-policies
+2. Oprette ny `BulletinBoard.tsx` komponent med:
+   - Fetch indlaeg med paginering
+   - Formular til nyt indlaeg
+   - Visning af indlaeg
+   - Redigering af egne indlaeg
+   - Empty state
+   - Paginering
+3. Tilfoeje ny tab i EmployeeDashboard.tsx
+4. Importere og rendere BulletinBoard komponenten
+
+### 5. Paginering detaljer
+
+- 10 indlaeg per side
+- Bruger Supabase `.range()` til server-side paginering
+- Henter total count med `.count()` for at beregne antal sider
+- Viser kun paginering hvis der er mere end 1 side
+
+### 6. Redigering detaljer
+
+- "Rediger" knap vises kun paa egne indlaeg
+- Ved klik skiftes til redigeringstilstand med tekstfelt
+- "Gem" opdaterer indlaegget og lukker redigeringstilstand
+- "Annuller" lukker redigeringstilstand uden at gemme
+- `updated_at` opdateres automatisk via database trigger
+- Viser "(redigeret)" tekst hvis `updated_at` er forskellig fra `created_at`
