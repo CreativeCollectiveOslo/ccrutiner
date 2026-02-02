@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,21 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   const [totalCount, setTotalCount] = useState(0);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editMessage, setEditMessage] = useState("");
+  const firstMatchRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
+
+  // Auto-scroll to first match when searchHighlightTerm is set
+  useEffect(() => {
+    if (searchHighlightTerm && firstMatchRef.current && !hasScrolledRef.current) {
+      setTimeout(() => {
+        firstMatchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        hasScrolledRef.current = true;
+      }, 100);
+    }
+    if (!searchHighlightTerm) {
+      hasScrolledRef.current = false;
+    }
+  }, [searchHighlightTerm, posts]);
 
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
 
@@ -218,8 +233,17 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
         </Card>
       ) : (
         <div className="space-y-4">
-          {posts.map((post) => (
-            <Card key={post.id}>
+          {(() => {
+            // Find first matching post for scroll
+            const firstMatchId = searchHighlightTerm 
+              ? posts.find(p => p.message.toLowerCase().includes(searchHighlightTerm.toLowerCase()))?.id
+              : null;
+            
+            return posts.map((post) => (
+              <Card 
+                key={post.id}
+                ref={post.id === firstMatchId ? firstMatchRef : undefined}
+              >
               <CardContent className="p-4">
                 {editingPostId === post.id ? (
                   <div className="space-y-3">
@@ -271,7 +295,8 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                 )}
               </CardContent>
             </Card>
-          ))}
+            ));
+          })()}
         </div>
       )}
 
