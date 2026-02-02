@@ -7,7 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, Smartphone, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import * as LucideIcons from "lucide-react";
 import { TaskCompletionAnimation } from "@/components/TaskCompletionAnimation";
 import { NotificationsTab } from "@/components/NotificationsTab";
@@ -140,7 +151,7 @@ export default function EmployeeDashboard() {
     if (selectedShift) {
       fetchSections();
       fetchRoutines();
-      fetchTodayCompletions();
+      fetchCompletions();
     }
   }, [selectedShift]);
 
@@ -160,24 +171,7 @@ export default function EmployeeDashboard() {
     }
   };
 
-  // Check for date change every minute and reset tasks at midnight
-  useEffect(() => {
-    const checkDateChange = () => {
-      const today = new Date().toISOString().split("T")[0];
-      if (today !== currentDate) {
-        setCurrentDate(today);
-        setCompletions(new Set());
-        if (selectedShift) {
-          fetchTodayCompletions();
-        }
-        toast.success("Ny dag startet! Oppgaver er nullstilt 🌅");
-      }
-    };
-
-    const interval = setInterval(checkDateChange, 60000); // Check every minute
-    
-    return () => clearInterval(interval);
-  }, [currentDate, selectedShift]);
+  // Removed midnight reset timer - tasks now persist until manually cleared
 
   const fetchUnreadCount = async () => {
     if (!user) return;
@@ -259,10 +253,6 @@ export default function EmployeeDashboard() {
   };
 
   const fetchAllShiftProgress = async () => {
-    if (!user) return;
-
-    const today = new Date().toISOString().split("T")[0];
-
     // Fetch all routines grouped by shift
     const { data: allRoutines, error: routinesError } = await supabase
       .from("routines")
@@ -273,19 +263,17 @@ export default function EmployeeDashboard() {
       return;
     }
 
-    // Fetch today's completions for the user
-    const { data: todayCompletions, error: completionsError } = await supabase
+    // Fetch ALL completions (from all users, no date filter)
+    const { data: allCompletions, error: completionsError } = await supabase
       .from("task_completions")
-      .select("routine_id")
-      .eq("user_id", user.id)
-      .eq("shift_date", today);
+      .select("routine_id");
 
     if (completionsError) {
       console.error(completionsError);
       return;
     }
 
-    const completedRoutineIds = new Set(todayCompletions?.map((c) => c.routine_id) || []);
+    const completedRoutineIds = new Set(allCompletions?.map((c) => c.routine_id) || []);
 
     // Calculate progress per shift
     const progress: Record<string, { completed: number; total: number }> = {};
@@ -336,21 +324,63 @@ export default function EmployeeDashboard() {
     return routines.filter((r) => r.section_id === sectionId);
   };
 
-  const fetchTodayCompletions = async () => {
-    if (!user || !selectedShift) return;
+  const fetchCompletions = async () => {
+    if (!selectedShift) return;
 
-    const today = new Date().toISOString().split("T")[0];
+    // Fetch ALL completions for the selected shift's routines (from all users, no date filter)
+    const { data: shiftRoutines } = await supabase
+      .from("routines")
+      .select("id")
+      .eq("shift_id", selectedShift.id);
+
+    if (!shiftRoutines) return;
+
+    const routineIds = shiftRoutines.map((r) => r.id);
 
     const { data, error } = await supabase
       .from("task_completions")
       .select("routine_id")
-      .eq("user_id", user.id)
-      .eq("shift_date", today);
+      .in("routine_id", routineIds);
 
     if (error) {
       console.error(error);
     } else if (data) {
       setCompletions(new Set(data.map((c: TaskCompletion) => c.routine_id)));
+    }
+  };
+
+  const clearAllCompletions = async () => {
+    if (!selectedShift) return;
+
+    // Get all routine IDs for this shift
+    const { data: shiftRoutines } = await supabase
+      .from("routines")
+      .select("id")
+      .eq("shift_id", selectedShift.id);
+
+    if (!shiftRoutines || shiftRoutines.length === 0) return;
+
+    const routineIds = shiftRoutines.map((r) => r.id);
+
+    // Delete all completions for these routines
+    const { error } = await supabase
+      .from("task_completions")
+      .delete()
+      .in("routine_id", routineIds);
+
+    if (error) {
+      toast.error("Kunne ikke fjerne afkrydsninger");
+      console.error(error);
+    } else {
+      setCompletions(new Set());
+      setShiftProgress((prev) => ({
+        ...prev,
+        [selectedShift.id]: {
+          ...prev[selectedShift.id],
+          completed: 0,
+        },
+      }));
+      toast.success("Alle afkrydsninger fjernet");
     }
   };
 
@@ -567,6 +597,30 @@ export default function EmployeeDashboard() {
                   />
                 </div>
               )}
+              
+              {/* Clear all completions button */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="mt-3 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Fjern alle afkrydsninger
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Fjern alle afkrydsninger?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Dette vil fjerne alle afkrydsninger for denne vagt. Handlingen kan ikke fortrydes.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuller</AlertDialogCancel>
+                    <AlertDialogAction onClick={clearAllCompletions} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Fjern alle
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
 
 
