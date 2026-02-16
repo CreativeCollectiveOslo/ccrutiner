@@ -1,116 +1,83 @@
 
 
-# Omdøb Opslagstavle til Logbog + tilføj overskrift
+# Billedvedhæftning til rutiner, opdateringer og logbog
 
 ## Oversigt
 
-Denne ændring omdøber "Opslagstavle" til "Logbog" i hele appen og tilføjer et overskriftsfelt til alle logbog-indlæg.
+Tilføj mulighed for at vedhæfte billeder tre steder i appen:
+1. **Rutiner** (admin opretter/redigerer rutiner)
+2. **Opdateringer/Announcements** (admin opretter opdateringer)
+3. **Logbog/Bulletin Board** (alle brugere opretter indlæg)
 
 ---
 
-## Ændringer
+## Teknisk tilgang
 
-### 1. UI-tekst ændringer
+### 1. Storage bucket
 
-**Filen `EmployeeDashboard.tsx`:**
-- Ændre tab-teksten fra "Opslagstavle" til "Logbog"
+Opret en public storage bucket `attachments` med mapper for hver type:
+- `routines/` - billeder til rutiner
+- `announcements/` - billeder til opdateringer
+- `bulletin/` - billeder til logbog-indlæg
 
-**Filen `SearchDialog.tsx`:**
-- Ændre søgeresultat-overskriften fra "Opslagstavle" til "Logbog"
+RLS-policies:
+- Alle autentificerede brugere kan **se** filer
+- Autentificerede brugere kan **uploade** filer
+- Brugere kan **slette** egne filer, admins kan slette alle
 
-**Filen `BulletinBoard.tsx`:**
-- Opdatere formular-labels og placeholders til at reflektere "Logbog"
-- Ændre "Skriv et indlæg" til "Skriv i logbogen"
-- Ændre empty state tekster
+### 2. Database-ændringer
 
-### 2. Database-ændring
+| Tabel | Ændring |
+|-------|---------|
+| `routines` | Har allerede `multimedia_url` - ingen ændring nødvendig |
+| `announcements` | Tilføj `image_url TEXT` kolonne |
+| `bulletin_posts` | Tilføj `image_url TEXT` kolonne |
 
-Tilføj en `title` kolonne til `bulletin_posts` tabellen:
+### 3. UI-ændringer
 
-```sql
-ALTER TABLE bulletin_posts 
-ADD COLUMN title TEXT NOT NULL DEFAULT '';
-```
+**Fælles: Genbrugelig ImageUpload-komponent**
+- Ny komponent `src/components/ImageUpload.tsx`
+- Viser en "Vedhæft billede"-knap med ikon
+- Preview af valgt billede før upload
+- Uploader til storage bucket og returnerer URL
+- Mulighed for at fjerne vedhæftet billede
 
-### 3. Formular-opdatering (BulletinBoard.tsx)
+**SectionManager.tsx (rutiner)**
+- Tilføj ImageUpload i opret- og rediger-dialogen for rutiner
+- Brug den eksisterende `multimedia_url` kolonne
+- Vis billede i rutinelisten
 
-Tilføj et input-felt til overskrift:
-- Nyt `Input` felt til overskrift (påkrævet)
-- Opdater state til at håndtere `newTitle` og `editTitle`
-- Opdater insert og update queries til at inkludere title
+**AnnouncementManager.tsx (opdateringer)**
+- Tilføj ImageUpload i opret-formularen
+- Vis billede i opdateringslisten
 
-### 4. Visning af indlæg
+**BulletinBoard.tsx (logbog)**
+- Tilføj ImageUpload i opret- og rediger-formularen
+- Vis billede i logbog-indlæg
 
-Vis overskriften som en fed titel over hvert indlæg:
-- Overskrift vises med `font-semibold` styling
-- Besked vises under overskriften som før
-
----
-
-## Filer der ændres
-
-| Fil | Ændring |
-|-----|---------|
-| `src/pages/EmployeeDashboard.tsx` | Omdøb tab fra "Opslagstavle" til "Logbog" |
-| `src/components/SearchDialog.tsx` | Omdøb søgekategori til "Logbog" |
-| `src/components/BulletinBoard.tsx` | Tilføj overskriftsfelt + opdater tekster |
-| Database migration | Tilføj `title` kolonne til `bulletin_posts` |
-
----
-
-## Tekniske detaljer
-
-### Ny formular-struktur
-
-```text
-┌─────────────────────────────────────┐
-│  Skriv i logbogen                   │
-├─────────────────────────────────────┤
-│  Overskrift: [________________]     │
-│                                     │
-│  Besked:                            │
-│  ┌─────────────────────────────┐    │
-│  │                             │    │
-│  │                             │    │
-│  └─────────────────────────────┘    │
-│                                     │
-│  [Tilføj til logbog]                │
-└─────────────────────────────────────┘
-```
-
-### Visning af indlæg
-
-```text
-┌─────────────────────────────────────┐
-│  Bruger navn                    ✏️  │
-│                                     │
-│  **Overskrift her**                 │
-│  Besked tekst her...                │
-│                                     │
-│  2. februar 2026 kl. 15:30          │
-└─────────────────────────────────────┘
-```
-
-### Database migration SQL
-
-```sql
--- Tilføj title kolonne med default værdi for eksisterende data
-ALTER TABLE bulletin_posts 
-ADD COLUMN title TEXT NOT NULL DEFAULT '';
-
--- Opdater eksisterende posts med en standard-overskrift baseret på beskedens første linje
-UPDATE bulletin_posts 
-SET title = CASE 
-  WHEN position(chr(10) in message) > 0 
-  THEN left(message, position(chr(10) in message) - 1)
-  ELSE left(message, 50)
-END
-WHERE title = '';
-```
+**EmployeeDashboard.tsx**
+- Vis `multimedia_url` billeder ved rutiner
+- Vis `image_url` billeder ved opdateringer og logbog-indlæg
 
 ---
 
-## Søgefunktion
+## Filer der oprettes/ændres
 
-Søgefunktionen opdateres til også at søge i overskrifter, så brugere kan finde logbog-indlæg baseret på både titel og besked.
+| Fil | Type |
+|-----|------|
+| Database migration | Ny: storage bucket + kolonner |
+| `src/components/ImageUpload.tsx` | Ny komponent |
+| `src/components/SectionManager.tsx` | Tilføj billedupload til rutiner |
+| `src/components/AnnouncementManager.tsx` | Tilføj billedupload til opdateringer |
+| `src/components/BulletinBoard.tsx` | Tilføj billedupload til logbog |
+| `src/pages/EmployeeDashboard.tsx` | Vis billeder i medarbejdervisning |
+| `src/components/NotificationsTab.tsx` | Vis billeder ved opdateringer |
+
+---
+
+## Billedvisning
+
+Billeder vises under teksten i hvert indlæg/rutine med:
+- Responsiv størrelse (max-width: 100%, afrundede hjørner)
+- Klik for at åbne i fuld størrelse (lightbox-lignende dialog)
 
