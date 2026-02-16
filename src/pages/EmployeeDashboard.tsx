@@ -30,6 +30,7 @@ import { useWakeLock } from "@/hooks/use-wake-lock";
 import { SearchDialog } from "@/components/SearchDialog";
 import { highlightSearchTerm } from "@/lib/highlightText";
 import logo from "@/assets/logo.png";
+import { ImageDisplay } from "@/components/ImageUpload";
 
 interface RoutineInfo {
   id: string;
@@ -808,6 +809,9 @@ export default function EmployeeDashboard() {
                                         </button>
                                       )}
                                     </div>
+                                   )}
+                                  {routine.multimedia_url && (
+                                    <ImageDisplay url={routine.multimedia_url} className="max-h-48 mt-2" />
                                   )}
                                   {routine.priority > 0 && (
                                     <Badge variant="secondary">
@@ -895,6 +899,9 @@ export default function EmployeeDashboard() {
                                           </button>
                                         )}
                                       </div>
+                                    )}
+                                    {routine.multimedia_url && (
+                                      <ImageDisplay url={routine.multimedia_url} className="max-h-48 mt-2" />
                                     )}
                                     {routine.priority > 0 && (
                                       <Badge variant="secondary">

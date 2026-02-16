@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          image_url: string | null
           message: string
           title: string
           updated_at: string
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          image_url?: string | null
           message: string
           title: string
           updated_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          image_url?: string | null
           message?: string
           title?: string
           updated_at?: string
@@ -74,6 +77,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string | null
           message: string
           title: string
           updated_at: string
@@ -82,6 +86,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string | null
           message: string
           title?: string
           updated_at?: string
@@ -90,6 +95,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          image_url?: string | null
           message?: string
           title?: string
           updated_at?: string

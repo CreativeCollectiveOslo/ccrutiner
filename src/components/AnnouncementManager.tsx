@@ -9,11 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 import { Trash2, Users, ChevronDown, ChevronUp, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ImageUpload, ImageDisplay } from "@/components/ImageUpload";
 
 interface Announcement {
   id: string;
   title: string;
   message: string;
+  image_url: string | null;
   created_at: string;
   created_by: string;
 }
@@ -82,6 +84,7 @@ export function AnnouncementManager() {
   const [routineNotifications, setRoutineNotifications] = useState<RoutineNotification[]>([]);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ type: 'announcement' | 'routine'; id: string; title: string; createdAt: string } | null>(null);
   const [readStatuses, setReadStatuses] = useState<ReadStatus[]>([]);
@@ -161,7 +164,7 @@ export function AnnouncementManager() {
 
     const { error } = await supabase
       .from("announcements")
-      .insert([{ title, message, created_by: user.id }]);
+      .insert([{ title, message, image_url: imageUrl, created_by: user.id }]);
 
     if (error) {
       toast.error("Kunne ikke oprette opdatering");
@@ -170,6 +173,7 @@ export function AnnouncementManager() {
       toast.success("Opdatering oprettet!");
       setTitle("");
       setMessage("");
+      setImageUrl(null);
       fetchAnnouncements();
     }
 
@@ -334,6 +338,13 @@ export function AnnouncementManager() {
                 rows={4}
               />
             </div>
+            <div>
+              <ImageUpload
+                folder="announcements"
+                currentUrl={imageUrl}
+                onImageUploaded={setImageUrl}
+              />
+            </div>
             <Button type="submit" disabled={loading}>
               {loading ? "Opretter..." : "Opret opdatering"}
             </Button>
@@ -381,6 +392,9 @@ export function AnnouncementManager() {
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold mb-2">{announcement.title}</h3>
                             <CollapsibleText text={announcement.message} />
+                            {announcement.image_url && (
+                              <ImageDisplay url={announcement.image_url} className="mt-2 max-h-40" />
+                            )}
                             <p className="text-xs text-muted-foreground mt-2">
                               {new Date(announcement.created_at).toLocaleString("da-DK")} · Af {getCreatorName(announcement.created_by)}
                             </p>
