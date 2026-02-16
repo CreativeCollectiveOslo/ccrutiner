@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ClipboardList, Loader2, Pencil, X, Check } from "lucide-react";
+import { ImageUpload, ImageDisplay } from "@/components/ImageUpload";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import {
@@ -25,6 +26,7 @@ interface BulletinPost {
   user_id: string;
   title: string;
   message: string;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -48,11 +50,13 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   const [submitting, setSubmitting] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newMessage, setNewMessage] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editMessage, setEditMessage] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
   const firstMatchRef = useRef<HTMLDivElement>(null);
   const hasScrolledRef = useRef(false);
 
@@ -148,6 +152,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       user_id: user.id,
       title: newTitle.trim(),
       message: newMessage.trim(),
+      image_url: newImageUrl,
     });
 
     if (error) {
@@ -157,6 +162,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       toast.success("Indlæg tilføjet til logbogen!");
       setNewTitle("");
       setNewMessage("");
+      setNewImageUrl(null);
       setCurrentPage(1);
       fetchPosts();
     }
@@ -168,12 +174,14 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
     setEditingPostId(post.id);
     setEditTitle(post.title);
     setEditMessage(post.message);
+    setEditImageUrl(post.image_url);
   };
 
   const cancelEditing = () => {
     setEditingPostId(null);
     setEditTitle("");
     setEditMessage("");
+    setEditImageUrl(null);
   };
 
   const saveEdit = async (postId: string) => {
@@ -183,7 +191,8 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       .from("bulletin_posts")
       .update({ 
         title: editTitle.trim(),
-        message: editMessage.trim() 
+        message: editMessage.trim(),
+        image_url: editImageUrl,
       })
       .eq("id", postId);
 
@@ -195,6 +204,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       setEditingPostId(null);
       setEditTitle("");
       setEditMessage("");
+      setEditImageUrl(null);
       fetchPosts();
     }
   };
@@ -237,6 +247,11 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 className="min-h-[100px]"
+              />
+              <ImageUpload
+                folder="bulletin"
+                currentUrl={newImageUrl}
+                onImageUploaded={setNewImageUrl}
               />
             </div>
             <Button type="submit" disabled={submitting || !newTitle.trim() || !newMessage.trim()}>
@@ -293,6 +308,11 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                       onChange={(e) => setEditMessage(e.target.value)}
                       className="min-h-[100px]"
                     />
+                    <ImageUpload
+                      folder="bulletin"
+                      currentUrl={editImageUrl}
+                      onImageUploaded={setEditImageUrl}
+                    />
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -327,6 +347,9 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                     </div>
                     <h4 className="font-semibold text-sm mb-1">{highlightSearchTerm(post.title, searchHighlightTerm)}</h4>
                     <p className="text-sm whitespace-pre-wrap mb-3">{highlightSearchTerm(post.message, searchHighlightTerm)}</p>
+                    {post.image_url && (
+                      <ImageDisplay url={post.image_url} className="mb-3 max-h-48" />
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {formatDate(post.created_at)}
                       {isEdited(post) && (

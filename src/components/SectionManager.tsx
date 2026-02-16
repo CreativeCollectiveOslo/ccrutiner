@@ -36,6 +36,7 @@ import { Plus, Trash2, Pencil, FolderOpen, MoveRight, GripVertical, ChevronUp, C
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload, ImageDisplay } from "@/components/ImageUpload";
 
 interface Section {
   id: string;
@@ -50,6 +51,7 @@ interface Routine {
   section_id: string | null;
   title: string;
   description: string | null;
+  multimedia_url: string | null;
   priority: number;
   order_index: number;
 }
@@ -94,6 +96,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     description: "",
     priority: 0,
     sendNotification: false,
+    multimediaUrl: null as string | null,
   });
   
   const [editRoutine, setEditRoutine] = useState({
@@ -101,6 +104,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     description: "",
     priority: 0,
     sendNotification: false,
+    multimediaUrl: null as string | null,
   });
 
   useEffect(() => {
@@ -249,6 +253,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         section_id: currentSectionForNewRoutine,
         title: newRoutine.title,
         description: newRoutine.description || null,
+        multimedia_url: newRoutine.multimediaUrl,
         priority: newRoutine.priority,
         order_index: routines.filter((r) => r.section_id === currentSectionForNewRoutine).length,
       })
@@ -271,7 +276,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
       toast.success("Rutine oprettet!");
       setRoutineDialogOpen(false);
-      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false });
+      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, multimediaUrl: null });
       setCurrentSectionForNewRoutine(null);
       fetchRoutines();
     }
@@ -286,6 +291,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       .update({
         title: editRoutine.title,
         description: editRoutine.description || null,
+        multimedia_url: editRoutine.multimediaUrl,
         priority: editRoutine.priority,
       })
       .eq("id", editingRoutine.id);
@@ -358,6 +364,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       description: routine.description || "",
       priority: routine.priority,
       sendNotification: false,
+      multimediaUrl: routine.multimedia_url || null,
     });
     setEditRoutineDialogOpen(true);
   };
@@ -427,6 +434,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
                 {routine.description}
               </p>
+            )}
+            {routine.multimedia_url && (
+              <ImageDisplay url={routine.multimedia_url} className="mt-2 max-h-24" />
             )}
           </div>
           <div className="flex gap-0.5 shrink-0">
@@ -735,6 +745,14 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                   }
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Billede</Label>
+                <ImageUpload
+                  folder="routines"
+                  currentUrl={newRoutine.multimediaUrl}
+                  onImageUploaded={(url) => setNewRoutine({ ...newRoutine, multimediaUrl: url })}
+                />
+              </div>
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <Label htmlFor="new-notification">Send notifikation</Label>
@@ -793,6 +811,14 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                   onChange={(e) =>
                     setEditRoutine({ ...editRoutine, priority: parseInt(e.target.value) || 0 })
                   }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Billede</Label>
+                <ImageUpload
+                  folder="routines"
+                  currentUrl={editRoutine.multimediaUrl}
+                  onImageUploaded={(url) => setEditRoutine({ ...editRoutine, multimediaUrl: url })}
                 />
               </div>
               <div className="flex items-center justify-between py-2">
