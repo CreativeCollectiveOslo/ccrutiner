@@ -296,9 +296,9 @@ export default function AdminDashboard() {
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
             <h1 className="text-xl">Admin Dashboard</h1>
           </div>
-          <Button variant="ghost" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logg ut
+          <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
+            <LogOut className="h-4 w-4" />
+            <span className="sr-only">Logg ut</span>
           </Button>
         </div>
       </header>

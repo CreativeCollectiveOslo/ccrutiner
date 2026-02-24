@@ -534,13 +534,13 @@ export default function EmployeeDashboard() {
             <h1 className="text-xl">Mine Rutiner</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
-              <Search className="h-4 w-4" />
-              <span className="sr-only">Søg</span>
+            <Button variant="outline" size="icon" onClick={() => setSearchOpen(true)}>
+              <Search className="h-5 w-5" />
+              <span className="sr-only">Søk</span>
             </Button>
-            <Button variant="ghost" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logg ut
+            <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Logg ut</span>
             </Button>
           </div>
         </div>
