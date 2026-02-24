@@ -20,6 +20,7 @@ export type Database = {
           created_by: string
           id: string
           image_url: string | null
+          image_urls: string[] | null
           message: string
           title: string
           updated_at: string
@@ -29,6 +30,7 @@ export type Database = {
           created_by: string
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           message: string
           title: string
           updated_at?: string
@@ -38,6 +40,7 @@ export type Database = {
           created_by?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           message?: string
           title?: string
           updated_at?: string
@@ -78,6 +81,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          image_urls: string[] | null
           message: string
           title: string
           updated_at: string
@@ -87,6 +91,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           message: string
           title?: string
           updated_at?: string
@@ -96,6 +101,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           message?: string
           title?: string
           updated_at?: string
@@ -203,6 +209,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_urls: string[] | null
           multimedia_url: string | null
           order_index: number | null
           priority: number | null
@@ -215,6 +222,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_urls?: string[] | null
           multimedia_url?: string | null
           order_index?: number | null
           priority?: number | null
@@ -227,6 +235,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_urls?: string[] | null
           multimedia_url?: string | null
           order_index?: number | null
           priority?: number | null
@@ -311,6 +320,33 @@ export type Database = {
           id?: string
           name?: string
           order_index?: number | null
+        }
+        Relationships: []
+      }
+      shopping_items: {
+        Row: {
+          completed: boolean
+          completed_by: string | null
+          created_at: string
+          created_by: string
+          id: string
+          title: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_by?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          title: string
+        }
+        Update: {
+          completed?: boolean
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          title?: string
         }
         Relationships: []
       }
