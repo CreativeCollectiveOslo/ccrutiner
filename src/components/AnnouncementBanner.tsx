@@ -82,7 +82,7 @@ export function AnnouncementBanner() {
               <Bell className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">{announcement.title}</h3>
-                <p className="text-sm text-muted-foreground">{announcement.message}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{announcement.message}</p>
                 <p className="text-xs text-muted-foreground mt-2">
                   {new Date(announcement.created_at).toLocaleDateString("da-DK")}
                 </p>
