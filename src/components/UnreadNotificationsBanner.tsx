@@ -78,7 +78,6 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
   };
 
   const isLongText = (text: string): boolean => {
-    // Check if text would be more than 3 lines (roughly 150 chars)
     return text.length > 150;
   };
 
@@ -104,10 +103,10 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
       }
 
       onMarkAsRead(notification);
-      toast.success("Markeret som læst");
+      toast.success("Markert som lest");
     } catch (error) {
       console.error("Error marking as read:", error);
-      toast.error("Kunne ikke markere som læst");
+      toast.error("Kunne ikke markere som lest");
     } finally {
       setMarkingAsRead((prev) => {
         const newSet = new Set(prev);
@@ -125,7 +124,7 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
     <div className="space-y-3 mb-6">
       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
         <Bell className="h-4 w-4" />
-        <span>Ulæste notifikationer ({notifications.length})</span>
+        <span>Uleste varsler ({notifications.length})</span>
       </div>
 
       {notifications.map((notification) => {
@@ -141,7 +140,7 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
               {/* Chips above header */}
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="text-xs">
-                  {notification.type === "announcement" ? "Nyhed" : "Opdatering"}
+                  {notification.type === "announcement" ? "Nyhet" : "Oppdatering"}
                 </Badge>
               </div>
 
@@ -172,7 +171,7 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
                             ) : (
                               <>
                                 <ChevronDown className="h-3 w-3" />
-                                Vis mere
+                                Vis mer
                               </>
                             )}
                           </button>
@@ -202,7 +201,7 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
                             ) : (
                               <>
                                 <ChevronDown className="h-3 w-3" />
-                                Vis mere
+                                Vis mer
                               </>
                             )}
                           </button>
@@ -232,16 +231,16 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
                   )}
 
                   <p className="text-xs text-muted-foreground mt-2">
-                    {new Date(notification.created_at).toLocaleDateString("da-DK", {
+                    {new Date(notification.created_at).toLocaleDateString("nb-NO", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
                     {notification.type === "announcement" && notification.created_by && getCreatorName(notification.created_by) && (
-                      <> · Af {getCreatorName(notification.created_by)}</>
+                      <> · Av {getCreatorName(notification.created_by)}</>
                     )}
                     {notification.type === "routine" && notification.created_by && getCreatorName(notification.created_by) && (
-                      <> · Af {getCreatorName(notification.created_by)}</>
+                      <> · Av {getCreatorName(notification.created_by)}</>
                     )}
                   </p>
                 </div>

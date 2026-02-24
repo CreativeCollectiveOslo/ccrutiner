@@ -58,7 +58,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
     e.preventDefault();
     
     if (!name.trim()) {
-      toast.error("Udfyld venligst navn");
+      toast.error("Vennligst fyll ut navn");
       return;
     }
 
@@ -71,15 +71,14 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
         .eq("id", editingId);
 
       if (error) {
-        toast.error("Kunne ikke opdatere vagt");
+        toast.error("Kunne ikke oppdatere vakt");
       } else {
-        toast.success("Vagt opdateret!");
+        toast.success("Vakt oppdatert!");
         resetForm();
         fetchShifts();
         notifyChange();
       }
     } else {
-      // Get the highest order_index and add 1
       const maxOrderIndex = shifts.length > 0 
         ? Math.max(...shifts.map(s => s.order_index)) + 1 
         : 0;
@@ -89,9 +88,9 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
         .insert([{ name, color_code: colorCode, icon: selectedIcon, order_index: maxOrderIndex }]);
 
       if (error) {
-        toast.error("Kunne ikke oprette vagt");
+        toast.error("Kunne ikke opprette vakt");
       } else {
-        toast.success("Vagt oprettet!");
+        toast.success("Vakt opprettet!");
         resetForm();
         fetchShifts();
         notifyChange();
@@ -111,7 +110,6 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
     const currentShift = shifts[currentIndex];
     const targetShift = shifts[targetIndex];
 
-    // Swap order_index values
     const { error: error1 } = await supabase
       .from("shifts")
       .update({ order_index: targetShift.order_index })
@@ -123,7 +121,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
       .eq("id", targetShift.id);
 
     if (error1 || error2) {
-      toast.error("Kunne ikke flytte vagt");
+      toast.error("Kunne ikke flytte vakt");
     } else {
       fetchShifts();
     }
@@ -143,9 +141,9 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
       .eq("id", id);
 
     if (error) {
-      toast.error("Kunne ikke slette vagt");
+      toast.error("Kunne ikke slette vakt");
     } else {
-      toast.success("Vagt slettet");
+      toast.success("Vakt slettet");
       fetchShifts();
       notifyChange();
     }
@@ -167,7 +165,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
     <div className="space-y-6">
       {/* Create/Edit Form */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium">{editingId ? "Rediger vagt" : "Opret ny vagt"}</h3>
+        <h3 className="text-sm font-medium">{editingId ? "Rediger vakt" : "Opprett ny vakt"}</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm text-muted-foreground mb-1.5 block">Navn</label>
@@ -178,7 +176,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
             />
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">Farve</label>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Farge</label>
             <Input
               type="color"
               value={colorCode}
@@ -221,11 +219,11 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
           </Collapsible>
           <div className="flex gap-2">
             <Button type="submit" disabled={loading} size="sm">
-              {loading ? "Gemmer..." : editingId ? "Opdater" : "Opret"}
+              {loading ? "Lagrer..." : editingId ? "Oppdater" : "Opprett"}
             </Button>
             {editingId && (
               <Button type="button" variant="outline" size="sm" onClick={resetForm}>
-                Annuller
+                Avbryt
               </Button>
             )}
           </div>
@@ -237,7 +235,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
         <h3 className="text-sm font-medium">Eksisterende vakter</h3>
         <div className="space-y-1.5">
           {shifts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Ingen vakter endnu</p>
+            <p className="text-sm text-muted-foreground">Ingen vakter ennå</p>
           ) : (
             shifts.map((shift, index) => (
               <div

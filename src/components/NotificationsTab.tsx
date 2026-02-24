@@ -190,13 +190,13 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
       .insert([{ announcement_id: announcementId, user_id: user.id }]);
 
     if (error) {
-      toast.error("Kunne ikke markere som læst");
+      toast.error("Kunne ikke markere som lest");
       return;
     }
 
     setReadAnnouncementIds((prev) => new Set(prev).add(announcementId));
     onMarkAsRead?.();
-    toast.success("Markeret som læst");
+    toast.success("Markert som lest");
   };
 
   const markRoutineNotificationAsRead = async (notificationId: string) => {
@@ -208,13 +208,13 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
     });
 
     if (error) {
-      toast.error("Kunne ikke markere som læst");
+      toast.error("Kunne ikke markere som lest");
       return;
     }
 
     setReadRoutineNotificationIds((prev) => new Set(prev).add(notificationId));
     onMarkAsRead?.();
-    toast.success("Markeret som læst");
+    toast.success("Markert som lest");
   };
 
   const isRead = (notification: NotificationItem): boolean => {
@@ -237,7 +237,7 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
       <Card>
         <CardContent className="py-12 px-4 text-center">
           <Bell className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Ingen notifikationer endnu</p>
+          <p className="text-sm text-muted-foreground">Ingen varsler ennå</p>
         </CardContent>
       </Card>
     );
@@ -269,11 +269,11 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
               {/* Chips above header */}
               <div className="flex items-center gap-2 mb-3">
                 <Badge variant="outline" className="text-xs">
-                  {notification.type === "announcement" ? "Opdatering" : "Rutine"}
+                  {notification.type === "announcement" ? "Oppdatering" : "Rutine"}
                 </Badge>
                 {read && (
                   <Badge variant="secondary" className="text-xs">
-                    Læst
+                    Lest
                   </Badge>
                 )}
               </div>
@@ -313,7 +313,7 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
                   )}
 
                   <p className="text-xs text-muted-foreground mt-3">
-                    {new Date(notification.created_at).toLocaleDateString("da-DK", {
+                    {new Date(notification.created_at).toLocaleDateString("nb-NO", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
@@ -340,7 +340,7 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
                     }
                   >
                     <Check className="h-4 w-4 mr-1" />
-                    Læst
+                    Lest
                   </Button>
                 </div>
               )}
