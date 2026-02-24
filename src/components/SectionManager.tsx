@@ -43,6 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { MultiImageUpload, MultiImageDisplay } from "@/components/ImageUpload";
 
+
 interface Section {
   id: string;
   shift_id: string;
@@ -52,19 +53,21 @@ interface Section {
 
 interface Routine {
   id: string;
-  shift_id: string;
-  section_id: string | null;
   title: string;
   description: string | null;
-  multimedia_url: string | null;
-  image_urls: string[] | null;
+  shift_id: string;
   priority: number;
   order_index: number;
+  multimedia_url: string | null;
+  image_urls: string[] | null;
+  section_id: string | null;
 }
 
 interface Shift {
   id: string;
   name: string;
+  color_code: string;
+  order_index: number;
 }
 
 interface SectionManagerProps {
@@ -77,31 +80,20 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   const [sections, setSections] = useState<Section[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  const [isCreating, setIsCreating] = useState(false);
-  const [isMoving, setIsMoving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
-  // Section dialogs
+  // Section state
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
-  const [editSectionDialogOpen, setEditSectionDialogOpen] = useState(false);
-  const [deleteSectionDialogOpen, setDeleteSectionDialogOpen] = useState(false);
-  const [sectionToDelete, setSectionToDelete] = useState<Section | null>(null);
-  const [deleteWithRoutines, setDeleteWithRoutines] = useState(false);
-  const [editingSection, setEditingSection] = useState<Section | null>(null);
   const [newSectionName, setNewSectionName] = useState("");
+  const [editSectionDialogOpen, setEditSectionDialogOpen] = useState(false);
   const [editSectionName, setEditSectionName] = useState("");
-  
-  // Routine dialogs
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [deleteSectionDialogOpen, setDeleteSectionDialogOpen] = useState(false);
+  const [deletingSectionId, setDeletingSectionId] = useState<string | null>(null);
+  const [deleteWithRoutines, setDeleteWithRoutines] = useState(false);
+
+  // Routine state
   const [routineDialogOpen, setRoutineDialogOpen] = useState(false);
-  const [editRoutineDialogOpen, setEditRoutineDialogOpen] = useState(false);
-  const [moveRoutineDialogOpen, setMoveRoutineDialogOpen] = useState(false);
-  const [routineToMove, setRoutineToMove] = useState<Routine | null>(null);
-  const [targetSectionId, setTargetSectionId] = useState<string>("");
-  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [currentSectionForNewRoutine, setCurrentSectionForNewRoutine] = useState<string | null>(null);
-  
   const [newRoutine, setNewRoutine] = useState({
     title: "",
     description: "",
@@ -109,7 +101,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     sendNotification: false,
     imageUrls: [] as string[],
   });
-  
+
+  // Edit routine state
+  const [editRoutineDialogOpen, setEditRoutineDialogOpen] = useState(false);
+  const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null);
   const [editRoutine, setEditRoutine] = useState({
     title: "",
     description: "",
@@ -118,11 +113,16 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     imageUrls: [] as string[],
   });
 
+  // Move routine state
+  const [moveRoutineDialogOpen, setMoveRoutineDialogOpen] = useState(false);
+  const [routineToMove, setRoutineToMove] = useState<Routine | null>(null);
+  const [targetSectionId, setTargetSectionId] = useState<string>("unsorted");
+
+  const shiftName = shifts.find((s) => s.id === shiftId)?.name || "";
+
   useEffect(() => {
-    if (shiftId) {
-      fetchSections();
-      fetchRoutines();
-    }
+    fetchSections();
+    fetchRoutines();
   }, [shiftId]);
 
   const fetchSections = async () => {
@@ -133,12 +133,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       .order("order_index");
 
     if (error) {
-      toast.error("Kunne ikke hente afsnit");
       console.error(error);
     } else {
       setSections(data || []);
     }
-    setLoading(false);
   };
 
   const fetchRoutines = async () => {
@@ -146,15 +144,14 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       .from("routines")
       .select("*")
       .eq("shift_id", shiftId)
-      .order("priority", { ascending: false })
       .order("order_index");
 
     if (error) {
-      toast.error("Kunne ikke hente rutiner");
       console.error(error);
     } else {
       setRoutines(data || []);
     }
+    setLoading(false);
   };
 
   const handleCreateSection = async (e: React.FormEvent) => {
@@ -167,10 +164,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     });
 
     if (error) {
-      toast.error("Kunne ikke oprette afsnit");
+      toast.error("Kunne ikke opprette avsnitt");
       console.error(error);
     } else {
-      toast.success("Afsnit oprettet!");
+      toast.success("Avsnitt opprettet!");
       setSectionDialogOpen(false);
       setNewSectionName("");
       fetchSections();
@@ -179,41 +176,42 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const handleUpdateSection = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingSection) return;
+    if (!editingSectionId) return;
 
     const { error } = await supabase
       .from("sections")
       .update({ name: editSectionName })
-      .eq("id", editingSection.id);
+      .eq("id", editingSectionId);
 
     if (error) {
-      toast.error("Kunne ikke opdatere afsnit");
+      toast.error("Kunne ikke oppdatere avsnitt");
       console.error(error);
     } else {
-      toast.success("Afsnit opdateret!");
+      toast.success("Avsnitt oppdatert!");
       setEditSectionDialogOpen(false);
-      setEditingSection(null);
       fetchSections();
     }
   };
 
-  const handleDeleteSectionClick = (section: Section) => {
-    const sectionRoutines = routines.filter((r) => r.section_id === section.id);
-    setSectionToDelete(section);
-    setDeleteWithRoutines(false);
-    setDeleteSectionDialogOpen(true);
-  };
-
   const handleDeleteSection = async () => {
-    if (!sectionToDelete) return;
+    if (!deletingSectionId) return;
 
-    const sectionRoutines = routines.filter((r) => r.section_id === sectionToDelete.id);
+    if (deleteWithRoutines) {
+      const { error: routineError } = await supabase
+        .from("routines")
+        .delete()
+        .eq("section_id", deletingSectionId);
 
-    if (sectionRoutines.length > 0 && !deleteWithRoutines) {
+      if (routineError) {
+        toast.error("Kunne ikke slette rutiner");
+        console.error(routineError);
+        return;
+      }
+    } else {
       const { error: moveError } = await supabase
         .from("routines")
         .update({ section_id: null })
-        .eq("section_id", sectionToDelete.id);
+        .eq("section_id", deletingSectionId);
 
       if (moveError) {
         toast.error("Kunne ikke flytte rutiner");
@@ -222,56 +220,62 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       }
     }
 
-    if (deleteWithRoutines && sectionRoutines.length > 0) {
-      const { error: deleteRoutinesError } = await supabase
-        .from("routines")
-        .delete()
-        .eq("section_id", sectionToDelete.id);
-
-      if (deleteRoutinesError) {
-        toast.error("Kunne ikke slette rutiner");
-        console.error(deleteRoutinesError);
-        return;
-      }
-    }
-
     const { error } = await supabase
       .from("sections")
       .delete()
-      .eq("id", sectionToDelete.id);
+      .eq("id", deletingSectionId);
 
     if (error) {
-      toast.error("Kunne ikke slette afsnit");
+      toast.error("Kunne ikke slette avsnitt");
       console.error(error);
     } else {
-      toast.success("Afsnit slettet!");
+      toast.success("Avsnitt slettet!");
       setDeleteSectionDialogOpen(false);
-      setSectionToDelete(null);
+      setDeleteWithRoutines(false);
       fetchSections();
       fetchRoutines();
     }
   };
 
+  const handleMoveSection = async (sectionId: string, direction: "up" | "down") => {
+    const currentIndex = sections.findIndex((s) => s.id === sectionId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= sections.length) return;
+
+    const current = sections[currentIndex];
+    const target = sections[targetIndex];
+
+    await supabase.from("sections").update({ order_index: target.order_index }).eq("id", current.id);
+    await supabase.from("sections").update({ order_index: current.order_index }).eq("id", target.id);
+
+    fetchSections();
+  };
+
   const handleCreateRoutine = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const maxOrderIndex = routines.length > 0
+      ? Math.max(...routines.map((r) => r.order_index ?? 0)) + 1
+      : 0;
 
     const { data: routineData, error } = await supabase
       .from("routines")
       .insert({
-        shift_id: shiftId,
-        section_id: currentSectionForNewRoutine,
         title: newRoutine.title,
         description: newRoutine.description || null,
-        image_urls: newRoutine.imageUrls.length > 0 ? newRoutine.imageUrls : null,
-        multimedia_url: newRoutine.imageUrls[0] || null,
+        shift_id: shiftId,
         priority: newRoutine.priority,
-        order_index: routines.filter((r) => r.section_id === currentSectionForNewRoutine).length,
-      } as any)
+        order_index: maxOrderIndex,
+        section_id: currentSectionForNewRoutine,
+        image_urls: newRoutine.imageUrls.length > 0 ? newRoutine.imageUrls : null,
+      })
       .select()
       .single();
 
     if (error) {
-      toast.error("Kunne ikke oprette rutine");
+      toast.error("Kunne ikke opprette rutine");
       console.error(error);
     } else {
       if (newRoutine.sendNotification && routineData) {
@@ -279,12 +283,12 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         await supabase.from("routine_notifications").insert({
           routine_id: routineData.id,
           shift_id: shiftId,
-          message: `Ny rutine tilføjet til ${shiftName}: "${newRoutine.title}"`,
+          message: `Ny rutine lagt til i ${shiftName}: "${newRoutine.title}"`,
           created_by: user?.id,
         });
       }
 
-      toast.success("Rutine oprettet!");
+      toast.success("Rutine opprettet!");
       setRoutineDialogOpen(false);
       setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [] });
       setCurrentSectionForNewRoutine(null);
@@ -294,48 +298,46 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const handleUpdateRoutine = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingRoutine) return;
+    if (!editingRoutineId) return;
 
     const { error } = await supabase
       .from("routines")
       .update({
         title: editRoutine.title,
         description: editRoutine.description || null,
-        image_urls: editRoutine.imageUrls.length > 0 ? editRoutine.imageUrls : null,
-        multimedia_url: editRoutine.imageUrls[0] || null,
         priority: editRoutine.priority,
-      } as any)
-      .eq("id", editingRoutine.id);
+        image_urls: editRoutine.imageUrls.length > 0 ? editRoutine.imageUrls : null,
+      })
+      .eq("id", editingRoutineId);
 
     if (error) {
-      toast.error("Kunne ikke opdatere rutine");
+      toast.error("Kunne ikke oppdatere rutine");
       console.error(error);
     } else {
       if (editRoutine.sendNotification) {
-        const shiftName = shifts.find((s) => s.id === shiftId)?.name || "";
+        const routine = routines.find((r) => r.id === editingRoutineId);
         await supabase.from("routine_notifications").insert({
-          routine_id: editingRoutine.id,
+          routine_id: editingRoutineId,
           shift_id: shiftId,
-          message: `Rutine opdateret i ${shiftName}: "${editRoutine.title}"`,
+          message: `Rutine oppdatert i ${shiftName}: "${editRoutine.title}"`,
           created_by: user?.id,
         });
       }
 
-      toast.success("Rutine opdateret!");
+      toast.success("Rutine oppdatert!");
       setEditRoutineDialogOpen(false);
-      setEditingRoutine(null);
       fetchRoutines();
     }
   };
 
-  const handleDeleteRoutine = async (id: string) => {
-    const { error } = await supabase.from("routines").delete().eq("id", id);
+  const handleDeleteRoutine = async (routineId: string) => {
+    const { error } = await supabase.from("routines").delete().eq("id", routineId);
 
     if (error) {
       toast.error("Kunne ikke slette rutine");
       console.error(error);
     } else {
-      toast.success("Rutine slettet");
+      toast.success("Rutine slettet!");
       fetchRoutines();
     }
   };
@@ -357,25 +359,36 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       toast.success("Rutine flyttet!");
       setMoveRoutineDialogOpen(false);
       setRoutineToMove(null);
-      setTargetSectionId("");
       fetchRoutines();
     }
   };
 
   const openEditSection = (section: Section) => {
-    setEditingSection(section);
+    setEditingSectionId(section.id);
     setEditSectionName(section.name);
     setEditSectionDialogOpen(true);
   };
 
+  const openDeleteSection = (sectionId: string) => {
+    setDeletingSectionId(sectionId);
+    setDeleteWithRoutines(false);
+    setDeleteSectionDialogOpen(true);
+  };
+
+  const openNewRoutine = (sectionId: string | null) => {
+    setCurrentSectionForNewRoutine(sectionId);
+    setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [] });
+    setRoutineDialogOpen(true);
+  };
+
   const openEditRoutine = (routine: Routine) => {
-    setEditingRoutine(routine);
+    setEditingRoutineId(routine.id);
     setEditRoutine({
       title: routine.title,
       description: routine.description || "",
       priority: routine.priority,
       sendNotification: false,
-      imageUrls: routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [],
+      imageUrls: routine.image_urls || [],
     });
     setEditRoutineDialogOpen(true);
   };
@@ -386,71 +399,28 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     setMoveRoutineDialogOpen(true);
   };
 
-  const openNewRoutineDialog = (sectionId: string | null) => {
-    setCurrentSectionForNewRoutine(sectionId);
-    setRoutineDialogOpen(true);
-  };
-
-  const unsortedRoutines = routines.filter((r) => !r.section_id);
-
-  const getSectionRoutineCount = (sectionId: string) => {
-    return routines.filter((r) => r.section_id === sectionId).length;
-  };
-
-  const handleMoveSection = async (sectionId: string, direction: "up" | "down") => {
-    const currentIndex = sections.findIndex((s) => s.id === sectionId);
-    if (currentIndex === -1) return;
-
-    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= sections.length) return;
-
-    const otherSection = sections[newIndex];
-    const currentSection = sections[currentIndex];
-
-    const { error: error1 } = await supabase
-      .from("sections")
-      .update({ order_index: newIndex })
-      .eq("id", currentSection.id);
-
-    const { error: error2 } = await supabase
-      .from("sections")
-      .update({ order_index: currentIndex })
-      .eq("id", otherSection.id);
-
-    if (error1 || error2) {
-      toast.error("Kunne ikke flytte afsnit");
-      console.error(error1 || error2);
-    } else {
-      fetchSections();
-    }
-  };
-
-  const shiftName = shifts.find((s) => s.id === shiftId)?.name || "";
-
-  // --- Routine card with dropdown menu ---
-  const renderRoutineCard = (routine: Routine, index: number, arr: Routine[]) => (
+  const renderRoutineCard = (routine: Routine) => (
     <div
       key={routine.id}
-      className={`flex items-start justify-between gap-2 py-3 ${index < arr.length - 1 ? "border-b border-border/50" : ""}`}
+      className="flex items-start justify-between py-3 border-b last:border-b-0"
     >
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h4 className="text-sm font-medium break-words">{routine.title}</h4>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-medium">{routine.title}</h4>
           {routine.priority > 0 && (
-            <Badge variant="secondary" className="text-xs shrink-0">
-              P:{routine.priority}
+            <Badge variant="secondary" className="text-xs">
+              P{routine.priority}
             </Badge>
           )}
         </div>
         {routine.description && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
             {routine.description}
           </p>
         )}
-        {(() => {
-          const urls = routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [];
-          return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
-        })()}
+        {routine.image_urls && routine.image_urls.length > 0 && (
+          <MultiImageDisplay urls={routine.image_urls} className="mt-2" />
+        )}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -460,52 +430,49 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => openMoveRoutine(routine)}>
-            <MoveRight className="h-4 w-4 mr-2" />
-            Flyt
+            Flytt
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => openEditRoutine(routine)}>
-            <Pencil className="h-4 w-4 mr-2" />
             Rediger
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleDeleteRoutine(routine.id)}
             className="text-destructive focus:text-destructive"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Slet
+            Slett
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
   );
 
+  if (loading) {
+    return <p className="text-sm text-muted-foreground">Laster...</p>;
+  }
+
+  const unsortedRoutines = routines.filter((r) => !r.section_id);
+
   return (
-    <div className="space-y-8 min-w-0">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-lg font-semibold truncate">{shiftName} Rutiner</h2>
-          <p className="text-xs text-muted-foreground">
-            {routines.length} rutiner, {sections.length} afsnit
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{shiftName}</h2>
         <Dialog open={sectionDialogOpen} onOpenChange={setSectionDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="shrink-0 w-full sm:w-auto">
+            <Button variant="outline" size="sm">
               <FolderOpen className="h-4 w-4 mr-2" />
-              Nyt Afsnit
+              Nytt avsnitt
             </Button>
           </DialogTrigger>
           <DialogContent>
             <form onSubmit={handleCreateSection}>
               <DialogHeader>
-                <DialogTitle>Opret nyt afsnit</DialogTitle>
+                <DialogTitle>Opprett nytt avsnitt</DialogTitle>
                 <DialogDescription>
-                  Organiser dine rutiner i afsnit som f.eks. "Kafe", "Toilet" osv.
+                  Organiser rutinene dine i avsnitt som f.eks. "Kafe", "Toalett" osv.
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
-                <Label htmlFor="section-name">Afsnit navn *</Label>
+                <Label htmlFor="section-name">Avsnittsnavn *</Label>
                 <Input
                   id="section-name"
                   value={newSectionName}
@@ -515,7 +482,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit">Opret afsnit</Button>
+                <Button type="submit">Opprett avsnitt</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -526,33 +493,22 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       <div className="bg-muted/60 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usorterede rutiner</span>
-            <Badge variant="secondary" className="text-[10px] h-5">
-              {unsortedRoutines.length}
-            </Badge>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usorterte rutiner</span>
+            <Badge variant="secondary" className="text-xs">{unsortedRoutines.length}</Badge>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={() => openNewRoutineDialog(null)}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Ny Rutine
+          <Button variant="ghost" size="sm" onClick={() => openNewRoutine(null)} className="h-7 text-xs">
+            <Plus className="h-3 w-3 mr-1" />
+            Ny rutine
           </Button>
         </div>
         {unsortedRoutines.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">
-            Ingen usorterede rutiner
-          </p>
+          <p className="text-sm text-muted-foreground py-2">Ingen usorterte rutiner</p>
         ) : (
-          <div>
-            {unsortedRoutines.map((r, i, arr) => renderRoutineCard(r, i, arr))}
-          </div>
+          <div>{unsortedRoutines.map(renderRoutineCard)}</div>
         )}
       </div>
 
-      {/* Sections */}
+      {/* Named Sections */}
       {sections.map((section) => {
         const sectionRoutines = routines.filter((r) => r.section_id === section.id);
         const sectionIndex = sections.findIndex((s) => s.id === section.id);
@@ -563,19 +519,12 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">
                   {section.name}
                 </span>
-                <Badge variant="secondary" className="text-[10px] h-5 shrink-0">
-                  {sectionRoutines.length}
-                </Badge>
+                <Badge variant="secondary" className="text-xs shrink-0">{sectionRoutines.length}</Badge>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => openNewRoutineDialog(section.id)}
-                >
-                  <Plus className="h-3.5 w-3.5 sm:mr-1" />
-                  <span className="hidden sm:inline">Ny Rutine</span>
+                <Button variant="ghost" size="sm" onClick={() => openNewRoutine(section.id)} className="h-7 text-xs">
+                  <Plus className="h-3 w-3 mr-1" />
+                  Ny rutine
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -585,42 +534,34 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEditSection(section)}>
-                      <Pencil className="h-4 w-4 mr-2" />
                       Rediger
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleMoveSection(section.id, "up")}
                       disabled={sectionIndex === 0}
                     >
-                      <ChevronUp className="h-4 w-4 mr-2" />
-                      Flyt op
+                      Flytt opp
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleMoveSection(section.id, "down")}
                       disabled={sectionIndex === sections.length - 1}
                     >
-                      <ChevronDown className="h-4 w-4 mr-2" />
-                      Flyt ned
+                      Flytt ned
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => handleDeleteSectionClick(section)}
+                      onClick={() => openDeleteSection(section.id)}
                       className="text-destructive focus:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Slet
+                      Slett
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </div>
             {sectionRoutines.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">
-                Ingen rutiner i dette afsnit
-              </p>
+              <p className="text-sm text-muted-foreground py-2">Ingen rutiner i dette avsnittet</p>
             ) : (
-              <div>
-                {sectionRoutines.map((r, i, arr) => renderRoutineCard(r, i, arr))}
-              </div>
+              <div>{sectionRoutines.map(renderRoutineCard)}</div>
             )}
           </div>
         );
@@ -631,10 +572,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         <DialogContent>
           <form onSubmit={handleUpdateSection}>
             <DialogHeader>
-              <DialogTitle>Rediger afsnit</DialogTitle>
+              <DialogTitle>Rediger avsnitt</DialogTitle>
             </DialogHeader>
             <div className="py-4">
-              <Label htmlFor="edit-section-name">Afsnit navn *</Label>
+              <Label htmlFor="edit-section-name">Avsnittsnavn *</Label>
               <Input
                 id="edit-section-name"
                 value={editSectionName}
@@ -644,9 +585,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditSectionDialogOpen(false)}>
-                Annuller
+                Avbryt
               </Button>
-              <Button type="submit">Gem ændringer</Button>
+              <Button type="submit">Lagre endringer</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -656,60 +597,60 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       <AlertDialog open={deleteSectionDialogOpen} onOpenChange={setDeleteSectionDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Slet afsnit</AlertDialogTitle>
+            <AlertDialogTitle>Slett avsnitt</AlertDialogTitle>
             <AlertDialogDescription>
-              {sectionToDelete && getSectionRoutineCount(sectionToDelete.id) > 0 ? (
-                <>
-                  Dette afsnit indeholder{" "}
-                  <strong>{getSectionRoutineCount(sectionToDelete.id)} rutiner</strong>.
-                  Hvad vil du gøre med dem?
-                </>
-              ) : (
-                "Er du sikker på at du vil slette dette afsnit?"
-              )}
+              {(() => {
+                const sectionRoutineCount = routines.filter(
+                  (r) => r.section_id === deletingSectionId
+                ).length;
+                if (sectionRoutineCount === 0) {
+                  return "Er du sikker på at du vil slette dette avsnittet?";
+                }
+                return `Dette avsnittet har ${sectionRoutineCount} rutine(r). Hva vil du gjøre med dem?`;
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {sectionToDelete && getSectionRoutineCount(sectionToDelete.id) > 0 && (
-            <div className="space-y-3 py-2">
-              <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-accent">
+          {routines.filter((r) => r.section_id === deletingSectionId).length > 0 && (
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                 <input
                   type="radio"
-                  name="deleteOption"
+                  name="deleteAction"
                   checked={!deleteWithRoutines}
                   onChange={() => setDeleteWithRoutines(false)}
-                  className="h-4 w-4"
+                  className="mt-1"
                 />
                 <div>
-                  <p className="font-medium text-sm">Flyt rutiner til usorterede</p>
+                  <p className="font-medium text-sm">Flytt til usorterte</p>
                   <p className="text-xs text-muted-foreground">
-                    Rutinerne flyttes og kan organiseres senere
+                    Rutinene flyttes til usorterte rutiner
                   </p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 border border-destructive/50 rounded-lg cursor-pointer hover:bg-destructive/5">
+              <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                 <input
                   type="radio"
-                  name="deleteOption"
+                  name="deleteAction"
                   checked={deleteWithRoutines}
                   onChange={() => setDeleteWithRoutines(true)}
-                  className="h-4 w-4"
+                  className="mt-1"
                 />
                 <div>
-                  <p className="font-medium text-sm text-destructive">Slet alle rutiner</p>
+                  <p className="font-medium text-sm text-destructive">Slett alt</p>
                   <p className="text-xs text-muted-foreground">
-                    Alle rutiner i dette afsnit slettes permanent
+                    Alle rutiner i dette avsnittet slettes permanent
                   </p>
                 </div>
               </label>
             </div>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuller</AlertDialogCancel>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteSection}
               className={deleteWithRoutines ? "bg-destructive hover:bg-destructive/90" : ""}
             >
-              {deleteWithRoutines ? "Slet afsnit og rutiner" : "Slet afsnit"}
+              {deleteWithRoutines ? "Slett avsnitt og rutiner" : "Slett avsnitt"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -720,9 +661,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         <DialogContent>
           <form onSubmit={handleCreateRoutine}>
             <DialogHeader>
-              <DialogTitle>Opret ny rutine</DialogTitle>
+              <DialogTitle>Opprett ny rutine</DialogTitle>
               <DialogDescription>
-                Tilføj en ny rutine til {shiftName}
+                Legg til en ny rutine i {shiftName}
                 {currentSectionForNewRoutine &&
                   ` - ${sections.find((s) => s.id === currentSectionForNewRoutine)?.name}`}
               </DialogDescription>
@@ -758,7 +699,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Billede</Label>
+                <Label>Bilde</Label>
                 <MultiImageUpload
                   folder="routines"
                   currentUrls={newRoutine.imageUrls}
@@ -767,9 +708,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               </div>
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
-                  <Label htmlFor="new-notification">Send notifikation</Label>
+                  <Label htmlFor="new-notification">Send varsling</Label>
                   <p className="text-sm text-muted-foreground">
-                    Notificér medarbejdere om denne nye rutine
+                    Varsle medarbeidere om denne nye rutinen
                   </p>
                 </div>
                 <Switch
@@ -782,7 +723,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Opret rutine</Button>
+              <Button type="submit">Opprett rutine</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -826,7 +767,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Billede</Label>
+                <Label>Bilde</Label>
                 <MultiImageUpload
                   folder="routines"
                   currentUrls={editRoutine.imageUrls}
@@ -835,9 +776,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               </div>
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
-                  <Label htmlFor="edit-notification">Send notifikation</Label>
+                  <Label htmlFor="edit-notification">Send varsling</Label>
                   <p className="text-sm text-muted-foreground">
-                    Notificér medarbejdere om denne ændring
+                    Varsle medarbeidere om denne endringen
                   </p>
                 </div>
                 <Switch
@@ -851,9 +792,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditRoutineDialogOpen(false)}>
-                Annuller
+                Avbryt
               </Button>
-              <Button type="submit">Gem ændringer</Button>
+              <Button type="submit">Lagre endringer</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -863,19 +804,19 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       <Dialog open={moveRoutineDialogOpen} onOpenChange={setMoveRoutineDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Flyt rutine</DialogTitle>
+            <DialogTitle>Flytt rutine</DialogTitle>
             <DialogDescription>
-              Vælg hvor du vil flytte "{routineToMove?.title}" til
+              Velg hvor du vil flytte "{routineToMove?.title}" til
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="target-section">Flyt til afsnit</Label>
+            <Label htmlFor="target-section">Flytt til avsnitt</Label>
             <Select value={targetSectionId} onValueChange={setTargetSectionId}>
               <SelectTrigger id="target-section">
-                <SelectValue placeholder="Vælg afsnit" />
+                <SelectValue placeholder="Velg avsnitt" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="unsorted">Usorterede rutiner</SelectItem>
+                <SelectItem value="unsorted">Usorterte rutiner</SelectItem>
                 {sections.map((section) => (
                   <SelectItem key={section.id} value={section.id}>
                     {section.name}
@@ -885,9 +826,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setMoveRoutineDialogOpen(false)}>
-              Annuller
+              Avbryt
             </Button>
-            <Button onClick={handleMoveRoutine}>Flyt rutine</Button>
+            <Button onClick={handleMoveRoutine}>Flytt rutine</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

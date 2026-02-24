@@ -73,7 +73,7 @@ function CollapsibleText({ text, maxLines = 3 }: { text: string; maxLines?: numb
         onClick={() => setIsExpanded(!isExpanded)}
         className="text-xs text-primary hover:underline mt-1"
       >
-        {isExpanded ? 'Vis mindre' : 'Vis mere'}
+        {isExpanded ? 'Vis mindre' : 'Vis mer'}
       </button>
     </div>
   );
@@ -121,7 +121,7 @@ export function AnnouncementManager() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast.error("Kunne ikke hente opdateringer");
+      toast.error("Kunne ikke hente oppdateringer");
     } else if (data) {
       setAnnouncements(data);
     }
@@ -152,12 +152,12 @@ export function AnnouncementManager() {
     e.preventDefault();
     
     if (!title.trim() || !message.trim()) {
-      toast.error("Udfyld venligst alle felter");
+      toast.error("Vennligst fyll ut alle felter");
       return;
     }
 
     if (!user) {
-      toast.error("Du skal være logget ind");
+      toast.error("Du må være logget inn");
       return;
     }
 
@@ -168,10 +168,10 @@ export function AnnouncementManager() {
       .insert([{ title, message, image_urls: imageUrls.length > 0 ? imageUrls : null, image_url: imageUrls[0] || null, created_by: user.id }] as any);
 
     if (error) {
-      toast.error("Kunne ikke oprette opdatering");
+      toast.error("Kunne ikke opprette oppdatering");
       console.error(error);
     } else {
-      toast.success("Opdatering oprettet!");
+      toast.success("Oppdatering opprettet!");
       setTitle("");
       setMessage("");
       setImageUrls([]);
@@ -188,9 +188,9 @@ export function AnnouncementManager() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Kunne ikke slette opdatering");
+      toast.error("Kunne ikke slette oppdatering");
     } else {
-      toast.success("Opdatering slettet");
+      toast.success("Oppdatering slettet");
       fetchAnnouncements();
     }
   };
@@ -202,9 +202,9 @@ export function AnnouncementManager() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Kunne ikke slette rutineopdatering");
+      toast.error("Kunne ikke slette rutineoppdatering");
     } else {
-      toast.success("Rutineopdatering slettet");
+      toast.success("Rutineoppdatering slettet");
       fetchRoutineNotifications();
     }
   };
@@ -251,7 +251,7 @@ export function AnnouncementManager() {
       }
     } catch (error) {
       console.error("Error fetching read statuses:", error);
-      toast.error("Kunne ikke hente læsestatus");
+      toast.error("Kunne ikke hente lesestatus");
     } finally {
       setLoadingReadStatus(false);
     }
@@ -271,7 +271,7 @@ export function AnnouncementManager() {
 
   const getCreatorName = (createdBy: string) => {
     const creator = allUsers.find(u => u.id === createdBy);
-    return creator?.name || 'Ukendt';
+    return creator?.name || 'Ukjent';
   };
 
   // Pagination helpers
@@ -288,7 +288,7 @@ export function AnnouncementManager() {
     return routineNotifications.slice(start, start + ITEMS_PER_PAGE);
   };
 
-  const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => {
+  const PaginationComponent = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => {
     if (totalPages <= 1) return null;
     
     return (
@@ -302,7 +302,7 @@ export function AnnouncementManager() {
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <span className="text-sm text-muted-foreground">
-          Side {currentPage} af {totalPages}
+          Side {currentPage} av {totalPages}
         </span>
         <Button
           variant="outline"
@@ -320,20 +320,20 @@ export function AnnouncementManager() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Opret ny opdatering</CardTitle>
+          <CardTitle>Opprett ny oppdatering</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Input
-                placeholder="Titel"
+                placeholder="Tittel"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
             <div>
               <Textarea
-                placeholder="Besked"
+                placeholder="Melding"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={4}
@@ -347,7 +347,7 @@ export function AnnouncementManager() {
               />
             </div>
             <Button type="submit" disabled={loading}>
-              {loading ? "Opretter..." : "Opret opdatering"}
+              {loading ? "Oppretter..." : "Opprett oppdatering"}
             </Button>
           </form>
         </CardContent>
@@ -357,8 +357,8 @@ export function AnnouncementManager() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Nyheder</CardTitle>
-              <CardDescription>Generelle opdateringer til alle brugere</CardDescription>
+              <CardTitle>Nyheter</CardTitle>
+              <CardDescription>Generelle oppdateringer til alle brukere</CardDescription>
             </div>
             <Button
               variant="ghost"
@@ -383,7 +383,7 @@ export function AnnouncementManager() {
           <CardContent>
             <div className="space-y-4">
               {announcements.length === 0 ? (
-                <p className="text-muted-foreground">Ingen opdateringer endnu</p>
+                <p className="text-muted-foreground">Ingen oppdateringer ennå</p>
               ) : (
                 <>
                   {getPaginatedAnnouncements().map((announcement) => (
@@ -398,7 +398,7 @@ export function AnnouncementManager() {
                               return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
                             })()}
                             <p className="text-xs text-muted-foreground mt-2">
-                              {new Date(announcement.created_at).toLocaleString("da-DK")} · Af {getCreatorName(announcement.created_by)}
+                              {new Date(announcement.created_at).toLocaleString("nb-NO")} · Av {getCreatorName(announcement.created_by)}
                             </p>
                           </div>
                           <div className="flex flex-col gap-1 shrink-0">
@@ -406,7 +406,7 @@ export function AnnouncementManager() {
                               variant="ghost"
                               size="icon"
                               onClick={() => openReadStatusDialog('announcement', announcement.id, announcement.title, announcement.created_at)}
-                              title="Se hvem der har læst"
+                              title="Se hvem som har lest"
                             >
                               <Users className="h-4 w-4" />
                             </Button>
@@ -414,7 +414,7 @@ export function AnnouncementManager() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(announcement.id)}
-                              title="Slet"
+                              title="Slett"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -423,7 +423,7 @@ export function AnnouncementManager() {
                       </CardContent>
                     </Card>
                   ))}
-                  <Pagination
+                  <PaginationComponent
                     currentPage={announcementPage}
                     totalPages={getAnnouncementsTotalPages()}
                     onPageChange={setAnnouncementPage}
@@ -439,8 +439,8 @@ export function AnnouncementManager() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Rutineopdateringer</CardTitle>
-              <CardDescription>Opdateringer knyttet til specifikke rutiner</CardDescription>
+              <CardTitle>Rutineoppdateringer</CardTitle>
+              <CardDescription>Oppdateringer knyttet til spesifikke rutiner</CardDescription>
             </div>
             <Button
               variant="ghost"
@@ -465,7 +465,7 @@ export function AnnouncementManager() {
           <CardContent>
             <div className="space-y-4">
               {routineNotifications.length === 0 ? (
-                <p className="text-muted-foreground">Ingen rutineopdateringer endnu</p>
+                <p className="text-muted-foreground">Ingen rutineoppdateringer ennå</p>
               ) : (
                 <>
                   {getPaginatedRoutineNotifications().map((notification) => (
@@ -483,12 +483,12 @@ export function AnnouncementManager() {
                             </div>
                             <div className="flex items-center gap-2 mb-1">
                               <RefreshCw className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">Rutineopdatering</span>
+                              <span className="text-xs text-muted-foreground">Rutineoppdatering</span>
                             </div>
                             <CollapsibleText text={notification.message} />
                             <p className="text-xs text-muted-foreground mt-2">
-                              {new Date(notification.created_at).toLocaleString("da-DK")}
-                              {notification.created_by && ` · Af ${getCreatorName(notification.created_by)}`}
+                              {new Date(notification.created_at).toLocaleString("nb-NO")}
+                              {notification.created_by && ` · Av ${getCreatorName(notification.created_by)}`}
                             </p>
                           </div>
                           <div className="flex flex-col gap-1 shrink-0">
@@ -498,10 +498,10 @@ export function AnnouncementManager() {
                               onClick={() => openReadStatusDialog(
                                 'routine', 
                                 notification.id, 
-                                notification.routine?.title || 'Rutineopdatering',
+                                notification.routine?.title || 'Rutineoppdatering',
                                 notification.created_at
                               )}
-                              title="Se hvem der har læst"
+                              title="Se hvem som har lest"
                             >
                               <Users className="h-4 w-4" />
                             </Button>
@@ -509,7 +509,7 @@ export function AnnouncementManager() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteRoutineNotification(notification.id)}
-                              title="Slet"
+                              title="Slett"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -518,7 +518,7 @@ export function AnnouncementManager() {
                       </CardContent>
                     </Card>
                   ))}
-                  <Pagination
+                  <PaginationComponent
                     currentPage={routineNotificationPage}
                     totalPages={getRoutineNotificationsTotalPages()}
                     onPageChange={setRoutineNotificationPage}
@@ -533,30 +533,30 @@ export function AnnouncementManager() {
       <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Læsestatus</DialogTitle>
+            <DialogTitle>Lesestatus</DialogTitle>
             <DialogDescription>
               {selectedItem?.title}
             </DialogDescription>
           </DialogHeader>
           
           {loadingReadStatus ? (
-            <div className="text-center py-4 text-muted-foreground">Indlæser...</div>
+            <div className="text-center py-4 text-muted-foreground">Laster...</div>
           ) : (
             <div className="space-y-4">
               <div>
                 <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                  Læst ({readStatuses.length})
+                  Lest ({readStatuses.length})
                 </h4>
                 {readStatuses.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Ingen har læst denne endnu</p>
+                  <p className="text-sm text-muted-foreground">Ingen har lest denne ennå</p>
                 ) : (
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {readStatuses.map((status) => (
                       <div key={status.user_id} className="text-sm p-2 bg-muted/50 rounded">
-                        <div className="font-medium">{status.profile?.name || 'Ukendt bruger'}</div>
+                        <div className="font-medium">{status.profile?.name || 'Ukjent bruker'}</div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(status.read_at).toLocaleString("da-DK")}
+                          {new Date(status.read_at).toLocaleString("nb-NO")}
                         </div>
                       </div>
                     ))}
@@ -567,10 +567,10 @@ export function AnnouncementManager() {
               <div>
                 <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-orange-500"></span>
-                  Ikke læst ({getUnreadUsers().length})
+                  Ikke lest ({getUnreadUsers().length})
                 </h4>
                 {getUnreadUsers().length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Alle har læst denne opdatering</p>
+                  <p className="text-sm text-muted-foreground">Alle har lest denne oppdateringen</p>
                 ) : (
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {getUnreadUsers().map((user) => (

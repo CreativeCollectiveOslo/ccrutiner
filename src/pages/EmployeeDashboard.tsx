@@ -380,7 +380,7 @@ export default function EmployeeDashboard() {
       .in("routine_id", routineIds);
 
     if (error) {
-      toast.error("Kunne ikke fjerne afkrydsninger");
+      toast.error("Kunne ikke fjerne avkrysninger");
       console.error(error);
     } else {
       setCompletions(new Set());
@@ -391,7 +391,7 @@ export default function EmployeeDashboard() {
           completed: 0,
         },
       }));
-      toast.success("Alle afkrydsninger fjernet");
+      toast.success("Alle avkrysninger fjernet");
     }
   };
 
@@ -596,7 +596,7 @@ export default function EmployeeDashboard() {
                 }`}
               >
                 <ClipboardList className="h-5 w-5 sm:h-4 sm:w-4" />
-                <span>Logbog</span>
+                <span>Loggbok</span>
                 {mainTab === "bulletin" && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
@@ -734,13 +734,13 @@ export default function EmployeeDashboard() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Fjern alle afkrydsninger?</AlertDialogTitle>
+                      <AlertDialogTitle>Fjern alle avkrysninger?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Dette vil fjerne alle afkrydsninger for denne vagt. Handlingen kan ikke fortrydes.
+                        Dette vil fjerne alle avkrysninger for denne vakten. Handlingen kan ikke angres.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Annuller</AlertDialogCancel>
+                      <AlertDialogCancel>Avbryt</AlertDialogCancel>
                       <AlertDialogAction onClick={clearAllCompletions} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                         Fjern alle
                       </AlertDialogAction>

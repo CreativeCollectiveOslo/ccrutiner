@@ -148,7 +148,7 @@ export default function AdminDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error("Du skal være logget ind");
+        toast.error("Du må være logget inn");
         return;
       }
 
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     
     if (!inviteEmail.trim()) {
-      toast.error("Email er påkrævet");
+      toast.error("E-post er påkrevd");
       return;
     }
 
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error("Du skal være logget ind");
+        toast.error("Du må være logget inn");
         return;
       }
 
@@ -218,7 +218,7 @@ export default function AdminDashboard() {
         throw new Error(result.error || "Kunne ikke invitere bruker");
       }
 
-      toast.success(`Bruker inviteret! Password: ${result.generatedPassword}`, {
+      toast.success(`Bruker invitert! Passord: ${result.generatedPassword}`, {
         duration: 10000,
       });
       setInviteEmail("");
@@ -245,7 +245,7 @@ export default function AdminDashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error("Du skal være logget ind");
+        toast.error("Du må være logget inn");
         return;
       }
 
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Opdateringer
+              Oppdateringer
               {activeTab === "announcements" && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
               <div className="flex gap-2 overflow-x-auto pb-1 flex-1 min-w-0">
                 {shifts.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Ingen vakter endnu.
+                    Ingen vakter ennå.
                   </p>
                 ) : (
                   shifts.map((shift) => {
@@ -385,9 +385,9 @@ export default function AdminDashboard() {
                 </SheetTrigger>
                 <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
                   <SheetHeader>
-                    <SheetTitle>Administrer vakter</SheetTitle>
-                    <SheetDescription>
-                      Opret, rediger og omarranger vakter
+                   <SheetTitle>Administrer vakter</SheetTitle>
+                   <SheetDescription>
+                     Opprett, rediger og omorganiser vakter
                     </SheetDescription>
                   </SheetHeader>
                   <div className="mt-6">
@@ -486,9 +486,9 @@ export default function AdminDashboard() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Inviter ny bruker</DialogTitle>
-                      <DialogDescription>
-                        Et unikt password vil blive genereret automatisk.
-                      </DialogDescription>
+                       <DialogDescription>
+                         Et unikt passord vil bli generert automatisk.
+                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleInviteUser} className="space-y-4">
                       <div>
@@ -503,7 +503,7 @@ export default function AdminDashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="invite-name">Navn (valgfrit)</Label>
+                        <Label htmlFor="invite-name">Navn (valgfritt)</Label>
                         <Input
                           id="invite-name"
                           placeholder="Navn på bruker"
@@ -521,18 +521,18 @@ export default function AdminDashboard() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="employee">Medarbejder</SelectItem>
+                            <SelectItem value="employee">Medarbeider</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <DialogFooter>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setInviteDialogOpen(false)}
-                        >
-                          Annuller
+                       <DialogFooter>
+                         <Button
+                           type="button"
+                           variant="outline"
+                           onClick={() => setInviteDialogOpen(false)}
+                         >
+                           Avbryt
                         </Button>
                         <Button type="submit" disabled={inviteLoading}>
                           {inviteLoading ? "Inviterer..." : "Inviter"}
@@ -552,7 +552,7 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 py-3 flex justify-center">
           <Button variant="outline" onClick={() => navigate("/employee")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Til Medarbejder Visning
+            Til Medarbeider-visning
           </Button>
         </div>
       </footer>

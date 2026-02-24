@@ -84,7 +84,7 @@ export function ShoppingList() {
     } as any);
 
     if (error) {
-      toast.error("Kunne ikke tilføje vare");
+      toast.error("Kunne ikke legge til vare");
       console.error(error);
     } else {
       setNewItem("");
@@ -103,7 +103,7 @@ export function ShoppingList() {
       .eq("id", item.id);
 
     if (error) {
-      toast.error("Kunne ikke opdatere vare");
+      toast.error("Kunne ikke oppdatere vare");
       console.error(error);
     }
   };
@@ -121,11 +121,11 @@ export function ShoppingList() {
       toast.error("Kunne ikke fjerne varer");
       console.error(error);
     } else {
-      toast.success("Afkrydsede varer fjernet");
+      toast.success("Avkryssede varer fjernet");
     }
   };
 
-  const getName = (id: string) => profiles.get(id) || "Ukendt";
+  const getName = (id: string) => profiles.get(id) || "Ukjent";
   const hasCompleted = items.some((i) => i.completed);
 
   if (loading) {
@@ -141,7 +141,7 @@ export function ShoppingList() {
       {/* Add item form */}
       <form onSubmit={addItem} className="flex gap-2">
         <Input
-          placeholder="Tilføj vare..."
+          placeholder="Legg til vare..."
           value={newItem}
           onChange={(e) => setNewItem(e.target.value)}
           className="flex-1"
@@ -158,7 +158,7 @@ export function ShoppingList() {
             <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Handlelisten er tom</h3>
             <p className="text-sm text-muted-foreground">
-              Tilføj varer ovenfor
+              Legg til varer ovenfor
             </p>
           </CardContent>
         </Card>
@@ -177,8 +177,8 @@ export function ShoppingList() {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {item.completed
-                      ? `Købt af ${getName(item.completed_by!)}`
-                      : `Tilføjet af ${getName(item.created_by)}`}
+                      ? `Kjøpt av ${getName(item.completed_by!)}`
+                      : `Lagt til av ${getName(item.created_by)}`}
                   </p>
                 </div>
               </CardContent>
@@ -191,7 +191,7 @@ export function ShoppingList() {
       {hasCompleted && (
         <Button variant="outline" size="sm" onClick={removeCompleted} className="w-full">
           <Trash2 className="h-4 w-4 mr-2" />
-          Fjern afkrydsede
+          Fjern avkryssede
         </Button>
       )}
     </div>

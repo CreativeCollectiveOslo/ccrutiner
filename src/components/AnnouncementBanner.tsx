@@ -60,10 +60,10 @@ export function AnnouncementBanner() {
       .insert([{ announcement_id: announcementId, user_id: user.id }]);
 
     if (error) {
-      toast.error("Kunne ikke markere som læst");
+      toast.error("Kunne ikke markere som lest");
     } else {
       setReadAnnouncements(prev => new Set(prev).add(announcementId));
-      toast.success("Markeret som læst");
+      toast.success("Markert som lest");
     }
   };
 
@@ -84,7 +84,7 @@ export function AnnouncementBanner() {
                 <h3 className="font-semibold mb-1">{announcement.title}</h3>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{announcement.message}</p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {new Date(announcement.created_at).toLocaleDateString("da-DK")}
+                  {new Date(announcement.created_at).toLocaleDateString("nb-NO")}
                 </p>
               </div>
             </div>
@@ -94,7 +94,7 @@ export function AnnouncementBanner() {
                 size="sm"
                 onClick={() => markAsRead(announcement.id)}
               >
-                Læst
+                Lest
               </Button>
             </div>
           </CardContent>

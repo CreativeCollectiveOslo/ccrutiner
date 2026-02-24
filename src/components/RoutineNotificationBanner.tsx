@@ -36,7 +36,6 @@ export function RoutineNotificationBanner() {
   const fetchUnreadNotifications = async () => {
     if (!user) return;
 
-    // Get all notifications with routine data
     const { data: allNotifications, error: notifError } = await supabase
       .from("routine_notifications")
       .select(`
@@ -56,7 +55,6 @@ export function RoutineNotificationBanner() {
       return;
     }
 
-    // Get read notifications for this user
     const { data: readNotifications, error: readError } = await supabase
       .from("routine_notifications_read")
       .select("notification_id")
@@ -126,7 +124,7 @@ export function RoutineNotificationBanner() {
                 )}
                 
                 <p className="text-xs text-muted-foreground mt-2">
-                  {new Date(notification.created_at).toLocaleDateString("da-DK")}
+                  {new Date(notification.created_at).toLocaleDateString("nb-NO")}
                 </p>
               </div>
             </div>
@@ -136,7 +134,7 @@ export function RoutineNotificationBanner() {
                 size="sm"
                 onClick={() => markAsRead(notification.id)}
               >
-                Læst
+                Lest
               </Button>
             </div>
           </CardContent>

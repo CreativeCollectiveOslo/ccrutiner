@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, FileText, Bell, ClipboardList, Loader2, X } from "lucide-react";
 import { format } from "date-fns";
-import { da } from "date-fns/locale";
+import { nb } from "date-fns/locale";
 
 interface SearchResult {
   id: string;
@@ -85,7 +85,7 @@ export function SearchDialog({
             type: "routine",
             title: routine.title,
             description: routine.description || undefined,
-            context: routine.shifts?.name || "Ukendt vagt",
+            context: routine.shifts?.name || "Ukjent vakt",
             shiftId: routine.shift_id,
             routineId: routine.id,
           });
@@ -235,13 +235,13 @@ export function SearchDialog({
           {searchQuery.length < 2 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Skriv mindst 2 tegn for at søge</p>
+              <p className="text-sm">Skriv minst 2 tegn for å søke</p>
             </div>
           ) : results.length === 0 && !isSearching ? (
             <div className="p-8 text-center text-muted-foreground">
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm font-medium">Ingen resultater fundet</p>
-              <p className="text-xs mt-1">Prøv et andet søgeord</p>
+              <p className="text-xs mt-1">Prøv et annet søkeord</p>
             </div>
           ) : (
             <div className="p-2 space-y-4">
@@ -296,7 +296,7 @@ export function SearchDialog({
                           )}
                           {result.createdAt && (
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {format(new Date(result.createdAt), "d. MMMM yyyy", { locale: da })}
+                              {format(new Date(result.createdAt), "d. MMMM yyyy", { locale: nb })}
                             </p>
                           )}
                         </div>
@@ -309,7 +309,7 @@ export function SearchDialog({
               {bulletinResults.length > 0 && (
                 <div>
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-2 py-1">
-                    Logbog
+                    Loggbok
                   </h3>
                   <div className="space-y-1">
                     {bulletinResults.map((result) => (
@@ -325,7 +325,7 @@ export function SearchDialog({
                           </p>
                           {result.createdAt && (
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {format(new Date(result.createdAt), "d. MMMM yyyy", { locale: da })}
+                              {format(new Date(result.createdAt), "d. MMMM yyyy", { locale: nb })}
                             </p>
                           )}
                         </div>

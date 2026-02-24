@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { ClipboardList, Loader2, Pencil, X, Check } from "lucide-react";
 import { MultiImageUpload, MultiImageDisplay } from "@/components/ImageUpload";
 import { format } from "date-fns";
-import { da } from "date-fns/locale";
+import { nb } from "date-fns/locale";
 import {
   Pagination,
   PaginationContent,
@@ -134,7 +134,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       .range(from, to);
 
     if (error) {
-      toast.error("Kunne ikke hente indlæg");
+      toast.error("Kunne ikke hente innlegg");
       console.error(error);
     } else {
       setPosts(data || []);
@@ -158,10 +158,10 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
     } as any);
 
     if (error) {
-      toast.error("Kunne ikke oprette indlæg");
+      toast.error("Kunne ikke opprette innlegg");
       console.error(error);
     } else {
-      toast.success("Indlæg tilføjet til logbogen!");
+      toast.success("Innlegg lagt til i loggboka!");
       setNewTitle("");
       setNewMessage("");
       setNewImageUrls([]);
@@ -200,10 +200,10 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       .eq("id", postId);
 
     if (error) {
-      toast.error("Kunne ikke opdatere indlæg");
+      toast.error("Kunne ikke oppdatere innlegg");
       console.error(error);
     } else {
-      toast.success("Indlæg opdateret!");
+      toast.success("Innlegg oppdatert!");
       setEditingPostId(null);
       setEditTitle("");
       setEditMessage("");
@@ -213,7 +213,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "d. MMMM yyyy 'kl.' HH:mm", { locale: da });
+    return format(new Date(dateString), "d. MMMM yyyy 'kl.' HH:mm", { locale: nb });
   };
 
   const isEdited = (post: BulletinPost) => {
@@ -221,7 +221,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   };
 
   const getAuthorName = (userId: string) => {
-    return profiles.get(userId) || "Ukendt bruger";
+    return profiles.get(userId) || "Ukjent bruker";
   };
 
   if (loading && posts.length === 0) {
@@ -238,7 +238,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       <Card>
         <CardContent className="p-4">
           <form onSubmit={handleSubmit} className="space-y-3">
-            <Label className="text-sm font-medium">Skriv i logbogen</Label>
+            <Label className="text-sm font-medium">Skriv i loggboka</Label>
             <div className="space-y-2">
               <Input
                 placeholder="Overskrift"
@@ -261,10 +261,10 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Gemmer...
+                  Lagrer...
                 </>
               ) : (
-                "Tilføj til logbog"
+                "Legg til i loggbok"
               )}
             </Button>
           </form>
@@ -276,9 +276,9 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
         <Card>
           <CardContent className="py-12 px-4 text-center">
             <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Ingen indlæg i logbogen</h3>
+            <h3 className="text-lg font-medium mb-2">Ingen innlegg i loggboka</h3>
             <p className="text-sm text-muted-foreground">
-              Vær den første til at skrive i logbogen!
+              Vær den første til å skrive i loggboka!
             </p>
           </CardContent>
         </Card>
@@ -323,11 +323,11 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                         disabled={!editTitle.trim() || !editMessage.trim()}
                       >
                         <Check className="h-4 w-4 mr-1" />
-                        Gem
+                        Lagre
                       </Button>
                       <Button size="sm" variant="outline" onClick={cancelEditing}>
                         <X className="h-4 w-4 mr-1" />
-                        Annuller
+                        Avbryt
                       </Button>
                     </div>
                   </div>
@@ -357,7 +357,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                     <p className="text-xs text-muted-foreground">
                       {formatDate(post.created_at)}
                       {isEdited(post) && (
-                        <span className="ml-2 italic">(redigeret)</span>
+                        <span className="ml-2 italic">(redigert)</span>
                       )}
                     </p>
                   </>
