@@ -349,63 +349,53 @@ export default function AdminDashboard() {
         </div>
 
         {activeTab === "routines" ? (
-          <div className="grid gap-6 md:grid-cols-[300px_1fr]">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div>
-                  <CardTitle>Vakter</CardTitle>
-                  <CardDescription>Velg en vakt å administrere</CardDescription>
-                </div>
-                <Sheet open={shiftManagerOpen} onOpenChange={setShiftManagerOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Rediger vakter">
-                      <Settings2 className="h-4 w-4" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-                    <SheetHeader>
-                      <SheetTitle>Administrer vakter</SheetTitle>
-                      <SheetDescription>
-                        Opret, rediger og omarranger vakter
-                      </SheetDescription>
-                    </SheetHeader>
-                    <div className="mt-6">
-                      <ShiftManager onShiftChange={fetchShifts} />
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </CardHeader>
-              <CardContent className="p-4 space-y-1.5">
+          <div className="space-y-6">
+            {/* Horizontal shift carousel */}
+            <div className="flex items-center gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1 flex-1 min-w-0">
                 {shifts.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Ingen vakter endnu. Klik på tandhjulet for at oprette.
+                    Ingen vakter endnu.
                   </p>
                 ) : (
                   shifts.map((shift) => {
                     const isActive = selectedShift === shift.id;
                     return (
-                      <Button
+                      <button
                         key={shift.id}
-                        variant={isActive ? "default" : "ghost"}
-                        className={`w-full justify-start gap-2 ${
-                          !isActive ? "border border-transparent hover:bg-accent" : ""
-                        }`}
-                        style={isActive ? {} : { borderLeftColor: shift.color_code, borderLeftWidth: 3 }}
                         onClick={() => setSelectedShift(shift.id)}
+                        className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                        style={isActive ? { backgroundColor: shift.color_code } : {}}
                       >
-                        {isActive && (
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: shift.color_code }}
-                          />
-                        )}
-                        <span className="truncate">{shift.name}</span>
-                      </Button>
+                        {shift.name}
+                      </button>
                     );
                   })
                 )}
-              </CardContent>
-            </Card>
+              </div>
+              <Sheet open={shiftManagerOpen} onOpenChange={setShiftManagerOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Rediger vakter">
+                    <Settings2 className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Administrer vakter</SheetTitle>
+                    <SheetDescription>
+                      Opret, rediger og omarranger vakter
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <ShiftManager onShiftChange={fetchShifts} />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
 
             {selectedShift && (
               <SectionManager shiftId={selectedShift} shifts={shifts} />
