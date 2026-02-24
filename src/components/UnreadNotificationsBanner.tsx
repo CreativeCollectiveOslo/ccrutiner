@@ -153,7 +153,7 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
                       <h3 className="text-sm font-medium mb-1">{notification.title}</h3>
                       <div className="relative">
                         <p
-                          className={`text-sm text-muted-foreground ${
+                          className={`text-sm text-muted-foreground whitespace-pre-wrap ${
                             !isExpanded && needsExpansion ? "line-clamp-3" : ""
                           }`}
                         >
@@ -183,7 +183,7 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
                     <>
                       <div className="relative">
                         <p
-                          className={`text-sm font-medium ${
+                          className={`text-sm font-medium whitespace-pre-wrap ${
                             !isExpanded && needsExpansion ? "line-clamp-3" : ""
                           }`}
                         >
