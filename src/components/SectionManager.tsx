@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -25,6 +24,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -32,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FolderOpen, MoveRight, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Pencil, FolderOpen, MoveRight, MoreHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -73,6 +78,11 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
   
+  const [isCreating, setIsCreating] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
   // Section dialogs
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
   const [editSectionDialogOpen, setEditSectionDialogOpen] = useState(false);
@@ -200,7 +210,6 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     const sectionRoutines = routines.filter((r) => r.section_id === sectionToDelete.id);
 
     if (sectionRoutines.length > 0 && !deleteWithRoutines) {
-      // Move routines to unsorted first
       const { error: moveError } = await supabase
         .from("routines")
         .update({ section_id: null })
@@ -214,7 +223,6 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     }
 
     if (deleteWithRoutines && sectionRoutines.length > 0) {
-      // Delete all routines in section first
       const { error: deleteRoutinesError } = await supabase
         .from("routines")
         .delete()
@@ -399,7 +407,6 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     const otherSection = sections[newIndex];
     const currentSection = sections[currentIndex];
 
-    // Swap order_index values
     const { error: error1 } = await supabase
       .from("sections")
       .update({ order_index: newIndex })
@@ -420,68 +427,65 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const shiftName = shifts.find((s) => s.id === shiftId)?.name || "";
 
-  const renderRoutineCard = (routine: Routine) => (
-    <Card key={routine.id} className="group">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="text-sm font-medium break-words">{routine.title}</h4>
-              {routine.priority > 0 && (
-                <Badge variant="secondary" className="text-xs shrink-0">
-                  P:{routine.priority}
-                </Badge>
-              )}
-            </div>
-            {routine.description && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
-                {routine.description}
-              </p>
-            )}
-            {(() => {
-              const urls = routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [];
-              return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
-            })()}
-          </div>
-          <div className="flex gap-0.5 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => openMoveRoutine(routine)}
-              title="Flyt rutine"
-            >
-              <MoveRight className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => openEditRoutine(routine)}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => handleDeleteRoutine(routine.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-            </Button>
-          </div>
+  // --- Routine card with dropdown menu ---
+  const renderRoutineCard = (routine: Routine, index: number, arr: Routine[]) => (
+    <div
+      key={routine.id}
+      className={`flex items-start justify-between gap-2 py-3 ${index < arr.length - 1 ? "border-b border-border/50" : ""}`}
+    >
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h4 className="text-sm font-medium break-words">{routine.title}</h4>
+          {routine.priority > 0 && (
+            <Badge variant="secondary" className="text-xs shrink-0">
+              P:{routine.priority}
+            </Badge>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        {routine.description && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
+            {routine.description}
+          </p>
+        )}
+        {(() => {
+          const urls = routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [];
+          return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
+        })()}
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => openMoveRoutine(routine)}>
+            <MoveRight className="h-4 w-4 mr-2" />
+            Flyt
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => openEditRoutine(routine)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Rediger
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleDeleteRoutine(routine.id)}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Slet
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 
   return (
-    <div className="space-y-6 min-w-0">
+    <div className="space-y-8 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-xl truncate">{shiftName} Rutiner</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-lg font-semibold truncate">{shiftName} Rutiner</h2>
+          <p className="text-xs text-muted-foreground">
             {routines.length} rutiner, {sections.length} afsnit
           </p>
         </div>
@@ -519,15 +523,21 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       </div>
 
       {/* Unsorted Routines */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-muted-foreground">Usorterede rutiner</h3>
+      <div className="bg-muted/30 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usorterede rutiner</span>
+            <Badge variant="secondary" className="text-[10px] h-5">
+              {unsortedRoutines.length}
+            </Badge>
+          </div>
           <Button
             variant="ghost"
             size="sm"
+            className="h-7 text-xs"
             onClick={() => openNewRoutineDialog(null)}
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="h-3.5 w-3.5 mr-1" />
             Ny Rutine
           </Button>
         </div>
@@ -536,8 +546,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
             Ingen usorterede rutiner
           </p>
         ) : (
-          <div className="space-y-2">
-            {unsortedRoutines.map(renderRoutineCard)}
+          <div>
+            {unsortedRoutines.map((r, i, arr) => renderRoutineCard(r, i, arr))}
           </div>
         )}
       </div>
@@ -545,76 +555,74 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       {/* Sections */}
       {sections.map((section) => {
         const sectionRoutines = routines.filter((r) => r.section_id === section.id);
+        const sectionIndex = sections.findIndex((s) => s.id === section.id);
         return (
-          <Card key={section.id}>
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <h3 className="font-medium truncate">{section.name}</h3>
-                  <Badge variant="secondary" className="text-xs shrink-0">
-                    {sectionRoutines.length}
-                  </Badge>
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleMoveSection(section.id, "up")}
-                    disabled={sections.findIndex((s) => s.id === section.id) === 0}
-                    title="Flyt op"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleMoveSection(section.id, "down")}
-                    disabled={sections.findIndex((s) => s.id === section.id) === sections.length - 1}
-                    title="Flyt ned"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => openNewRoutineDialog(section.id)}
-                  >
-                    <Plus className="h-4 w-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Ny Rutine</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => openEditSection(section)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleDeleteSectionClick(section)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
+          <div key={section.id} className="bg-muted/30 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">
+                  {section.name}
+                </span>
+                <Badge variant="secondary" className="text-[10px] h-5 shrink-0">
+                  {sectionRoutines.length}
+                </Badge>
               </div>
-              {sectionRoutines.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">
-                  Ingen rutiner i dette afsnit
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {sectionRoutines.map(renderRoutineCard)}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => openNewRoutineDialog(section.id)}
+                >
+                  <Plus className="h-3.5 w-3.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Ny Rutine</span>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEditSection(section)}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Rediger
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleMoveSection(section.id, "up")}
+                      disabled={sectionIndex === 0}
+                    >
+                      <ChevronUp className="h-4 w-4 mr-2" />
+                      Flyt op
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleMoveSection(section.id, "down")}
+                      disabled={sectionIndex === sections.length - 1}
+                    >
+                      <ChevronDown className="h-4 w-4 mr-2" />
+                      Flyt ned
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleDeleteSectionClick(section)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Slet
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            {sectionRoutines.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                Ingen rutiner i dette afsnit
+              </p>
+            ) : (
+              <div>
+                {sectionRoutines.map((r, i, arr) => renderRoutineCard(r, i, arr))}
+              </div>
+            )}
+          </div>
         );
       })}
 
@@ -872,8 +880,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                   <SelectItem key={section.id} value={section.id}>
                     {section.name}
                   </SelectItem>
-                ))}
-              </SelectContent>
+                ))}</SelectContent>
             </Select>
           </div>
           <DialogFooter>
