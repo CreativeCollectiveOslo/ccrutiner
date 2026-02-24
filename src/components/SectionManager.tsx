@@ -523,7 +523,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       </div>
 
       {/* Unsorted Routines */}
-      <div className="bg-muted/30 rounded-lg p-4">
+      <div className="bg-muted/60 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usorterede rutiner</span>
@@ -557,7 +557,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         const sectionRoutines = routines.filter((r) => r.section_id === section.id);
         const sectionIndex = sections.findIndex((s) => s.id === section.id);
         return (
-          <div key={section.id} className="bg-muted/30 rounded-lg p-4">
+          <div key={section.id} className="bg-muted/60 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">
