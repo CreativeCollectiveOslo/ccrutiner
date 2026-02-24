@@ -375,22 +375,34 @@ export default function AdminDashboard() {
                   </SheetContent>
                 </Sheet>
               </CardHeader>
-              <CardContent className="p-4 space-y-2">
+              <CardContent className="p-4 space-y-1.5">
                 {shifts.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Ingen vakter endnu. Klik på tandhjulet for at oprette.
                   </p>
                 ) : (
-                  shifts.map((shift) => (
-                    <Button
-                      key={shift.id}
-                      variant={selectedShift === shift.id ? "default" : "outline"}
-                      className="w-full justify-start"
-                      onClick={() => setSelectedShift(shift.id)}
-                    >
-                      {shift.name}
-                    </Button>
-                  ))
+                  shifts.map((shift) => {
+                    const isActive = selectedShift === shift.id;
+                    return (
+                      <Button
+                        key={shift.id}
+                        variant={isActive ? "default" : "ghost"}
+                        className={`w-full justify-start gap-2 ${
+                          !isActive ? "border border-transparent hover:bg-accent" : ""
+                        }`}
+                        style={isActive ? {} : { borderLeftColor: shift.color_code, borderLeftWidth: 3 }}
+                        onClick={() => setSelectedShift(shift.id)}
+                      >
+                        {isActive && (
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: shift.color_code }}
+                          />
+                        )}
+                        <span className="truncate">{shift.name}</span>
+                      </Button>
+                    );
+                  })
                 )}
               </CardContent>
             </Card>

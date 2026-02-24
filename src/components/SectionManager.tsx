@@ -32,7 +32,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FolderOpen, MoveRight, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Pencil, FolderOpen, MoveRight, GripVertical, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -480,9 +481,9 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-xl truncate">{shiftName} Rutiner</h2>
-          <p className="text-sm text-muted-foreground">
-            {routines.length} rutiner, {sections.length} afsnit
+          <h2 className="text-lg font-semibold truncate">{shiftName}</h2>
+          <p className="text-xs text-muted-foreground">
+            {routines.length} rutiner · {sections.length} afsnit
           </p>
         </div>
         <Dialog open={sectionDialogOpen} onOpenChange={setSectionDialogOpen}>
@@ -519,102 +520,109 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       </div>
 
       {/* Unsorted Routines */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-muted-foreground">Usorterede rutiner</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => openNewRoutineDialog(null)}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Ny Rutine
-          </Button>
-        </div>
-        {unsortedRoutines.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">
-            Ingen usorterede rutiner
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {unsortedRoutines.map(renderRoutineCard)}
+      {unsortedRoutines.length > 0 && (
+        <Collapsible defaultOpen>
+          <div className="bg-muted/50 rounded-lg px-4 py-2.5 flex items-center justify-between">
+            <CollapsibleTrigger className="flex items-center gap-2 group flex-1 min-w-0">
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90 shrink-0" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usorterede</span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                {unsortedRoutines.length}
+              </Badge>
+            </CollapsibleTrigger>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => openNewRoutineDialog(null)}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Ny
+            </Button>
           </div>
-        )}
-      </div>
+          <CollapsibleContent>
+            <div className="space-y-2 pt-2">
+              {unsortedRoutines.map(renderRoutineCard)}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* Sections */}
       {sections.map((section) => {
         const sectionRoutines = routines.filter((r) => r.section_id === section.id);
         return (
-          <Card key={section.id}>
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <h3 className="font-medium truncate">{section.name}</h3>
-                  <Badge variant="secondary" className="text-xs shrink-0">
+          <Collapsible key={section.id} defaultOpen>
+            <div className="bg-muted/50 rounded-lg px-4 py-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <CollapsibleTrigger className="flex items-center gap-2 group flex-1 min-w-0">
+                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-90 shrink-0" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">{section.name}</span>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
                     {sectionRoutines.length}
                   </Badge>
-                </div>
-                <div className="flex gap-1 shrink-0">
+                </CollapsibleTrigger>
+                <div className="flex gap-0.5 shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => handleMoveSection(section.id, "up")}
                     disabled={sections.findIndex((s) => s.id === section.id) === 0}
                     title="Flyt op"
                   >
-                    <ChevronUp className="h-4 w-4" />
+                    <ChevronUp className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => handleMoveSection(section.id, "down")}
                     disabled={sections.findIndex((s) => s.id === section.id) === sections.length - 1}
                     title="Flyt ned"
                   >
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-2"
+                    className="h-7 px-2 text-xs"
                     onClick={() => openNewRoutineDialog(section.id)}
                   >
-                    <Plus className="h-4 w-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Ny Rutine</span>
+                    <Plus className="h-3.5 w-3.5 sm:mr-1" />
+                    <span className="hidden sm:inline">Ny</span>
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => openEditSection(section)}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => handleDeleteSectionClick(section)}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>
               </div>
+            </div>
+            <CollapsibleContent>
               {sectionRoutines.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">
+                <p className="text-xs text-muted-foreground italic pt-2 pl-2">
                   Ingen rutiner i dette afsnit
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 pt-2">
                   {sectionRoutines.map(renderRoutineCard)}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </CollapsibleContent>
+          </Collapsible>
         );
       })}
 
