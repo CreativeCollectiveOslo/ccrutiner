@@ -9,13 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 import { Trash2, Users, ChevronDown, ChevronUp, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ImageUpload, ImageDisplay } from "@/components/ImageUpload";
+import { MultiImageUpload, MultiImageDisplay } from "@/components/ImageUpload";
 
 interface Announcement {
   id: string;
   title: string;
   message: string;
   image_url: string | null;
+  image_urls: string[] | null;
   created_at: string;
   created_by: string;
 }
@@ -84,7 +85,7 @@ export function AnnouncementManager() {
   const [routineNotifications, setRoutineNotifications] = useState<RoutineNotification[]>([]);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ type: 'announcement' | 'routine'; id: string; title: string; createdAt: string } | null>(null);
   const [readStatuses, setReadStatuses] = useState<ReadStatus[]>([]);
@@ -164,7 +165,7 @@ export function AnnouncementManager() {
 
     const { error } = await supabase
       .from("announcements")
-      .insert([{ title, message, image_url: imageUrl, created_by: user.id }]);
+      .insert([{ title, message, image_urls: imageUrls.length > 0 ? imageUrls : null, image_url: imageUrls[0] || null, created_by: user.id }] as any);
 
     if (error) {
       toast.error("Kunne ikke oprette opdatering");
@@ -173,7 +174,7 @@ export function AnnouncementManager() {
       toast.success("Opdatering oprettet!");
       setTitle("");
       setMessage("");
-      setImageUrl(null);
+      setImageUrls([]);
       fetchAnnouncements();
     }
 
@@ -339,10 +340,10 @@ export function AnnouncementManager() {
               />
             </div>
             <div>
-              <ImageUpload
+              <MultiImageUpload
                 folder="announcements"
-                currentUrl={imageUrl}
-                onImageUploaded={setImageUrl}
+                currentUrls={imageUrls}
+                onImagesChanged={setImageUrls}
               />
             </div>
             <Button type="submit" disabled={loading}>
@@ -392,9 +393,10 @@ export function AnnouncementManager() {
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold mb-2">{announcement.title}</h3>
                             <CollapsibleText text={announcement.message} />
-                            {announcement.image_url && (
-                              <ImageDisplay url={announcement.image_url} className="mt-2 max-h-40" />
-                            )}
+                            {(() => {
+                              const urls = announcement.image_urls?.length ? announcement.image_urls : announcement.image_url ? [announcement.image_url] : [];
+                              return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
+                            })()}
                             <p className="text-xs text-muted-foreground mt-2">
                               {new Date(announcement.created_at).toLocaleString("da-DK")} · Af {getCreatorName(announcement.created_by)}
                             </p>

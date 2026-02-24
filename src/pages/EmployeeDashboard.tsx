@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, RotateCcw, ClipboardList, Search } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, RotateCcw, ClipboardList, Search, ShoppingCart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
@@ -30,7 +30,8 @@ import { useWakeLock } from "@/hooks/use-wake-lock";
 import { SearchDialog } from "@/components/SearchDialog";
 import { highlightSearchTerm } from "@/lib/highlightText";
 import logo from "@/assets/logo.png";
-import { ImageDisplay } from "@/components/ImageUpload";
+import { MultiImageDisplay } from "@/components/ImageUpload";
+import { ShoppingList } from "@/components/ShoppingList";
 
 interface RoutineInfo {
   id: string;
@@ -87,6 +88,7 @@ interface Routine {
   priority: number;
   order_index: number;
   multimedia_url: string | null;
+  image_urls: string[] | null;
   section_id: string | null;
 }
 
@@ -105,7 +107,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [mainTab, setMainTab] = useState<"shifts" | "notifications" | "bulletin">("shifts");
+  const [mainTab, setMainTab] = useState<"shifts" | "notifications" | "bulletin" | "shopping">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -599,12 +601,28 @@ export default function EmployeeDashboard() {
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
+              <button
+                onClick={() => setMainTab("shopping")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
+                  mainTab === "shopping"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ShoppingCart className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span>Handleliste</span>
+                {mainTab === "shopping" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
             </div>
 
             {mainTab === "notifications" ? (
               <NotificationsTab searchHighlightTerm={searchHighlightTerm} />
             ) : mainTab === "bulletin" ? (
               <BulletinBoard searchHighlightTerm={searchHighlightTerm} />
+            ) : mainTab === "shopping" ? (
+              <ShoppingList />
             ) : (
               <div className="space-y-6">
                 {/* Unread notifications banner above shifts */}
@@ -810,9 +828,10 @@ export default function EmployeeDashboard() {
                                       )}
                                     </div>
                                    )}
-                                  {routine.multimedia_url && (
-                                    <ImageDisplay url={routine.multimedia_url} className="max-h-48 mt-2" />
-                                  )}
+                                  {(() => {
+                                    const urls = routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [];
+                                    return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
+                                  })()}
                                   {routine.priority > 0 && (
                                     <Badge variant="secondary">
                                       Prioritet: {routine.priority}
@@ -900,9 +919,10 @@ export default function EmployeeDashboard() {
                                         )}
                                       </div>
                                     )}
-                                    {routine.multimedia_url && (
-                                      <ImageDisplay url={routine.multimedia_url} className="max-h-48 mt-2" />
-                                    )}
+                                    {(() => {
+                                      const urls = routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [];
+                                      return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
+                                    })()}
                                     {routine.priority > 0 && (
                                       <Badge variant="secondary">
                                         Prioritet: {routine.priority}

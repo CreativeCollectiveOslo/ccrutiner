@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ClipboardList, Loader2, Pencil, X, Check } from "lucide-react";
-import { ImageUpload, ImageDisplay } from "@/components/ImageUpload";
+import { MultiImageUpload, MultiImageDisplay } from "@/components/ImageUpload";
 import { format } from "date-fns";
 import { da } from "date-fns/locale";
 import {
@@ -27,6 +27,7 @@ interface BulletinPost {
   title: string;
   message: string;
   image_url: string | null;
+  image_urls: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -50,13 +51,13 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   const [submitting, setSubmitting] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newMessage, setNewMessage] = useState("");
-  const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
+  const [newImageUrls, setNewImageUrls] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editMessage, setEditMessage] = useState("");
-  const [editImageUrl, setEditImageUrl] = useState<string | null>(null);
+  const [editImageUrls, setEditImageUrls] = useState<string[]>([]);
   const firstMatchRef = useRef<HTMLDivElement>(null);
   const hasScrolledRef = useRef(false);
 
@@ -152,8 +153,9 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       user_id: user.id,
       title: newTitle.trim(),
       message: newMessage.trim(),
-      image_url: newImageUrl,
-    });
+      image_urls: newImageUrls.length > 0 ? newImageUrls : null,
+      image_url: newImageUrls[0] || null,
+    } as any);
 
     if (error) {
       toast.error("Kunne ikke oprette indlæg");
@@ -162,7 +164,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       toast.success("Indlæg tilføjet til logbogen!");
       setNewTitle("");
       setNewMessage("");
-      setNewImageUrl(null);
+      setNewImageUrls([]);
       setCurrentPage(1);
       fetchPosts();
     }
@@ -174,14 +176,14 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
     setEditingPostId(post.id);
     setEditTitle(post.title);
     setEditMessage(post.message);
-    setEditImageUrl(post.image_url);
+    setEditImageUrls(post.image_urls?.length ? post.image_urls : post.image_url ? [post.image_url] : []);
   };
 
   const cancelEditing = () => {
     setEditingPostId(null);
     setEditTitle("");
     setEditMessage("");
-    setEditImageUrl(null);
+    setEditImageUrls([]);
   };
 
   const saveEdit = async (postId: string) => {
@@ -192,8 +194,9 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       .update({ 
         title: editTitle.trim(),
         message: editMessage.trim(),
-        image_url: editImageUrl,
-      })
+        image_urls: editImageUrls.length > 0 ? editImageUrls : null,
+        image_url: editImageUrls[0] || null,
+      } as any)
       .eq("id", postId);
 
     if (error) {
@@ -204,7 +207,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       setEditingPostId(null);
       setEditTitle("");
       setEditMessage("");
-      setEditImageUrl(null);
+      setEditImageUrls([]);
       fetchPosts();
     }
   };
@@ -248,10 +251,10 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                 onChange={(e) => setNewMessage(e.target.value)}
                 className="min-h-[100px]"
               />
-              <ImageUpload
+              <MultiImageUpload
                 folder="bulletin"
-                currentUrl={newImageUrl}
-                onImageUploaded={setNewImageUrl}
+                currentUrls={newImageUrls}
+                onImagesChanged={setNewImageUrls}
               />
             </div>
             <Button type="submit" disabled={submitting || !newTitle.trim() || !newMessage.trim()}>
@@ -308,10 +311,10 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                       onChange={(e) => setEditMessage(e.target.value)}
                       className="min-h-[100px]"
                     />
-                    <ImageUpload
+                    <MultiImageUpload
                       folder="bulletin"
-                      currentUrl={editImageUrl}
-                      onImageUploaded={setEditImageUrl}
+                      currentUrls={editImageUrls}
+                      onImagesChanged={setEditImageUrls}
                     />
                     <div className="flex gap-2">
                       <Button
@@ -347,9 +350,10 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                     </div>
                     <h4 className="font-semibold text-sm mb-1">{highlightSearchTerm(post.title, searchHighlightTerm)}</h4>
                     <p className="text-sm whitespace-pre-wrap mb-3">{highlightSearchTerm(post.message, searchHighlightTerm)}</p>
-                    {post.image_url && (
-                      <ImageDisplay url={post.image_url} className="mb-3 max-h-48" />
-                    )}
+                    {(() => {
+                      const urls = post.image_urls?.length ? post.image_urls : post.image_url ? [post.image_url] : [];
+                      return urls.length > 0 && <MultiImageDisplay urls={urls} className="mb-3" />;
+                    })()}
                     <p className="text-xs text-muted-foreground">
                       {formatDate(post.created_at)}
                       {isEdited(post) && (

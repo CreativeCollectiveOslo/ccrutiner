@@ -36,7 +36,7 @@ import { Plus, Trash2, Pencil, FolderOpen, MoveRight, GripVertical, ChevronUp, C
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ImageUpload, ImageDisplay } from "@/components/ImageUpload";
+import { MultiImageUpload, MultiImageDisplay } from "@/components/ImageUpload";
 
 interface Section {
   id: string;
@@ -52,6 +52,7 @@ interface Routine {
   title: string;
   description: string | null;
   multimedia_url: string | null;
+  image_urls: string[] | null;
   priority: number;
   order_index: number;
 }
@@ -96,7 +97,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     description: "",
     priority: 0,
     sendNotification: false,
-    multimediaUrl: null as string | null,
+    imageUrls: [] as string[],
   });
   
   const [editRoutine, setEditRoutine] = useState({
@@ -104,7 +105,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     description: "",
     priority: 0,
     sendNotification: false,
-    multimediaUrl: null as string | null,
+    imageUrls: [] as string[],
   });
 
   useEffect(() => {
@@ -253,10 +254,11 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         section_id: currentSectionForNewRoutine,
         title: newRoutine.title,
         description: newRoutine.description || null,
-        multimedia_url: newRoutine.multimediaUrl,
+        image_urls: newRoutine.imageUrls.length > 0 ? newRoutine.imageUrls : null,
+        multimedia_url: newRoutine.imageUrls[0] || null,
         priority: newRoutine.priority,
         order_index: routines.filter((r) => r.section_id === currentSectionForNewRoutine).length,
-      })
+      } as any)
       .select()
       .single();
 
@@ -276,7 +278,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
       toast.success("Rutine oprettet!");
       setRoutineDialogOpen(false);
-      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, multimediaUrl: null });
+      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [] });
       setCurrentSectionForNewRoutine(null);
       fetchRoutines();
     }
@@ -291,9 +293,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       .update({
         title: editRoutine.title,
         description: editRoutine.description || null,
-        multimedia_url: editRoutine.multimediaUrl,
+        image_urls: editRoutine.imageUrls.length > 0 ? editRoutine.imageUrls : null,
+        multimedia_url: editRoutine.imageUrls[0] || null,
         priority: editRoutine.priority,
-      })
+      } as any)
       .eq("id", editingRoutine.id);
 
     if (error) {
@@ -364,7 +367,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       description: routine.description || "",
       priority: routine.priority,
       sendNotification: false,
-      multimediaUrl: routine.multimedia_url || null,
+      imageUrls: routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [],
     });
     setEditRoutineDialogOpen(true);
   };
@@ -435,9 +438,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                 {routine.description}
               </p>
             )}
-            {routine.multimedia_url && (
-              <ImageDisplay url={routine.multimedia_url} className="mt-2 max-h-24" />
-            )}
+            {(() => {
+              const urls = routine.image_urls?.length ? routine.image_urls : routine.multimedia_url ? [routine.multimedia_url] : [];
+              return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-2" />;
+            })()}
           </div>
           <div className="flex gap-0.5 shrink-0">
             <Button
@@ -747,10 +751,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               </div>
               <div className="space-y-2">
                 <Label>Billede</Label>
-                <ImageUpload
+                <MultiImageUpload
                   folder="routines"
-                  currentUrl={newRoutine.multimediaUrl}
-                  onImageUploaded={(url) => setNewRoutine({ ...newRoutine, multimediaUrl: url })}
+                  currentUrls={newRoutine.imageUrls}
+                  onImagesChanged={(urls) => setNewRoutine({ ...newRoutine, imageUrls: urls })}
                 />
               </div>
               <div className="flex items-center justify-between py-2">
@@ -815,10 +819,10 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               </div>
               <div className="space-y-2">
                 <Label>Billede</Label>
-                <ImageUpload
+                <MultiImageUpload
                   folder="routines"
-                  currentUrl={editRoutine.multimediaUrl}
-                  onImageUploaded={(url) => setEditRoutine({ ...editRoutine, multimediaUrl: url })}
+                  currentUrls={editRoutine.imageUrls}
+                  onImagesChanged={(urls) => setEditRoutine({ ...editRoutine, imageUrls: urls })}
                 />
               </div>
               <div className="flex items-center justify-between py-2">
