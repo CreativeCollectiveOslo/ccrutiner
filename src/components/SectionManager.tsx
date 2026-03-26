@@ -51,6 +51,15 @@ interface Section {
   order_index: number;
 }
 
+interface ShiftInfo {
+  id: string;
+  shift_id: string;
+  title: string;
+  description: string | null;
+  image_urls: string[] | null;
+  order_index: number;
+}
+
 interface Routine {
   id: string;
   title: string;
@@ -79,7 +88,15 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   const { user } = useAuth();
   const [sections, setSections] = useState<Section[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [shiftInfoItems, setShiftInfoItems] = useState<ShiftInfo[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Shift info state
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [editInfoDialogOpen, setEditInfoDialogOpen] = useState(false);
+  const [editingInfoId, setEditingInfoId] = useState<string | null>(null);
+  const [newInfo, setNewInfo] = useState({ title: "", description: "", imageUrls: [] as string[] });
+  const [editInfo, setEditInfo] = useState({ title: "", description: "", imageUrls: [] as string[] });
 
   // Section state
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
@@ -123,7 +140,88 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   useEffect(() => {
     fetchSections();
     fetchRoutines();
+    fetchShiftInfo();
   }, [shiftId]);
+
+  const fetchShiftInfo = async () => {
+    const { data, error } = await supabase
+      .from("shift_info")
+      .select("*")
+      .eq("shift_id", shiftId)
+      .order("order_index");
+
+    if (error) {
+      console.error(error);
+    } else {
+      setShiftInfoItems(data || []);
+    }
+  };
+
+  const handleCreateInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.from("shift_info").insert({
+      shift_id: shiftId,
+      title: newInfo.title,
+      description: newInfo.description || null,
+      image_urls: newInfo.imageUrls.length > 0 ? newInfo.imageUrls : null,
+      order_index: shiftInfoItems.length,
+    });
+
+    if (error) {
+      toast.error("Kunne ikke opprette info");
+      console.error(error);
+    } else {
+      toast.success("Viktig info opprettet!");
+      setInfoDialogOpen(false);
+      setNewInfo({ title: "", description: "", imageUrls: [] });
+      fetchShiftInfo();
+    }
+  };
+
+  const handleUpdateInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInfoId) return;
+
+    const { error } = await supabase
+      .from("shift_info")
+      .update({
+        title: editInfo.title,
+        description: editInfo.description || null,
+        image_urls: editInfo.imageUrls.length > 0 ? editInfo.imageUrls : null,
+      })
+      .eq("id", editingInfoId);
+
+    if (error) {
+      toast.error("Kunne ikke oppdatere info");
+      console.error(error);
+    } else {
+      toast.success("Info oppdatert!");
+      setEditInfoDialogOpen(false);
+      fetchShiftInfo();
+    }
+  };
+
+  const handleDeleteInfo = async (infoId: string) => {
+    const { error } = await supabase.from("shift_info").delete().eq("id", infoId);
+
+    if (error) {
+      toast.error("Kunne ikke slette info");
+      console.error(error);
+    } else {
+      toast.success("Info slettet!");
+      fetchShiftInfo();
+    }
+  };
+
+  const openEditInfo = (info: ShiftInfo) => {
+    setEditingInfoId(info.id);
+    setEditInfo({
+      title: info.title,
+      description: info.description || "",
+      imageUrls: info.image_urls || [],
+    });
+    setEditInfoDialogOpen(true);
+  };
 
   const fetchSections = async () => {
     const { data, error } = await supabase
