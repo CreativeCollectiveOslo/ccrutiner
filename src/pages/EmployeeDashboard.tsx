@@ -828,6 +828,7 @@ export default function EmployeeDashboard() {
             </div>
 
 
+            <div className="space-y-6">
               {routines.length === 0 ? (
                 <Card>
                   <CardContent className="p-6 text-center">
