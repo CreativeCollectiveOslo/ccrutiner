@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FolderOpen, MoveRight, MoreHorizontal, ChevronUp, ChevronDown, Info } from "lucide-react";
+import { Plus, Trash2, Pencil, FolderOpen, MoveRight, MoreHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -123,88 +123,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   useEffect(() => {
     fetchSections();
     fetchRoutines();
-    fetchShiftInfo();
   }, [shiftId]);
-
-  const fetchShiftInfo = async () => {
-    const { data, error } = await supabase
-      .from("shift_info")
-      .select("*")
-      .eq("shift_id", shiftId)
-      .order("order_index");
-
-    if (error) {
-      console.error(error);
-    } else {
-      setShiftInfoItems(data || []);
-    }
-  };
-
-  const handleCreateInfo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("shift_info").insert({
-      shift_id: shiftId,
-      title: newInfo.title,
-      description: newInfo.description || null,
-      image_urls: newInfo.imageUrls.length > 0 ? newInfo.imageUrls : null,
-      order_index: shiftInfoItems.length,
-    });
-
-    if (error) {
-      toast.error("Kunne ikke opprette info");
-      console.error(error);
-    } else {
-      toast.success("Viktig info opprettet!");
-      setInfoDialogOpen(false);
-      setNewInfo({ title: "", description: "", imageUrls: [] });
-      fetchShiftInfo();
-    }
-  };
-
-  const handleUpdateInfo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingInfoId) return;
-
-    const { error } = await supabase
-      .from("shift_info")
-      .update({
-        title: editInfo.title,
-        description: editInfo.description || null,
-        image_urls: editInfo.imageUrls.length > 0 ? editInfo.imageUrls : null,
-      })
-      .eq("id", editingInfoId);
-
-    if (error) {
-      toast.error("Kunne ikke oppdatere info");
-      console.error(error);
-    } else {
-      toast.success("Info oppdatert!");
-      setEditInfoDialogOpen(false);
-      fetchShiftInfo();
-    }
-  };
-
-  const handleDeleteInfo = async (infoId: string) => {
-    const { error } = await supabase.from("shift_info").delete().eq("id", infoId);
-
-    if (error) {
-      toast.error("Kunne ikke slette info");
-      console.error(error);
-    } else {
-      toast.success("Info slettet!");
-      fetchShiftInfo();
-    }
-  };
-
-  const openEditInfo = (info: ShiftInfo) => {
-    setEditingInfoId(info.id);
-    setEditInfo({
-      title: info.title,
-      description: info.description || "",
-      imageUrls: info.image_urls || [],
-    });
-    setEditInfoDialogOpen(true);
-  };
 
   const fetchSections = async () => {
     const { data, error } = await supabase
