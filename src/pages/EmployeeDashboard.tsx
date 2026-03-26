@@ -600,14 +600,14 @@ export default function EmployeeDashboard() {
           <>
             {/* Main tabs - only visible on front page */}
             {mainTab === "notifications" ? (
-              <div className="mb-6">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setMainTab("shifts")} className="gap-1">
-                    <ChevronLeft className="h-4 w-4" />
-                    Tilbake
-                  </Button>
-                  <h2 className="text-lg font-semibold">Notifikasjoner</h2>
-                </div>
+              <div className="space-y-6 mb-6">
+                <button
+                  onClick={() => setMainTab("shifts")}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  ← Tilbake
+                </button>
+                <h2 className="text-2xl font-semibold">Notifikasjoner</h2>
               </div>
             ) : (
               <div className="flex border-b border-border mb-6">
