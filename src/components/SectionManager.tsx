@@ -489,57 +489,6 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         </Dialog>
       </div>
 
-      {/* Viktig Info Section */}
-      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-blue-200/50 dark:border-blue-800/50">
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Viktig info</span>
-            <Badge variant="secondary" className="text-xs">{shiftInfoItems.length}</Badge>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => { setNewInfo({ title: "", description: "", imageUrls: [] }); setInfoDialogOpen(true); }} className="h-7 text-xs">
-            <Plus className="h-3 w-3 mr-1" />
-            Ny info
-          </Button>
-        </div>
-        {shiftInfoItems.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">Ingen viktig info ennå</p>
-        ) : (
-          <div>
-            {shiftInfoItems.map((info) => (
-              <div key={info.id} className="flex items-start justify-between py-3 border-b last:border-b-0 border-blue-100 dark:border-blue-900/50">
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium">{info.title}</h4>
-                  {info.description && (
-                    <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line line-clamp-3">{info.description}</p>
-                  )}
-                  {info.image_urls && info.image_urls.length > 0 && (
-                    <MultiImageDisplay urls={info.image_urls} className="mt-2" />
-                  )}
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEditInfo(info)}>
-                      Rediger
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDeleteInfo(info.id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      Slett
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Unsorted Routines */}
       <div className="bg-muted/60 rounded-lg p-4">
