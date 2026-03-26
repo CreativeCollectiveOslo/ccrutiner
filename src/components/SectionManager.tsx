@@ -51,15 +51,6 @@ interface Section {
   order_index: number;
 }
 
-interface ShiftInfo {
-  id: string;
-  shift_id: string;
-  title: string;
-  description: string | null;
-  image_urls: string[] | null;
-  order_index: number;
-}
-
 interface Routine {
   id: string;
   title: string;
