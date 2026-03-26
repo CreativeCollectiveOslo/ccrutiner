@@ -296,6 +296,44 @@ export type Database = {
           },
         ]
       }
+      shift_info: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_urls: string[] | null
+          order_index: number | null
+          shift_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          order_index?: number | null
+          shift_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          order_index?: number | null
+          shift_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_info_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shifts: {
         Row: {
           color_code: string
