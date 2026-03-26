@@ -569,9 +569,9 @@ export default function EmployeeDashboard() {
               size="icon"
               onClick={() => { setSelectedShift(null); setMainTab("notifications"); }}
               title="Notifikasjoner"
-              className="relative"
+              className={`relative ${mainTab === "notifications" ? "bg-accent text-accent-foreground" : ""}`}
             >
-              <Bell className="h-4 w-4" />
+              <Bell className={`h-4 w-4 ${mainTab === "notifications" ? "text-primary" : ""}`} />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-medium">
                   {unreadCount > 9 ? "9+" : unreadCount}
