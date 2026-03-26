@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FolderOpen, MoveRight, MoreHorizontal, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Pencil, FolderOpen, MoveRight, MoreHorizontal, ChevronUp, ChevronDown, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -587,6 +587,58 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         </Dialog>
       </div>
 
+      {/* Viktig Info Section */}
+      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-blue-200/50 dark:border-blue-800/50">
+          <div className="flex items-center gap-2">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Viktig info</span>
+            <Badge variant="secondary" className="text-xs">{shiftInfoItems.length}</Badge>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => { setNewInfo({ title: "", description: "", imageUrls: [] }); setInfoDialogOpen(true); }} className="h-7 text-xs">
+            <Plus className="h-3 w-3 mr-1" />
+            Ny info
+          </Button>
+        </div>
+        {shiftInfoItems.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-2">Ingen viktig info ennå</p>
+        ) : (
+          <div>
+            {shiftInfoItems.map((info) => (
+              <div key={info.id} className="flex items-start justify-between py-3 border-b last:border-b-0 border-blue-100 dark:border-blue-900/50">
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium">{info.title}</h4>
+                  {info.description && (
+                    <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line line-clamp-3">{info.description}</p>
+                  )}
+                  {info.image_urls && info.image_urls.length > 0 && (
+                    <MultiImageDisplay urls={info.image_urls} className="mt-2" />
+                  )}
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEditInfo(info)}>
+                      Rediger
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleDeleteInfo(info.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      Slett
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Unsorted Routines */}
       <div className="bg-muted/60 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
@@ -928,6 +980,96 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
             </Button>
             <Button onClick={handleMoveRoutine}>Flytt rutine</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Info Dialog */}
+      <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
+        <DialogContent>
+          <form onSubmit={handleCreateInfo}>
+            <DialogHeader>
+              <DialogTitle>Legg til viktig info</DialogTitle>
+              <DialogDescription>
+                Informasjon som vises til ansatte for denne vakten
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="info-title">Tittel *</Label>
+                <Input
+                  id="info-title"
+                  value={newInfo.title}
+                  onChange={(e) => setNewInfo({ ...newInfo, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="info-description">Beskrivelse</Label>
+                <Textarea
+                  id="info-description"
+                  value={newInfo.description}
+                  onChange={(e) => setNewInfo({ ...newInfo, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bilder</Label>
+                <MultiImageUpload
+                  folder="shift-info"
+                  currentUrls={newInfo.imageUrls}
+                  onImagesChanged={(urls) => setNewInfo({ ...newInfo, imageUrls: urls })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">Legg til</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Info Dialog */}
+      <Dialog open={editInfoDialogOpen} onOpenChange={setEditInfoDialogOpen}>
+        <DialogContent>
+          <form onSubmit={handleUpdateInfo}>
+            <DialogHeader>
+              <DialogTitle>Rediger viktig info</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-info-title">Tittel *</Label>
+                <Input
+                  id="edit-info-title"
+                  value={editInfo.title}
+                  onChange={(e) => setEditInfo({ ...editInfo, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-info-description">Beskrivelse</Label>
+                <Textarea
+                  id="edit-info-description"
+                  value={editInfo.description}
+                  onChange={(e) => setEditInfo({ ...editInfo, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bilder</Label>
+                <MultiImageUpload
+                  folder="shift-info"
+                  currentUrls={editInfo.imageUrls}
+                  onImagesChanged={(urls) => setEditInfo({ ...editInfo, imageUrls: urls })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditInfoDialogOpen(false)}>
+                Avbryt
+              </Button>
+              <Button type="submit">Lagre endringer</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
