@@ -102,6 +102,14 @@ interface ShiftInfoItem {
   description: string | null;
   image_urls: string[] | null;
   order_index: number;
+  category_id: string | null;
+}
+
+interface InfoCategory {
+  id: string;
+  name: string;
+  icon: string;
+  order_index: number;
 }
 
 export default function EmployeeDashboard() {
@@ -121,6 +129,8 @@ export default function EmployeeDashboard() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [shiftInfoItems, setShiftInfoItems] = useState<ShiftInfoItem[]>([]);
+  const [infoCategories, setInfoCategories] = useState<InfoCategory[]>([]);
+  const [selectedInfoCategory, setSelectedInfoCategory] = useState<string | null>(null);
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
   const [searchOpen, setSearchOpen] = useState(false);
   const [highlightedRoutineId, setHighlightedRoutineId] = useState<string | null>(null);
@@ -181,14 +191,16 @@ export default function EmployeeDashboard() {
   }, []);
 
   const fetchShiftInfo = async () => {
-    const { data, error } = await supabase
-      .from("shift_info")
-      .select("*")
-      .is("shift_id", null)
-      .order("order_index");
+    const [infoRes, catRes] = await Promise.all([
+      supabase.from("shift_info").select("*").is("shift_id", null).order("order_index"),
+      supabase.from("info_categories").select("*").order("order_index"),
+    ]);
 
-    if (!error && data) {
-      setShiftInfoItems(data);
+    if (!infoRes.error && infoRes.data) {
+      setShiftInfoItems(infoRes.data);
+    }
+    if (!catRes.error && catRes.data) {
+      setInfoCategories(catRes.data);
     }
   };
 
