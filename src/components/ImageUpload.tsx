@@ -8,7 +8,7 @@ import { ImagePlus, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 // ===== Multi-image upload =====
 
 interface MultiImageUploadProps {
-  folder: "routines" | "announcements" | "bulletin";
+  folder: "routines" | "announcements" | "bulletin" | "shift-info";
   currentUrls: string[];
   onImagesChanged: (urls: string[]) => void;
   maxImages?: number;
@@ -176,7 +176,7 @@ export function MultiImageUpload({ folder, currentUrls, onImagesChanged, maxImag
 // ===== Legacy single-image upload (wrapper around multi) =====
 
 interface ImageUploadProps {
-  folder: "routines" | "announcements" | "bulletin";
+  folder: "routines" | "announcements" | "bulletin" | "shift-info";
   currentUrl?: string | null;
   onImageUploaded: (url: string | null) => void;
   className?: string;
