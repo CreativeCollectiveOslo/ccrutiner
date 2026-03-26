@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, RotateCcw, ClipboardList, Search, ShoppingCart, Info } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, ChevronLeft, Settings, RotateCcw, ClipboardList, Search, ShoppingCart, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
