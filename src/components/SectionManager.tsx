@@ -79,15 +79,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   const { user } = useAuth();
   const [sections, setSections] = useState<Section[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
-  const [shiftInfoItems, setShiftInfoItems] = useState<ShiftInfo[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Shift info state
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
-  const [editInfoDialogOpen, setEditInfoDialogOpen] = useState(false);
-  const [editingInfoId, setEditingInfoId] = useState<string | null>(null);
-  const [newInfo, setNewInfo] = useState({ title: "", description: "", imageUrls: [] as string[] });
-  const [editInfo, setEditInfo] = useState({ title: "", description: "", imageUrls: [] as string[] });
 
   // Section state
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
