@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, FolderOpen, MoveRight, MoreHorizontal, ChevronUp, ChevronDown, Info } from "lucide-react";
+import { Plus, Trash2, Pencil, FolderOpen, MoveRight, MoreHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -48,15 +48,6 @@ interface Section {
   id: string;
   shift_id: string;
   name: string;
-  order_index: number;
-}
-
-interface ShiftInfo {
-  id: string;
-  shift_id: string;
-  title: string;
-  description: string | null;
-  image_urls: string[] | null;
   order_index: number;
 }
 
@@ -88,15 +79,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   const { user } = useAuth();
   const [sections, setSections] = useState<Section[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
-  const [shiftInfoItems, setShiftInfoItems] = useState<ShiftInfo[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Shift info state
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
-  const [editInfoDialogOpen, setEditInfoDialogOpen] = useState(false);
-  const [editingInfoId, setEditingInfoId] = useState<string | null>(null);
-  const [newInfo, setNewInfo] = useState({ title: "", description: "", imageUrls: [] as string[] });
-  const [editInfo, setEditInfo] = useState({ title: "", description: "", imageUrls: [] as string[] });
 
   // Section state
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
@@ -140,88 +123,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   useEffect(() => {
     fetchSections();
     fetchRoutines();
-    fetchShiftInfo();
   }, [shiftId]);
-
-  const fetchShiftInfo = async () => {
-    const { data, error } = await supabase
-      .from("shift_info")
-      .select("*")
-      .eq("shift_id", shiftId)
-      .order("order_index");
-
-    if (error) {
-      console.error(error);
-    } else {
-      setShiftInfoItems(data || []);
-    }
-  };
-
-  const handleCreateInfo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("shift_info").insert({
-      shift_id: shiftId,
-      title: newInfo.title,
-      description: newInfo.description || null,
-      image_urls: newInfo.imageUrls.length > 0 ? newInfo.imageUrls : null,
-      order_index: shiftInfoItems.length,
-    });
-
-    if (error) {
-      toast.error("Kunne ikke opprette info");
-      console.error(error);
-    } else {
-      toast.success("Viktig info opprettet!");
-      setInfoDialogOpen(false);
-      setNewInfo({ title: "", description: "", imageUrls: [] });
-      fetchShiftInfo();
-    }
-  };
-
-  const handleUpdateInfo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingInfoId) return;
-
-    const { error } = await supabase
-      .from("shift_info")
-      .update({
-        title: editInfo.title,
-        description: editInfo.description || null,
-        image_urls: editInfo.imageUrls.length > 0 ? editInfo.imageUrls : null,
-      })
-      .eq("id", editingInfoId);
-
-    if (error) {
-      toast.error("Kunne ikke oppdatere info");
-      console.error(error);
-    } else {
-      toast.success("Info oppdatert!");
-      setEditInfoDialogOpen(false);
-      fetchShiftInfo();
-    }
-  };
-
-  const handleDeleteInfo = async (infoId: string) => {
-    const { error } = await supabase.from("shift_info").delete().eq("id", infoId);
-
-    if (error) {
-      toast.error("Kunne ikke slette info");
-      console.error(error);
-    } else {
-      toast.success("Info slettet!");
-      fetchShiftInfo();
-    }
-  };
-
-  const openEditInfo = (info: ShiftInfo) => {
-    setEditingInfoId(info.id);
-    setEditInfo({
-      title: info.title,
-      description: info.description || "",
-      imageUrls: info.image_urls || [],
-    });
-    setEditInfoDialogOpen(true);
-  };
 
   const fetchSections = async () => {
     const { data, error } = await supabase
@@ -587,57 +489,6 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         </Dialog>
       </div>
 
-      {/* Viktig Info Section */}
-      <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-blue-200/50 dark:border-blue-800/50">
-          <div className="flex items-center gap-2">
-            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Viktig info</span>
-            <Badge variant="secondary" className="text-xs">{shiftInfoItems.length}</Badge>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => { setNewInfo({ title: "", description: "", imageUrls: [] }); setInfoDialogOpen(true); }} className="h-7 text-xs">
-            <Plus className="h-3 w-3 mr-1" />
-            Ny info
-          </Button>
-        </div>
-        {shiftInfoItems.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">Ingen viktig info ennå</p>
-        ) : (
-          <div>
-            {shiftInfoItems.map((info) => (
-              <div key={info.id} className="flex items-start justify-between py-3 border-b last:border-b-0 border-blue-100 dark:border-blue-900/50">
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium">{info.title}</h4>
-                  {info.description && (
-                    <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line line-clamp-3">{info.description}</p>
-                  )}
-                  {info.image_urls && info.image_urls.length > 0 && (
-                    <MultiImageDisplay urls={info.image_urls} className="mt-2" />
-                  )}
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEditInfo(info)}>
-                      Rediger
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDeleteInfo(info.id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      Slett
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Unsorted Routines */}
       <div className="bg-muted/60 rounded-lg p-4">
@@ -983,95 +834,6 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         </DialogContent>
       </Dialog>
 
-      {/* New Info Dialog */}
-      <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
-        <DialogContent>
-          <form onSubmit={handleCreateInfo}>
-            <DialogHeader>
-              <DialogTitle>Legg til viktig info</DialogTitle>
-              <DialogDescription>
-                Informasjon som vises til ansatte for denne vakten
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="info-title">Tittel *</Label>
-                <Input
-                  id="info-title"
-                  value={newInfo.title}
-                  onChange={(e) => setNewInfo({ ...newInfo, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="info-description">Beskrivelse</Label>
-                <Textarea
-                  id="info-description"
-                  value={newInfo.description}
-                  onChange={(e) => setNewInfo({ ...newInfo, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Bilder</Label>
-                <MultiImageUpload
-                  folder="shift-info"
-                  currentUrls={newInfo.imageUrls}
-                  onImagesChanged={(urls) => setNewInfo({ ...newInfo, imageUrls: urls })}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Legg til</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Info Dialog */}
-      <Dialog open={editInfoDialogOpen} onOpenChange={setEditInfoDialogOpen}>
-        <DialogContent>
-          <form onSubmit={handleUpdateInfo}>
-            <DialogHeader>
-              <DialogTitle>Rediger viktig info</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-info-title">Tittel *</Label>
-                <Input
-                  id="edit-info-title"
-                  value={editInfo.title}
-                  onChange={(e) => setEditInfo({ ...editInfo, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-info-description">Beskrivelse</Label>
-                <Textarea
-                  id="edit-info-description"
-                  value={editInfo.description}
-                  onChange={(e) => setEditInfo({ ...editInfo, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Bilder</Label>
-                <MultiImageUpload
-                  folder="shift-info"
-                  currentUrls={editInfo.imageUrls}
-                  onImagesChanged={(urls) => setEditInfo({ ...editInfo, imageUrls: urls })}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditInfoDialogOpen(false)}>
-                Avbryt
-              </Button>
-              <Button type="submit">Lagre endringer</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

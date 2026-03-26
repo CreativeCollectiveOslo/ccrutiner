@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import logo from "@/assets/logo.png";
 import { ShiftManager } from "@/components/ShiftManager";
 import { AnnouncementManager } from "@/components/AnnouncementManager";
 import { SectionManager } from "@/components/SectionManager";
+import { ViktigInfoManager } from "@/components/ViktigInfoManager";
 
 
 interface Shift {
@@ -40,7 +41,7 @@ export default function AdminDashboard() {
   const [selectedShift, setSelectedShift] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements">("routines");
+  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info">("routines");
   const [shiftManagerOpen, setShiftManagerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
@@ -345,6 +346,19 @@ export default function AdminDashboard() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
+            <button
+              onClick={() => setActiveTab("info")}
+              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                activeTab === "info"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Viktig info
+              {activeTab === "info" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
           </div>
         </div>
 
@@ -403,6 +417,8 @@ export default function AdminDashboard() {
           </div>
         ) : activeTab === "announcements" ? (
           <AnnouncementManager />
+        ) : activeTab === "info" ? (
+          <ViktigInfoManager />
         ) : (
           <Card>
             <CardHeader>

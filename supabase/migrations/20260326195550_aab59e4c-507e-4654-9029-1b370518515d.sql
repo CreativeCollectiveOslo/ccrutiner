@@ -1,0 +1,1 @@
+ALTER TABLE public.shift_info ALTER COLUMN shift_id DROP NOT NULL;

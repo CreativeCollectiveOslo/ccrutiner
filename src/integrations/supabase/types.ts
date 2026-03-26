@@ -303,7 +303,7 @@ export type Database = {
           id: string
           image_urls: string[] | null
           order_index: number | null
-          shift_id: string
+          shift_id: string | null
           title: string
         }
         Insert: {
@@ -312,7 +312,7 @@ export type Database = {
           id?: string
           image_urls?: string[] | null
           order_index?: number | null
-          shift_id: string
+          shift_id?: string | null
           title: string
         }
         Update: {
@@ -321,7 +321,7 @@ export type Database = {
           id?: string
           image_urls?: string[] | null
           order_index?: number | null
-          shift_id?: string
+          shift_id?: string | null
           title?: string
         }
         Relationships: [

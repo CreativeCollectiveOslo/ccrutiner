@@ -146,10 +146,11 @@ export function SearchDialog({
         });
       }
 
-      // Search shift info
+      // Search shift info (global)
       const { data: shiftInfoData } = await supabase
         .from("shift_info")
-        .select("id, title, description, shift_id, shifts(name)")
+        .select("id, title, description")
+        .is("shift_id", null)
         .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (shiftInfoData) {
@@ -159,8 +160,7 @@ export function SearchDialog({
             type: "routine",
             title: `ℹ️ ${info.title}`,
             description: info.description || undefined,
-            context: info.shifts?.name || "Ukjent vakt",
-            shiftId: info.shift_id,
+            context: "Viktig info",
           });
         });
       }

@@ -115,7 +115,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [mainTab, setMainTab] = useState<"shifts" | "notifications" | "bulletin" | "shopping">("shifts");
+  const [mainTab, setMainTab] = useState<"shifts" | "info" | "notifications" | "bulletin" | "shopping">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -172,16 +172,19 @@ export default function EmployeeDashboard() {
       fetchSections();
       fetchRoutines();
       fetchCompletions();
-      fetchShiftInfo();
     }
   }, [selectedShift]);
 
+  // Fetch global shift info on mount
+  useEffect(() => {
+    fetchShiftInfo();
+  }, []);
+
   const fetchShiftInfo = async () => {
-    if (!selectedShift) return;
     const { data, error } = await supabase
       .from("shift_info")
       .select("*")
-      .eq("shift_id", selectedShift.id)
+      .is("shift_id", null)
       .order("order_index");
 
     if (!error && data) {
@@ -561,6 +564,21 @@ export default function EmployeeDashboard() {
               <Search className="h-5 w-5" />
               <span className="sr-only">Søk</span>
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => { setSelectedShift(null); setMainTab("notifications"); }}
+              title="Notifikasjoner"
+              className="relative"
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-medium">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+              <span className="sr-only">Notifikasjoner</span>
+            </Button>
             <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
               <LogOut className="h-4 w-4" />
               <span className="sr-only">Logg ut</span>
@@ -597,16 +615,16 @@ export default function EmployeeDashboard() {
                 )}
               </button>
               <button
-                onClick={() => setMainTab("notifications")}
+                onClick={() => setMainTab("info")}
                 className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
-                  mainTab === "notifications"
+                  mainTab === "info"
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Bell className="h-5 w-5 sm:h-4 sm:w-4" />
-                <span className="text-center leading-tight">Notifikationer</span>
-                {mainTab === "notifications" && (
+                <Info className="h-5 w-5 sm:h-4 sm:w-4" />
+                <span className="text-center leading-tight">Viktig info</span>
+                {mainTab === "info" && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
@@ -642,6 +660,42 @@ export default function EmployeeDashboard() {
 
             {mainTab === "notifications" ? (
               <NotificationsTab searchHighlightTerm={searchHighlightTerm} />
+            ) : mainTab === "info" ? (
+              <div className="space-y-4">
+                <div className="text-center space-y-2">
+                  <h2 className="text-xl">Viktig informasjon</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Generell informasjon for alle ansatte
+                  </p>
+                </div>
+                {shiftInfoItems.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Info className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                    <p className="text-sm text-muted-foreground">Ingen viktig info ennå</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {shiftInfoItems.map((info) => (
+                      <Card key={info.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <p className="text-sm font-medium">{info.title}</p>
+                              {info.description && (
+                                <p className="text-sm text-muted-foreground whitespace-pre-line">{info.description}</p>
+                              )}
+                              {info.image_urls && info.image_urls.length > 0 && (
+                                <MultiImageDisplay urls={info.image_urls} className="mt-2" />
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : mainTab === "bulletin" ? (
               <BulletinBoard searchHighlightTerm={searchHighlightTerm} />
             ) : mainTab === "shopping" ? (
@@ -773,30 +827,6 @@ export default function EmployeeDashboard() {
               </div>
             </div>
 
-
-            {/* Viktig Info */}
-            {shiftInfoItems.length > 0 && (
-              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Viktig info</span>
-                </div>
-                {shiftInfoItems.map((info) => (
-                  <div key={info.id} className="flex items-start gap-3 py-2 border-b last:border-b-0 border-blue-100 dark:border-blue-900/50">
-                    <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-sm font-medium">{info.title}</p>
-                      {info.description && (
-                        <p className="text-sm text-muted-foreground whitespace-pre-line">{info.description}</p>
-                      )}
-                      {info.image_urls && info.image_urls.length > 0 && (
-                        <MultiImageDisplay urls={info.image_urls} className="mt-2" />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <div className="space-y-6">
               {routines.length === 0 ? (
