@@ -599,64 +599,76 @@ export default function EmployeeDashboard() {
         {!selectedShift ? (
           <>
             {/* Main tabs - only visible on front page */}
-            <div className="flex border-b border-border mb-6">
-              <button
-                onClick={() => setMainTab("shifts")}
-                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
-                  mainTab === "shifts"
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Calendar className="h-5 w-5 sm:h-4 sm:w-4" />
-                <span>Vakter</span>
-                {mainTab === "shifts" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
-              </button>
-              <button
-                onClick={() => setMainTab("info")}
-                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
-                  mainTab === "info"
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Info className="h-5 w-5 sm:h-4 sm:w-4" />
-                <span className="text-center leading-tight">Viktig info</span>
-                {mainTab === "info" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
-              </button>
-              <button
-                onClick={() => setMainTab("bulletin")}
-                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
-                  mainTab === "bulletin"
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <ClipboardList className="h-5 w-5 sm:h-4 sm:w-4" />
-                <span>Loggbok</span>
-                {mainTab === "bulletin" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
-              </button>
-              <button
-                onClick={() => setMainTab("shopping")}
-                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
-                  mainTab === "shopping"
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <ShoppingCart className="h-5 w-5 sm:h-4 sm:w-4" />
-                <span>Handleliste</span>
-                {mainTab === "shopping" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
-              </button>
-            </div>
+            {mainTab === "notifications" ? (
+              <div className="mb-6">
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setMainTab("shifts")} className="gap-1">
+                    <ChevronLeft className="h-4 w-4" />
+                    Tilbake
+                  </Button>
+                  <h2 className="text-lg font-semibold">Notifikasjoner</h2>
+                </div>
+              </div>
+            ) : (
+              <div className="flex border-b border-border mb-6">
+                <button
+                  onClick={() => setMainTab("shifts")}
+                  className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
+                    mainTab === "shifts"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Calendar className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span>Vakter</span>
+                  {mainTab === "shifts" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setMainTab("info")}
+                  className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
+                    mainTab === "info"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Info className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span className="text-center leading-tight">Info</span>
+                  {mainTab === "info" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setMainTab("bulletin")}
+                  className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
+                    mainTab === "bulletin"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ClipboardList className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span>Loggbok</span>
+                  {mainTab === "bulletin" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setMainTab("shopping")}
+                  className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
+                    mainTab === "shopping"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ShoppingCart className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span>Handleliste</span>
+                  {mainTab === "shopping" && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  )}
+                </button>
+              </div>
+            )}
 
             {mainTab === "notifications" ? (
               <NotificationsTab searchHighlightTerm={searchHighlightTerm} />
