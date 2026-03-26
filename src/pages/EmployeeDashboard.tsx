@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, RotateCcw, ClipboardList, Search, ShoppingCart } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, Settings, RotateCcw, ClipboardList, Search, ShoppingCart, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
@@ -96,6 +96,14 @@ interface TaskCompletion {
   routine_id: string;
 }
 
+interface ShiftInfoItem {
+  id: string;
+  title: string;
+  description: string | null;
+  image_urls: string[] | null;
+  order_index: number;
+}
+
 export default function EmployeeDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
   const [shifts, setShifts] = useState<Shift[]>([]);
@@ -112,6 +120,7 @@ export default function EmployeeDashboard() {
   const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
+  const [shiftInfoItems, setShiftInfoItems] = useState<ShiftInfoItem[]>([]);
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
   const [searchOpen, setSearchOpen] = useState(false);
   const [highlightedRoutineId, setHighlightedRoutineId] = useState<string | null>(null);
@@ -163,8 +172,22 @@ export default function EmployeeDashboard() {
       fetchSections();
       fetchRoutines();
       fetchCompletions();
+      fetchShiftInfo();
     }
   }, [selectedShift]);
+
+  const fetchShiftInfo = async () => {
+    if (!selectedShift) return;
+    const { data, error } = await supabase
+      .from("shift_info")
+      .select("*")
+      .eq("shift_id", selectedShift.id)
+      .order("order_index");
+
+    if (!error && data) {
+      setShiftInfoItems(data);
+    }
+  };
 
   const fetchSections = async () => {
     if (!selectedShift) return;
