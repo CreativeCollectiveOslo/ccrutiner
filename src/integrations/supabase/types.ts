@@ -109,6 +109,30 @@ export type Database = {
         }
         Relationships: []
       }
+      info_categories: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          order_index?: number
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -298,6 +322,7 @@ export type Database = {
       }
       shift_info: {
         Row: {
+          category_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -307,6 +332,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -316,6 +342,7 @@ export type Database = {
           title: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -325,6 +352,13 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "shift_info_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "info_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "shift_info_shift_id_fkey"
             columns: ["shift_id"]
