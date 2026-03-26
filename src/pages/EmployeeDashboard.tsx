@@ -688,9 +688,13 @@ export default function EmployeeDashboard() {
               <div className="space-y-4">
                 {selectedInfoCategory ? (
                   (() => {
-                    const category = infoCategories.find(c => c.id === selectedInfoCategory);
-                    const categoryItems = shiftInfoItems.filter(i => i.category_id === selectedInfoCategory);
+                    const isUncategorized = selectedInfoCategory === "uncategorized";
+                    const category = isUncategorized ? null : infoCategories.find(c => c.id === selectedInfoCategory);
+                    const categoryItems = isUncategorized
+                      ? shiftInfoItems.filter(i => !i.category_id)
+                      : shiftInfoItems.filter(i => i.category_id === selectedInfoCategory);
                     const IconComponent = category?.icon ? (LucideIcons as any)[category.icon] || Info : Info;
+                    const categoryName = isUncategorized ? "Generelt" : category?.name;
                     return (
                       <div className="space-y-4">
                         <button
