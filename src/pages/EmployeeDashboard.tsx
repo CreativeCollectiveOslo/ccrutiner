@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, ChevronLeft, Settings, RotateCcw, ClipboardList, Search, ShoppingCart, Info } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Settings, RotateCcw, ClipboardList, Search, ShoppingCart, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
@@ -686,38 +686,105 @@ export default function EmployeeDashboard() {
               <NotificationsTab searchHighlightTerm={searchHighlightTerm} />
             ) : mainTab === "info" ? (
               <div className="space-y-4">
-                <div className="text-center space-y-2">
-                  <h2 className="text-xl">Viktig informasjon</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Generell informasjon for alle ansatte
-                  </p>
-                </div>
-                {shiftInfoItems.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Info className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                    <p className="text-sm text-muted-foreground">Ingen viktig info ennå</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {shiftInfoItems.map((info) => (
-                      <Card key={info.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <p className="text-sm font-medium">{info.title}</p>
-                              {info.description && (
-                                <p className="text-sm text-muted-foreground whitespace-pre-line">{info.description}</p>
-                              )}
-                              {info.image_urls && info.image_urls.length > 0 && (
-                                <MultiImageDisplay urls={info.image_urls} className="mt-2" />
-                              )}
-                            </div>
+                {selectedInfoCategory ? (
+                  (() => {
+                    const category = infoCategories.find(c => c.id === selectedInfoCategory);
+                    const categoryItems = shiftInfoItems.filter(i => i.category_id === selectedInfoCategory);
+                    const IconComponent = category?.icon ? (LucideIcons as any)[category.icon] || Info : Info;
+                    return (
+                      <div className="space-y-4">
+                        <button
+                          onClick={() => setSelectedInfoCategory(null)}
+                          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                        >
+                          ← Tilbake
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <IconComponent className="h-5 w-5 text-primary" />
+                          <h2 className="text-2xl font-semibold">{category?.name}</h2>
+                        </div>
+                        {categoryItems.length === 0 ? (
+                          <div className="text-center py-8">
+                            <Info className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                            <p className="text-sm text-muted-foreground">Ingen info i denne kategorien ennå</p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {categoryItems.map((info) => (
+                              <Card key={info.id}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-3">
+                                    <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                      <p className="text-sm font-medium">{info.title}</p>
+                                      {info.description && (
+                                        <p className="text-sm text-muted-foreground whitespace-pre-line">{info.description}</p>
+                                      )}
+                                      {info.image_urls && info.image_urls.length > 0 && (
+                                        <MultiImageDisplay urls={info.image_urls} className="mt-2" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <>
+                    {infoCategories.length === 0 && shiftInfoItems.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Info className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                        <p className="text-sm text-muted-foreground">Ingen info ennå</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {infoCategories.map((cat) => {
+                          const IconComponent = (LucideIcons as any)[cat.icon] || Info;
+                          const itemCount = shiftInfoItems.filter(i => i.category_id === cat.id).length;
+                          return (
+                            <Card
+                              key={cat.id}
+                              className="cursor-pointer hover:bg-accent/50 transition-colors"
+                              onClick={() => setSelectedInfoCategory(cat.id)}
+                            >
+                              <CardContent className="p-4 flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <IconComponent className="h-5 w-5 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium">{cat.name}</p>
+                                  <p className="text-xs text-muted-foreground">{itemCount} {itemCount === 1 ? 'element' : 'elementer'}</p>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                        {/* Uncategorized items */}
+                        {shiftInfoItems.filter(i => !i.category_id).length > 0 && (
+                          <Card
+                            className="cursor-pointer hover:bg-accent/50 transition-colors"
+                            onClick={() => setSelectedInfoCategory("uncategorized")}
+                          >
+                            <CardContent className="p-4 flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                <Info className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">Generelt</p>
+                                <p className="text-xs text-muted-foreground">{shiftInfoItems.filter(i => !i.category_id).length} elementer</p>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ) : mainTab === "bulletin" ? (
