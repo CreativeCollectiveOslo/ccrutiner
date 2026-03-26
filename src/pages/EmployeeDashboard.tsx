@@ -705,7 +705,7 @@ export default function EmployeeDashboard() {
                         </button>
                         <div className="flex items-center gap-2">
                           <IconComponent className="h-5 w-5 text-primary" />
-                          <h2 className="text-2xl font-semibold">{category?.name}</h2>
+                          <h2 className="text-2xl font-semibold">{categoryName}</h2>
                         </div>
                         {categoryItems.length === 0 ? (
                           <div className="text-center py-8">
