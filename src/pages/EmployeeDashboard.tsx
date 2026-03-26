@@ -828,31 +828,6 @@ export default function EmployeeDashboard() {
             </div>
 
 
-            {/* Viktig Info */}
-            {shiftInfoItems.length > 0 && (
-              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Viktig info</span>
-                </div>
-                {shiftInfoItems.map((info) => (
-                  <div key={info.id} className="flex items-start gap-3 py-2 border-b last:border-b-0 border-blue-100 dark:border-blue-900/50">
-                    <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-sm font-medium">{info.title}</p>
-                      {info.description && (
-                        <p className="text-sm text-muted-foreground whitespace-pre-line">{info.description}</p>
-                      )}
-                      {info.image_urls && info.image_urls.length > 0 && (
-                        <MultiImageDisplay urls={info.image_urls} className="mt-2" />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="space-y-6">
               {routines.length === 0 ? (
                 <Card>
                   <CardContent className="p-6 text-center">
