@@ -146,6 +146,25 @@ export function SearchDialog({
         });
       }
 
+      // Search shift info
+      const { data: shiftInfoData } = await supabase
+        .from("shift_info")
+        .select("id, title, description, shift_id, shifts(name)")
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+
+      if (shiftInfoData) {
+        shiftInfoData.forEach((info: any) => {
+          allResults.push({
+            id: info.id,
+            type: "routine",
+            title: `ℹ️ ${info.title}`,
+            description: info.description || undefined,
+            context: info.shifts?.name || "Ukjent vakt",
+            shiftId: info.shift_id,
+          });
+        });
+      }
+
       setResults(allResults);
     } catch (error) {
       console.error("Search error:", error);
