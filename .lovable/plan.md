@@ -1,47 +1,61 @@
 
 
-# To endringer: Rename "Viktig info" + Notifikasjoner som overlay
+# Info-kategorier: Gruppering av viktig informasjon
 
-## Endring 1: Rename "Viktig info" → "Info"
+## Konsept
 
-Enkelt tekst-bytte i begge dashboards.
+Info-siden faar et mellomlag med **kategorier** (f.eks. "Betaling", "Sikkerhet", "Utstyr"). Naar man aapner Info-fanen ser man kategori-kort. Klikk paa et kort viser info-elementene i den kategorien.
 
-**EmployeeDashboard.tsx** (linje 626): `"Viktig info"` → `"Info"`
-**AdminDashboard.tsx** (linje 357): `"Viktig info"` → `"Info"`
+## Database-endring
 
-Overskriften inne på info-siden (`"Viktig informasjon"`, linje 666) beholdes som den er – den gir kontekst når man er på siden.
+Ny tabell `info_categories`:
 
-## Endring 2: Notifikasjoner som overlay (skjul tab-menyen)
+| Kolonne | Type | Default |
+|---------|------|---------|
+| id | uuid | gen_random_uuid() |
+| name | text | required |
+| icon | text | 'Info' |
+| order_index | integer | 0 |
+| created_at | timestamptz | now() |
 
-Når `mainTab === "notifications"`, skal tab-menyen (Vakter, Info, Loggbok, Handleliste) ikke vises. Notifikasjonssiden fungerer som et overlay med en tilbake-knapp.
+RLS: Authenticated kan lese, admin kan CRUD.
 
-**EmployeeDashboard.tsx**:
-- Wrap tab-menyen (linje 602-658) i en betingelse: `{mainTab !== "notifications" && (...)}`
-- Når `mainTab === "notifications"`, vis i stedet en enkel header med tilbake-knapp (← Tilbake) som setter `mainTab` tilbake til `"shifts"`
-- Flytt `NotificationsTab`-rendringen utenfor tab-menyen sin betingelse
+Legg til kolonne paa `shift_info`:
+- `category_id uuid REFERENCES info_categories(id) ON DELETE SET NULL` (nullable for bakoverkompatibilitet)
 
-### Teknisk detalj
+## Brukerflyt
 
 ```text
-mainTab !== "notifications":
-  ┌─────────────────────────────┐
-  │ Vakter | Info | Loggbok | …│  ← tab-meny
-  │ [innhold for valgt tab]    │
-  └─────────────────────────────┘
+Info-fanen:
+┌─────────────┐ ┌─────────────┐
+│  Betaling   │ │  Sikkerhet  │
+│      💰     │ │      🛡     │
+└─────────────┘ └─────────────┘
+┌─────────────┐
+│   Utstyr    │
+│      🔧     │
+└─────────────┘
 
-mainTab === "notifications":
-  ┌─────────────────────────────┐
-  │ ← Tilbake     Notifikasjoner│  ← enkel header
-  │ [NotificationsTab]          │
-  └─────────────────────────────┘
+Klikk "Betaling":
+← Tilbake
+Betaling
+┌─ Info-kort 1 ──────────────┐
+│ Loennsdag er den 25. ...   │
+└────────────────────────────┘
+┌─ Info-kort 2 ──────────────┐
+│ Overtid registreres i ...  │
+└────────────────────────────┘
 ```
 
-### Filer som endres
+## Filer som endres
 
 | Fil | Endring |
 |-----|---------|
-| `src/pages/EmployeeDashboard.tsx` | Rename tab-tekst, skjul tabs ved notifications, legg til tilbake-header |
-| `src/pages/AdminDashboard.tsx` | Rename tab-tekst |
+| Ny migration | `info_categories`-tabell + `category_id` paa `shift_info` + RLS |
+| `src/pages/EmployeeDashboard.tsx` | Info-fanen viser kategorier, klikk aapner kategori-detalj med tilbake-knapp |
+| `src/components/ViktigInfoManager.tsx` | Admin: CRUD for kategorier + tildel info til kategori |
+| `src/pages/AdminDashboard.tsx` | Eventuelt oppdater admin info-tab |
 
-### Ingen database-endringer
+### Ingen breaking changes
+Eksisterende info uten kategori vises i en "Generelt"-gruppe.
 
