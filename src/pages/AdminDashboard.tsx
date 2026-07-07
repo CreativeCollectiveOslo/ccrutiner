@@ -717,6 +717,45 @@ export default function AdminDashboard() {
           </Card>
         )}
 
+        <Dialog open={storeEditorUserId !== null} onOpenChange={(o) => !o && setStoreEditorUserId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Butikktilgang</DialogTitle>
+              <DialogDescription>
+                Velg hvilke butikker brukeren skal ha tilgang til. Admin har alltid tilgang til alle butikker uansett.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 rounded-md border p-3">
+              {availableStores.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Ingen butikker tilgjengelig</p>
+              ) : (
+                availableStores.map((s) => (
+                  <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={storeEditorSelection.includes(s.id)}
+                      onCheckedChange={() => toggleStoreEditor(s.id)}
+                    />
+                    <div
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: s.color_code }}
+                    />
+                    <span className="text-sm">{s.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStoreEditorUserId(null)}>
+                Avbryt
+              </Button>
+              <Button onClick={saveStoreEditor} disabled={storeEditorSaving}>
+                {storeEditorSaving ? "Lagrer..." : "Lagre"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur">
