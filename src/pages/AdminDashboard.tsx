@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/contexts/StoreContext";
-import { StoreSwitcher } from "@/components/StoreSwitcher";
+import { StoreBar } from "@/components/StoreBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,9 @@ export default function AdminDashboard() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState<string | null>(null);
+  const [storeEditorUserId, setStoreEditorUserId] = useState<string | null>(null);
+  const [storeEditorSelection, setStoreEditorSelection] = useState<string[]>([]);
+  const [storeEditorSaving, setStoreEditorSaving] = useState(false);
   
   
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -263,6 +266,52 @@ export default function AdminDashboard() {
     );
   };
 
+  const openStoreEditor = (userId: string) => {
+    setStoreEditorUserId(userId);
+    setStoreEditorSelection(userStoreMemberships[userId] || []);
+  };
+
+  const toggleStoreEditor = (id: string) => {
+    setStoreEditorSelection((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  };
+
+  const saveStoreEditor = async () => {
+    if (!storeEditorUserId) return;
+    setStoreEditorSaving(true);
+    try {
+      const current = new Set(userStoreMemberships[storeEditorUserId] || []);
+      const next = new Set(storeEditorSelection);
+      const toAdd = [...next].filter((id) => !current.has(id));
+      const toRemove = [...current].filter((id) => !next.has(id));
+
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from("store_members")
+          .delete()
+          .eq("user_id", storeEditorUserId)
+          .in("store_id", toRemove);
+        if (error) throw error;
+      }
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from("store_members")
+          .insert(toAdd.map((store_id) => ({ store_id, user_id: storeEditorUserId })));
+        if (error) throw error;
+      }
+
+      toast.success("Butikktilgang oppdatert");
+      setStoreEditorUserId(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Kunne ikke oppdatere butikktilgang");
+    } finally {
+      setStoreEditorSaving(false);
+    }
+  };
+
   const handleResetPassword = async (userId: string) => {
     if (!confirm("Er du sikker på at du vil resette passordet for denne brukeren?")) {
       return;
@@ -326,7 +375,6 @@ export default function AdminDashboard() {
             <h1 className="text-xl">Admin Dashboard</h1>
           </div>
           <div className="flex items-center gap-2">
-            <StoreSwitcher />
             <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
               <LogOut className="h-4 w-4" />
               <span className="sr-only">Logg ut</span>
@@ -334,6 +382,8 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
+
+      <StoreBar />
 
       <main className="container mx-auto px-4 py-6 max-w-6xl pb-20">
         <div className="mb-6">
@@ -479,15 +529,16 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 {users
                   .sort((a, b) => {
-                    const aIsAdmin = a.roles.includes("admin");
-                    const bIsAdmin = b.roles.includes("admin");
-                    if (aIsAdmin && !bIsAdmin) return -1;
-                    if (!aIsAdmin && bIsAdmin) return 1;
+                    const rank = (u: UserWithRole) =>
+                      u.roles.includes("super_admin") ? 0 : u.roles.includes("admin") ? 1 : 2;
+                    const rd = rank(a) - rank(b);
+                    if (rd !== 0) return rd;
                     return a.name.localeCompare(b.name);
                   })
                   .map((userItem) => {
-                    const isAdmin = userItem.roles.includes("admin");
-                    const isEmployee = userItem.roles.includes("employee");
+                    const isSuper = userItem.roles.includes("super_admin");
+                    const isAdmin = userItem.roles.includes("admin") || isSuper;
+                    const isEmployee = userItem.roles.includes("employee") && !isAdmin;
                     const memberships = userStoreMemberships[userItem.id] || [];
                     const memberStoreNames = memberships
                       .map((sid) => availableStores.find((s) => s.id === sid)?.name)
@@ -496,17 +547,25 @@ export default function AdminDashboard() {
                       <div
                         key={userItem.id}
                         className={`p-4 rounded-lg border ${
-                          isAdmin ? "bg-primary/5 border-primary" : ""
+                          isSuper ? "bg-primary/10 border-primary" : isAdmin ? "bg-primary/5 border-primary" : ""
                         }`}
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="font-medium truncate max-w-[200px] sm:max-w-none">{userItem.name}</h3>
-                              {isAdmin && (
+                              {isSuper ? (
+                                <Badge variant="default" className="shrink-0 bg-primary">Super-admin</Badge>
+                              ) : isAdmin && (
                                 <Badge variant="default" className="shrink-0">Admin</Badge>
                               )}
-                              {isEmployee && !isAdmin && memberStoreNames.map((n) => (
+                              {isSuper && (
+                                <Badge variant="outline" className="shrink-0 gap-1">
+                                  <StoreIcon className="h-3 w-3" />
+                                  Alle butikker
+                                </Badge>
+                              )}
+                              {!isSuper && memberStoreNames.map((n) => (
                                 <Badge key={n} variant="outline" className="shrink-0 gap-1">
                                   <StoreIcon className="h-3 w-3" />
                                   {n}
@@ -520,7 +579,18 @@ export default function AdminDashboard() {
                               {userItem.email}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                            {!isSuper && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openStoreEditor(userItem.id)}
+                                title="Endre butikktilgang"
+                              >
+                                <StoreIcon className="h-4 w-4 mr-1" />
+                                Butikker
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -646,6 +716,45 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         )}
+
+        <Dialog open={storeEditorUserId !== null} onOpenChange={(o) => !o && setStoreEditorUserId(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Butikktilgang</DialogTitle>
+              <DialogDescription>
+                Velg hvilke butikker brukeren skal ha tilgang til. Admin har alltid tilgang til alle butikker uansett.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 rounded-md border p-3">
+              {availableStores.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Ingen butikker tilgjengelig</p>
+              ) : (
+                availableStores.map((s) => (
+                  <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={storeEditorSelection.includes(s.id)}
+                      onCheckedChange={() => toggleStoreEditor(s.id)}
+                    />
+                    <div
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: s.color_code }}
+                    />
+                    <span className="text-sm">{s.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStoreEditorUserId(null)}>
+                Avbryt
+              </Button>
+              <Button onClick={saveStoreEditor} disabled={storeEditorSaving}>
+                {storeEditorSaving ? "Lagrer..." : "Lagre"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
 
       </main>
 

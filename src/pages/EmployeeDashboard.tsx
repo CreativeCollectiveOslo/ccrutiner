@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStore } from "@/contexts/StoreContext";
-import { StoreSwitcher } from "@/components/StoreSwitcher";
+import { StoreBar } from "@/components/StoreBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -584,7 +584,6 @@ export default function EmployeeDashboard() {
             <h1 className="text-xl">Mine Rutiner</h1>
           </div>
           <div className="flex items-center gap-2">
-            <StoreSwitcher />
             <Button variant="outline" size="icon" onClick={() => setSearchOpen(true)}>
               <Search className="h-5 w-5" />
               <span className="sr-only">Søk</span>
@@ -611,6 +610,9 @@ export default function EmployeeDashboard() {
           </div>
         </div>
       </header>
+
+      <StoreBar />
+
 
       <SearchDialog
         open={searchOpen}
