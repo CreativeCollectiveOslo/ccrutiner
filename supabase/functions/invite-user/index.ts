@@ -14,6 +14,7 @@ const InviteUserSchema = z.object({
   email: z.string().email("Invalid email format").max(255, "Email too long"),
   name: z.string().max(255, "Name too long").optional(),
   role: z.enum(["admin", "employee"], { errorMap: () => ({ message: "Invalid role" }) }),
+  store_ids: z.array(z.string().uuid()).optional().default([]),
 });
 
 // Norwegian word lists for generating memorable passwords
@@ -95,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { email, name, role } = parseResult.data;
+    const { email, name, role, store_ids } = parseResult.data;
 
     // Generate a memorable two-word password
     const generatedPassword = generatePassword();
@@ -130,9 +131,22 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (roleError) {
         console.error("Error updating user role:", roleError);
-        // User was created but role update failed - return success with warning
       } else {
         console.log("User role updated to admin");
+      }
+    }
+
+    // Create store memberships for employees
+    if (role === "employee" && newUser.user?.id && store_ids.length > 0) {
+      const rows = store_ids.map((store_id) => ({
+        store_id,
+        user_id: newUser.user!.id,
+      }));
+      const { error: memberError } = await supabaseAdmin
+        .from("store_members")
+        .insert(rows);
+      if (memberError) {
+        console.error("Error creating store memberships:", memberError);
       }
     }
 
