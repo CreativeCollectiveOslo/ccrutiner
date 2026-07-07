@@ -27,19 +27,16 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .eq("user_id", user.id);
 
     if (error) {
       console.error("Error fetching user role:", error);
-    } else if (data) {
-      setUserRole(data.role);
-      
-      // Always redirect to employee dashboard
-      // Admins can access admin dashboard from there
+    } else {
+      const roles = (data || []).map((r) => r.role);
+      setUserRole(roles[0] || null);
       navigate("/employee");
     }
-    
+
     setLoading(false);
   };
 
