@@ -116,7 +116,7 @@ interface InfoCategory {
 
 export default function EmployeeDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { activeStore } = useStore();
+  const { activeStore, canSwitchStore } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
