@@ -325,10 +325,13 @@ export default function AdminDashboard() {
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
             <h1 className="text-xl">Admin Dashboard</h1>
           </div>
-          <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
-            <LogOut className="h-4 w-4" />
-            <span className="sr-only">Logg ut</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <StoreSwitcher />
+            <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Logg ut</span>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -387,6 +390,21 @@ export default function AdminDashboard() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
+            {isSuperAdmin && (
+              <button
+                onClick={() => setActiveTab("stores")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                  activeTab === "stores"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Butikker
+                {activeTab === "stores" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
