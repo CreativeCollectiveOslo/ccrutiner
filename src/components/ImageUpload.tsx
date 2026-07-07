@@ -48,7 +48,7 @@ export function MultiImageUpload({ folder, currentUrls, onImagesChanged, maxImag
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("attachments")
+        .from("attachments-private")
         .upload(fileName, file);
 
       if (uploadError) {
@@ -57,11 +57,18 @@ export function MultiImageUpload({ folder, currentUrls, onImagesChanged, maxImag
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("attachments")
-        .getPublicUrl(fileName);
+      // Long-lived signed URL (~10 years) since bucket is private
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("attachments-private")
+        .createSignedUrl(fileName, 60 * 60 * 24 * 365 * 10);
 
-      newUrls.push(publicUrl);
+      if (signErr || !signed?.signedUrl) {
+        toast.error("Kunne ikke generere billed-URL");
+        console.error(signErr);
+        continue;
+      }
+
+      newUrls.push(signed.signedUrl);
     }
 
     if (newUrls.length > 0) {
