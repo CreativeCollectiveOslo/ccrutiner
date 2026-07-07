@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ interface UserProfile {
 
 export function ShoppingList() {
   const { user } = useAuth();
+  const { activeStore } = useStore();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [profiles, setProfiles] = useState<Map<string, string>>(new Map());
   const [newItem, setNewItem] = useState("");
@@ -31,15 +33,16 @@ export function ShoppingList() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!activeStore) return;
     fetchItems();
     fetchProfiles();
 
     // Realtime subscription
     const channel = supabase
-      .channel("shopping_items")
+      .channel(`shopping_items_${activeStore.id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "shopping_items" },
+        { event: "*", schema: "public", table: "shopping_items", filter: `store_id=eq.${activeStore.id}` },
         () => fetchItems()
       )
       .subscribe();
@@ -47,7 +50,7 @@ export function ShoppingList() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [activeStore]);
 
   const fetchProfiles = async () => {
     const { data } = await supabase.from("profiles").select("id, name");
@@ -59,9 +62,11 @@ export function ShoppingList() {
   };
 
   const fetchItems = async () => {
+    if (!activeStore) return;
     const { data, error } = await supabase
       .from("shopping_items")
       .select("*")
+      .eq("store_id", activeStore.id)
       .order("completed")
       .order("created_at", { ascending: false });
 
@@ -75,12 +80,13 @@ export function ShoppingList() {
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newItem.trim()) return;
+    if (!user || !activeStore || !newItem.trim()) return;
 
     setSubmitting(true);
     const { error } = await supabase.from("shopping_items").insert({
       title: newItem.trim(),
       created_by: user.id,
+      store_id: activeStore.id,
     } as any);
 
     if (error) {

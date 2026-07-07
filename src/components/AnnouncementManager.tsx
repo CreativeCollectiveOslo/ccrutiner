@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -81,6 +82,7 @@ function CollapsibleText({ text, maxLines = 3 }: { text: string; maxLines?: numb
 
 export function AnnouncementManager() {
   const { user } = useAuth();
+  const { activeStore } = useStore();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [routineNotifications, setRoutineNotifications] = useState<RoutineNotification[]>([]);
   const [title, setTitle] = useState("");
@@ -97,10 +99,12 @@ export function AnnouncementManager() {
   const [routineNotificationPage, setRoutineNotificationPage] = useState(1);
 
   useEffect(() => {
-    fetchAnnouncements();
-    fetchRoutineNotifications();
+    if (activeStore) {
+      fetchAnnouncements();
+      fetchRoutineNotifications();
+    }
     fetchAllUsers();
-  }, []);
+  }, [activeStore]);
 
   const fetchAllUsers = async () => {
     const { data, error } = await supabase
@@ -115,9 +119,11 @@ export function AnnouncementManager() {
   };
 
   const fetchAnnouncements = async () => {
+    if (!activeStore) return;
     const { data, error } = await supabase
       .from("announcements")
       .select("*")
+      .eq("store_id", activeStore.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -128,6 +134,7 @@ export function AnnouncementManager() {
   };
 
   const fetchRoutineNotifications = async () => {
+    if (!activeStore) return;
     const { data, error } = await supabase
       .from("routine_notifications")
       .select(`
@@ -135,6 +142,7 @@ export function AnnouncementManager() {
         routine:routines(title),
         shift:shifts(name)
       `)
+      .eq("store_id", activeStore.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -160,12 +168,16 @@ export function AnnouncementManager() {
       toast.error("Du må være logget inn");
       return;
     }
+    if (!activeStore) {
+      toast.error("Ingen butikk valgt");
+      return;
+    }
 
     setLoading(true);
 
     const { error } = await supabase
       .from("announcements")
-      .insert([{ title, message, image_urls: imageUrls.length > 0 ? imageUrls : null, image_url: imageUrls[0] || null, created_by: user.id }] as any);
+      .insert([{ title, message, image_urls: imageUrls.length > 0 ? imageUrls : null, image_url: imageUrls[0] || null, created_by: user.id, store_id: activeStore.id }] as any);
 
     if (error) {
       toast.error("Kunne ikke opprette oppdatering");

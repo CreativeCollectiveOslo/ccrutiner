@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useStore } from "@/contexts/StoreContext";
 import { Search, FileText, Bell, ClipboardList, Loader2, X } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -34,6 +35,7 @@ export function SearchDialog({
   onNavigateToNotifications,
   onNavigateToBulletin,
 }: SearchDialogProps) {
+  const { activeStore } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -68,14 +70,17 @@ export function SearchDialog({
   }, [debouncedQuery]);
 
   const performSearch = async (query: string) => {
+    if (!activeStore) return;
     setIsSearching(true);
     const allResults: SearchResult[] = [];
+    const storeId = activeStore.id;
 
     try {
       // Search routines with shift info
       const { data: routinesData } = await supabase
         .from("routines")
         .select("id, title, description, shift_id, shifts(name)")
+        .eq("store_id", storeId)
         .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (routinesData) {
@@ -96,6 +101,7 @@ export function SearchDialog({
       const { data: announcementsData } = await supabase
         .from("announcements")
         .select("id, title, message, created_at")
+        .eq("store_id", storeId)
         .or(`title.ilike.%${query}%,message.ilike.%${query}%`);
 
       if (announcementsData) {
@@ -114,6 +120,7 @@ export function SearchDialog({
       const { data: routineNotifsData } = await supabase
         .from("routine_notifications")
         .select("id, message, created_at, routines(title)")
+        .eq("store_id", storeId)
         .ilike("message", `%${query}%`);
 
       if (routineNotifsData) {
@@ -132,6 +139,7 @@ export function SearchDialog({
       const { data: bulletinData } = await supabase
         .from("bulletin_posts")
         .select("id, title, message, created_at")
+        .eq("store_id", storeId)
         .or(`title.ilike.%${query}%,message.ilike.%${query}%`);
 
       if (bulletinData) {
@@ -150,6 +158,7 @@ export function SearchDialog({
       const { data: shiftInfoData } = await supabase
         .from("shift_info")
         .select("id, title, description")
+        .eq("store_id", storeId)
         .is("shift_id", null)
         .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
 

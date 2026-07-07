@@ -22,6 +22,7 @@ export type Database = {
           image_url: string | null
           image_urls: string[] | null
           message: string
+          store_id: string
           title: string
           updated_at: string
         }
@@ -32,6 +33,7 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[] | null
           message: string
+          store_id: string
           title: string
           updated_at?: string
         }
@@ -42,10 +44,19 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[] | null
           message?: string
+          store_id?: string
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "announcements_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       announcements_read: {
         Row: {
@@ -83,6 +94,7 @@ export type Database = {
           image_url: string | null
           image_urls: string[] | null
           message: string
+          store_id: string
           title: string
           updated_at: string
           user_id: string
@@ -93,6 +105,7 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[] | null
           message: string
+          store_id: string
           title?: string
           updated_at?: string
           user_id: string
@@ -103,11 +116,20 @@ export type Database = {
           image_url?: string | null
           image_urls?: string[] | null
           message?: string
+          store_id?: string
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bulletin_posts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       info_categories: {
         Row: {
@@ -116,6 +138,7 @@ export type Database = {
           id: string
           name: string
           order_index: number
+          store_id: string
         }
         Insert: {
           created_at?: string
@@ -123,6 +146,7 @@ export type Database = {
           id?: string
           name: string
           order_index?: number
+          store_id: string
         }
         Update: {
           created_at?: string
@@ -130,8 +154,17 @@ export type Database = {
           id?: string
           name?: string
           order_index?: number
+          store_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "info_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -165,6 +198,7 @@ export type Database = {
           message: string
           routine_id: string
           shift_id: string
+          store_id: string
         }
         Insert: {
           created_at?: string
@@ -173,6 +207,7 @@ export type Database = {
           message: string
           routine_id: string
           shift_id: string
+          store_id: string
         }
         Update: {
           created_at?: string
@@ -181,6 +216,7 @@ export type Database = {
           message?: string
           routine_id?: string
           shift_id?: string
+          store_id?: string
         }
         Relationships: [
           {
@@ -195,6 +231,13 @@ export type Database = {
             columns: ["shift_id"]
             isOneToOne: false
             referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "routine_notifications_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -239,6 +282,7 @@ export type Database = {
           priority: number | null
           section_id: string | null
           shift_id: string
+          store_id: string
           title: string
           updated_at: string
         }
@@ -252,6 +296,7 @@ export type Database = {
           priority?: number | null
           section_id?: string | null
           shift_id: string
+          store_id: string
           title: string
           updated_at?: string
         }
@@ -265,6 +310,7 @@ export type Database = {
           priority?: number | null
           section_id?: string | null
           shift_id?: string
+          store_id?: string
           title?: string
           updated_at?: string
         }
@@ -283,6 +329,13 @@ export type Database = {
             referencedRelation: "shifts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "routines_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sections: {
@@ -292,6 +345,7 @@ export type Database = {
           name: string
           order_index: number | null
           shift_id: string
+          store_id: string
           updated_at: string
         }
         Insert: {
@@ -300,6 +354,7 @@ export type Database = {
           name: string
           order_index?: number | null
           shift_id: string
+          store_id: string
           updated_at?: string
         }
         Update: {
@@ -308,6 +363,7 @@ export type Database = {
           name?: string
           order_index?: number | null
           shift_id?: string
+          store_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -316,6 +372,13 @@ export type Database = {
             columns: ["shift_id"]
             isOneToOne: false
             referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -329,6 +392,7 @@ export type Database = {
           image_urls: string[] | null
           order_index: number | null
           shift_id: string | null
+          store_id: string
           title: string
         }
         Insert: {
@@ -339,6 +403,7 @@ export type Database = {
           image_urls?: string[] | null
           order_index?: number | null
           shift_id?: string | null
+          store_id: string
           title: string
         }
         Update: {
@@ -349,6 +414,7 @@ export type Database = {
           image_urls?: string[] | null
           order_index?: number | null
           shift_id?: string | null
+          store_id?: string
           title?: string
         }
         Relationships: [
@@ -366,6 +432,13 @@ export type Database = {
             referencedRelation: "shifts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shift_info_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       shifts: {
@@ -376,6 +449,7 @@ export type Database = {
           id: string
           name: string
           order_index: number | null
+          store_id: string
         }
         Insert: {
           color_code: string
@@ -384,6 +458,7 @@ export type Database = {
           id?: string
           name: string
           order_index?: number | null
+          store_id: string
         }
         Update: {
           color_code?: string
@@ -392,8 +467,17 @@ export type Database = {
           id?: string
           name?: string
           order_index?: number | null
+          store_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shifts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shopping_items: {
         Row: {
@@ -402,6 +486,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          store_id: string
           title: string
         }
         Insert: {
@@ -410,6 +495,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          store_id: string
           title: string
         }
         Update: {
@@ -418,7 +504,69 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          store_id?: string
           title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_members: {
+        Row: {
+          created_at: string
+          id: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_members_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stores: {
+        Row: {
+          color_code: string
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          color_code?: string
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          color_code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
         }
         Relationships: []
       }
@@ -428,6 +576,7 @@ export type Database = {
           id: string
           routine_id: string
           shift_date: string
+          store_id: string
           user_id: string
         }
         Insert: {
@@ -435,6 +584,7 @@ export type Database = {
           id?: string
           routine_id: string
           shift_date?: string
+          store_id: string
           user_id: string
         }
         Update: {
@@ -442,6 +592,7 @@ export type Database = {
           id?: string
           routine_id?: string
           shift_date?: string
+          store_id?: string
           user_id?: string
         }
         Relationships: [
@@ -450,6 +601,13 @@ export type Database = {
             columns: ["routine_id"]
             isOneToOne: false
             referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_completions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -487,9 +645,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_store_access: {
+        Args: { _store_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_content_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "employee"
+      app_role: "admin" | "employee" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -617,7 +781,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "employee"],
+      app_role: ["admin", "employee", "super_admin"],
     },
   },
 } as const

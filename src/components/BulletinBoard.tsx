@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +46,7 @@ interface BulletinBoardProps {
 
 export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   const { user } = useAuth();
+  const { activeStore } = useStore();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [profiles, setProfiles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -90,9 +92,11 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
 
   useEffect(() => {
-    fetchPosts();
-    fetchProfiles();
-  }, [currentPage]);
+    if (activeStore) {
+      fetchPosts();
+      fetchProfiles();
+    }
+  }, [currentPage, activeStore]);
 
   const fetchProfiles = async () => {
     const { data, error } = await supabase
@@ -107,12 +111,14 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
   };
 
   const fetchPosts = async () => {
+    if (!activeStore) return;
     setLoading(true);
 
     // Get total count
     const { count, error: countError } = await supabase
       .from("bulletin_posts")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .eq("store_id", activeStore.id);
 
     if (countError) {
       console.error(countError);
@@ -130,6 +136,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
     const { data, error } = await supabase
       .from("bulletin_posts")
       .select("*")
+      .eq("store_id", activeStore.id)
       .order("created_at", { ascending: false })
       .range(from, to);
 
@@ -145,7 +152,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newTitle.trim() || !newMessage.trim()) return;
+    if (!user || !activeStore || !newTitle.trim() || !newMessage.trim()) return;
 
     setSubmitting(true);
 
@@ -155,6 +162,7 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
       message: newMessage.trim(),
       image_urls: newImageUrls.length > 0 ? newImageUrls : null,
       image_url: newImageUrls[0] || null,
+      store_id: activeStore.id,
     } as any);
 
     if (error) {

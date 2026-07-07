@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ interface ShiftManagerProps {
 }
 
 export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
+  const { activeStore } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [name, setName] = useState("");
   const [colorCode, setColorCode] = useState("#3b82f6");
@@ -38,13 +40,15 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
   };
 
   useEffect(() => {
-    fetchShifts();
-  }, []);
+    if (activeStore) fetchShifts();
+  }, [activeStore]);
 
   const fetchShifts = async () => {
+    if (!activeStore) return;
     const { data, error } = await supabase
       .from("shifts")
       .select("*")
+      .eq("store_id", activeStore.id)
       .order("order_index");
 
     if (error) {
@@ -79,13 +83,14 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
         notifyChange();
       }
     } else {
-      const maxOrderIndex = shifts.length > 0 
-        ? Math.max(...shifts.map(s => s.order_index)) + 1 
+      const maxOrderIndex = shifts.length > 0
+        ? Math.max(...shifts.map(s => s.order_index)) + 1
         : 0;
-        
+
+      if (!activeStore) return;
       const { error } = await supabase
         .from("shifts")
-        .insert([{ name, color_code: colorCode, icon: selectedIcon, order_index: maxOrderIndex }]);
+        .insert([{ name, color_code: colorCode, icon: selectedIcon, order_index: maxOrderIndex, store_id: activeStore.id }]);
 
       if (error) {
         toast.error("Kunne ikke opprette vakt");

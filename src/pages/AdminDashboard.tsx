@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
+import { StoreSwitcher } from "@/components/StoreSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info, Store as StoreIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +21,7 @@ import { ShiftManager } from "@/components/ShiftManager";
 import { AnnouncementManager } from "@/components/AnnouncementManager";
 import { SectionManager } from "@/components/SectionManager";
 import { ViktigInfoManager } from "@/components/ViktigInfoManager";
+import { StoreManager } from "@/components/StoreManager";
 
 
 interface Shift {
@@ -37,15 +41,18 @@ interface UserWithRole {
 
 export default function AdminDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { activeStore, availableStores, isSuperAdmin } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info">("routines");
+  const [userStoreMemberships, setUserStoreMemberships] = useState<Record<string, string[]>>({});
+  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info" | "stores">("routines");
   const [shiftManagerOpen, setShiftManagerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "employee">("employee");
+  const [inviteStoreIds, setInviteStoreIds] = useState<string[]>([]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState<string | null>(null);
@@ -86,11 +93,11 @@ export default function AdminDashboard() {
 
   // Only fetch data after admin verification
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && activeStore) {
       fetchShifts();
       fetchUsers();
     }
-  }, [isAdmin]);
+  }, [isAdmin, activeStore]);
 
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
@@ -103,13 +110,20 @@ export default function AdminDashboard() {
       return;
     }
 
-    const { data: roles, error: roleError } = await supabase
+    const { data: roles } = await supabase
       .from("user_roles")
       .select("user_id, role");
 
-    if (roleError) {
-      console.error(roleError);
-    }
+    const { data: memberships } = await supabase
+      .from("store_members")
+      .select("user_id, store_id");
+
+    const membershipMap: Record<string, string[]> = {};
+    (memberships || []).forEach((m: any) => {
+      if (!membershipMap[m.user_id]) membershipMap[m.user_id] = [];
+      membershipMap[m.user_id].push(m.store_id);
+    });
+    setUserStoreMemberships(membershipMap);
 
     const usersWithRoles: UserWithRole[] = profiles.map((profile) => ({
       id: profile.id,
@@ -123,9 +137,11 @@ export default function AdminDashboard() {
   };
 
   const fetchShifts = async () => {
+    if (!activeStore) return;
     const { data, error } = await supabase
       .from("shifts")
       .select("*")
+      .eq("store_id", activeStore.id)
       .order("order_index");
 
     if (error) {
@@ -181,9 +197,13 @@ export default function AdminDashboard() {
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!inviteEmail.trim()) {
       toast.error("E-post er påkrevd");
+      return;
+    }
+    if (inviteRole === "employee" && inviteStoreIds.length === 0) {
+      toast.error("Velg minst én butikk for medarbeideren");
       return;
     }
 
@@ -191,7 +211,7 @@ export default function AdminDashboard() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Du må være logget inn");
         return;
@@ -209,6 +229,7 @@ export default function AdminDashboard() {
             email: inviteEmail,
             name: inviteName,
             role: inviteRole,
+            store_ids: inviteRole === "employee" ? inviteStoreIds : [],
           }),
         }
       );
@@ -225,6 +246,7 @@ export default function AdminDashboard() {
       setInviteEmail("");
       setInviteName("");
       setInviteRole("employee");
+      setInviteStoreIds(activeStore ? [activeStore.id] : []);
       setInviteDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
@@ -233,6 +255,12 @@ export default function AdminDashboard() {
     } finally {
       setInviteLoading(false);
     }
+  };
+
+  const toggleInviteStore = (id: string) => {
+    setInviteStoreIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
   };
 
   const handleResetPassword = async (userId: string) => {
@@ -297,10 +325,13 @@ export default function AdminDashboard() {
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
             <h1 className="text-xl">Admin Dashboard</h1>
           </div>
-          <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
-            <LogOut className="h-4 w-4" />
-            <span className="sr-only">Logg ut</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <StoreSwitcher />
+            <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Logg ut</span>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -359,6 +390,21 @@ export default function AdminDashboard() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
+            {isSuperAdmin && (
+              <button
+                onClick={() => setActiveTab("stores")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                  activeTab === "stores"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Butikker
+                {activeTab === "stores" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -419,6 +465,8 @@ export default function AdminDashboard() {
           <AnnouncementManager />
         ) : activeTab === "info" ? (
           <ViktigInfoManager />
+        ) : activeTab === "stores" ? (
+          <StoreManager />
         ) : (
           <Card>
             <CardHeader>
@@ -439,6 +487,11 @@ export default function AdminDashboard() {
                   })
                   .map((userItem) => {
                     const isAdmin = userItem.roles.includes("admin");
+                    const isEmployee = userItem.roles.includes("employee");
+                    const memberships = userStoreMemberships[userItem.id] || [];
+                    const memberStoreNames = memberships
+                      .map((sid) => availableStores.find((s) => s.id === sid)?.name)
+                      .filter(Boolean) as string[];
                     return (
                       <div
                         key={userItem.id}
@@ -453,6 +506,12 @@ export default function AdminDashboard() {
                               {isAdmin && (
                                 <Badge variant="default" className="shrink-0">Admin</Badge>
                               )}
+                              {isEmployee && !isAdmin && memberStoreNames.map((n) => (
+                                <Badge key={n} variant="outline" className="shrink-0 gap-1">
+                                  <StoreIcon className="h-3 w-3" />
+                                  {n}
+                                </Badge>
+                              ))}
                               {userItem.has_logged_in && (
                                 <Badge variant="secondary" className="text-xs shrink-0">Har logget inn</Badge>
                               )}
@@ -492,7 +551,12 @@ export default function AdminDashboard() {
                   })}
               </div>
               <div className="mt-6 flex justify-center">
-                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                <Dialog open={inviteDialogOpen} onOpenChange={(o) => {
+                  setInviteDialogOpen(o);
+                  if (o && inviteStoreIds.length === 0 && activeStore) {
+                    setInviteStoreIds([activeStore.id]);
+                  }
+                }}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
@@ -542,6 +606,27 @@ export default function AdminDashboard() {
                           </SelectContent>
                         </Select>
                       </div>
+                      {inviteRole === "employee" && (
+                        <div>
+                          <Label>Butikker *</Label>
+                          <div className="mt-2 space-y-2 rounded-md border p-3">
+                            {availableStores.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">Ingen butikker tilgjengelig</p>
+                            ) : (
+                              availableStores.map((s) => (
+                                <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                                  <Checkbox
+                                    checked={inviteStoreIds.includes(s.id)}
+                                    onCheckedChange={() => toggleInviteStore(s.id)}
+                                  />
+                                  <span className="text-sm">{s.name}</span>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">Velg én eller flere butikker medarbeideren skal ha tilgang til</p>
+                        </div>
+                      )}
                        <DialogFooter>
                          <Button
                            type="button"
