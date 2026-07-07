@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info, Store as StoreIcon, Users as UsersIcon } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info, Store as StoreIcon, Users as UsersIcon, Menu } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -381,90 +382,96 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
-              <LogOut className="h-4 w-4" />
-              <span className="sr-only">Logg ut</span>
-            </Button>
+          <div className="flex items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" title="Administrasjon">
+                  <Menu className="h-4 w-4" />
+                  <span className="sr-only">Administrasjon</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                  På tvers av butikker
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setActiveTab("users")} className="gap-2">
+                  <UsersIcon className="h-4 w-4 text-primary" />
+                  <span>Brukere</span>
+                  {activeTab === "users" && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                </DropdownMenuItem>
+                {isSuperAdmin && (
+                  <DropdownMenuItem onClick={() => setActiveTab("stores")} className="gap-2">
+                    <StoreIcon className="h-4 w-4 text-primary" />
+                    <span>Butikker</span>
+                    {activeTab === "stores" && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  <span>Logg ut</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
 
-      <StoreBar />
+      {activeTab !== "users" && activeTab !== "stores" && <StoreBar />}
+
 
       <main className="container mx-auto px-4 py-6 max-w-6xl pb-20">
-        {/* Global (cross-store) nav pills */}
-        <div className="mb-4 flex justify-end gap-2">
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold tracking-wider uppercase transition-colors ${
-              activeTab === "users"
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/15"
-            }`}
-          >
-            <UsersIcon className="h-3 w-3" />
-            Brukere
-          </button>
-          {isSuperAdmin && (
-            <button
-              onClick={() => setActiveTab("stores")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold tracking-wider uppercase transition-colors ${
-                activeTab === "stores"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/15"
-              }`}
-            >
-              <StoreIcon className="h-3 w-3" />
-              Butikker
-            </button>
-          )}
-        </div>
-
-        {/* Scoped (per-store) tab bar */}
-        <div className="mb-6">
-          <div className="flex border-b border-border">
-            <button
-              onClick={() => setActiveTab("routines")}
-              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
-                activeTab === "routines"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Rutiner
-              {activeTab === "routines" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("announcements")}
-              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
-                activeTab === "announcements"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Oppdateringer
-              {activeTab === "announcements" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("info")}
-              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
-                activeTab === "info"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Info
-              {activeTab === "info" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
+        {activeTab === "users" || activeTab === "stores" ? (
+          <div className="mb-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+            {activeTab === "users" ? <UsersIcon className="h-3 w-3" /> : <StoreIcon className="h-3 w-3" />}
+            <span>På tvers av butikker</span>
           </div>
-        </div>
+        ) : (
+          <div className="mb-6">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setActiveTab("routines")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                  activeTab === "routines"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Rutiner
+                {activeTab === "routines" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("announcements")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                  activeTab === "announcements"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Oppdateringer
+                {activeTab === "announcements" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("info")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                  activeTab === "info"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Info
+                {activeTab === "info" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
 
 
         {activeTab === "routines" ? (
