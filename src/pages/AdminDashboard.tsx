@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
+import { StoreSwitcher } from "@/components/StoreSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info, Store as StoreIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +21,7 @@ import { ShiftManager } from "@/components/ShiftManager";
 import { AnnouncementManager } from "@/components/AnnouncementManager";
 import { SectionManager } from "@/components/SectionManager";
 import { ViktigInfoManager } from "@/components/ViktigInfoManager";
+import { StoreManager } from "@/components/StoreManager";
 
 
 interface Shift {
@@ -37,15 +41,18 @@ interface UserWithRole {
 
 export default function AdminDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { activeStore, availableStores, isSuperAdmin } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info">("routines");
+  const [userStoreMemberships, setUserStoreMemberships] = useState<Record<string, string[]>>({});
+  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info" | "stores">("routines");
   const [shiftManagerOpen, setShiftManagerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "employee">("employee");
+  const [inviteStoreIds, setInviteStoreIds] = useState<string[]>([]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState<string | null>(null);
@@ -86,11 +93,11 @@ export default function AdminDashboard() {
 
   // Only fetch data after admin verification
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && activeStore) {
       fetchShifts();
       fetchUsers();
     }
-  }, [isAdmin]);
+  }, [isAdmin, activeStore]);
 
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
@@ -103,13 +110,20 @@ export default function AdminDashboard() {
       return;
     }
 
-    const { data: roles, error: roleError } = await supabase
+    const { data: roles } = await supabase
       .from("user_roles")
       .select("user_id, role");
 
-    if (roleError) {
-      console.error(roleError);
-    }
+    const { data: memberships } = await supabase
+      .from("store_members")
+      .select("user_id, store_id");
+
+    const membershipMap: Record<string, string[]> = {};
+    (memberships || []).forEach((m: any) => {
+      if (!membershipMap[m.user_id]) membershipMap[m.user_id] = [];
+      membershipMap[m.user_id].push(m.store_id);
+    });
+    setUserStoreMemberships(membershipMap);
 
     const usersWithRoles: UserWithRole[] = profiles.map((profile) => ({
       id: profile.id,
@@ -123,9 +137,11 @@ export default function AdminDashboard() {
   };
 
   const fetchShifts = async () => {
+    if (!activeStore) return;
     const { data, error } = await supabase
       .from("shifts")
       .select("*")
+      .eq("store_id", activeStore.id)
       .order("order_index");
 
     if (error) {
