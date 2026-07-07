@@ -66,25 +66,21 @@ const Index = () => {
                   <span className="text-2xl">🍎</span> iPhone / iPad
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-4 text-sm">
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">1</span>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">1</span>
                   <p>Åpne denne siden i <strong>Safari</strong></p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">2</span>
-                  <p className="flex items-center gap-1">
-                    Trykk på <Share className="h-4 w-4 inline text-primary" /> <strong>Del</strong>-knappen nederst
-                  </p>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">2</span>
+                  <p>Trykk på <strong>Del</strong>-knappen nederst</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">3</span>
-                  <p className="flex items-center gap-1">
-                    Velg <PlusSquare className="h-4 w-4 inline text-primary" /> <strong>Legg til på Hjem-skjerm</strong>
-                  </p>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">3</span>
+                  <p>Velg <strong>Legg til på Hjem-skjerm</strong></p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">4</span>
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">4</span>
                   <p>Trykk <strong>Legg til</strong> øverst til høyre</p>
                 </div>
               </CardContent>
