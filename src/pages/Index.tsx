@@ -52,10 +52,10 @@ const Index = () => {
         {/* PWA Installation Guide */}
         <div className="mt-16 max-w-2xl mx-auto">
           <h2 className="text-2xl font-semibold text-center mb-6">
-            Installer appen på din telefon
+            Installer appen på telefonen
           </h2>
           <p className="text-center text-muted-foreground mb-8">
-            Få rask tilgang til rutinene dine ved å legge til appen på hjemskjermen
+            Få rask tilgang til rutinene dine – enten du jobber i Oslo eller Trondheim.
           </p>
           
           <div className="grid md:grid-cols-2 gap-4">
