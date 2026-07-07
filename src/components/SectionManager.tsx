@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,7 @@ interface SectionManagerProps {
 
 export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
   const { user } = useAuth();
+  const { activeStore } = useStore();
   const [sections, setSections] = useState<Section[]>([]);
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,11 +158,13 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const handleCreateSection = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!activeStore) return;
+
     const { error } = await supabase.from("sections").insert({
       shift_id: shiftId,
       name: newSectionName,
       order_index: sections.length,
+      store_id: activeStore.id,
     });
 
     if (error) {
@@ -255,6 +259,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const handleCreateRoutine = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeStore) return;
 
     const maxOrderIndex = routines.length > 0
       ? Math.max(...routines.map((r) => r.order_index ?? 0)) + 1
@@ -270,6 +275,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         order_index: maxOrderIndex,
         section_id: currentSectionForNewRoutine,
         image_urls: newRoutine.imageUrls.length > 0 ? newRoutine.imageUrls : null,
+        store_id: activeStore.id,
       })
       .select()
       .single();
@@ -278,13 +284,14 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       toast.error("Kunne ikke opprette rutine");
       console.error(error);
     } else {
-      if (newRoutine.sendNotification && routineData) {
+      if (newRoutine.sendNotification && routineData && activeStore) {
         const shiftName = shifts.find((s) => s.id === shiftId)?.name || "";
         await supabase.from("routine_notifications").insert({
           routine_id: routineData.id,
           shift_id: shiftId,
           message: `Ny rutine lagt til i ${shiftName}: "${newRoutine.title}"`,
           created_by: user?.id,
+          store_id: activeStore.id,
         });
       }
 
@@ -314,13 +321,14 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       toast.error("Kunne ikke oppdatere rutine");
       console.error(error);
     } else {
-      if (editRoutine.sendNotification) {
+      if (editRoutine.sendNotification && activeStore) {
         const routine = routines.find((r) => r.id === editingRoutineId);
         await supabase.from("routine_notifications").insert({
           routine_id: editingRoutineId,
           shift_id: shiftId,
           message: `Rutine oppdatert i ${shiftName}: "${editRoutine.title}"`,
           created_by: user?.id,
+          store_id: activeStore.id,
         });
       }
 

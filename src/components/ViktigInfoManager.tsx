@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,7 @@ const ICON_OPTIONS = [
 ];
 
 export function ViktigInfoManager() {
+  const { activeStore } = useStore();
   const [items, setItems] = useState<ShiftInfo[]>([]);
   const [categories, setCategories] = useState<InfoCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -74,13 +76,14 @@ export function ViktigInfoManager() {
   const [editCat, setEditCat] = useState({ name: "", icon: "Info" });
 
   useEffect(() => {
-    fetchAll();
-  }, []);
+    if (activeStore) fetchAll();
+  }, [activeStore]);
 
   const fetchAll = async () => {
+    if (!activeStore) return;
     const [itemsRes, catsRes] = await Promise.all([
-      supabase.from("shift_info").select("*").is("shift_id", null).order("order_index"),
-      supabase.from("info_categories").select("*").order("order_index"),
+      supabase.from("shift_info").select("*").eq("store_id", activeStore.id).is("shift_id", null).order("order_index"),
+      supabase.from("info_categories").select("*").eq("store_id", activeStore.id).order("order_index"),
     ]);
     if (!itemsRes.error) setItems(itemsRes.data || []);
     if (!catsRes.error) setCategories(catsRes.data || []);
@@ -90,10 +93,12 @@ export function ViktigInfoManager() {
   // --- Category CRUD ---
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeStore) return;
     const { error } = await supabase.from("info_categories").insert({
       name: newCat.name,
       icon: newCat.icon,
       order_index: categories.length,
+      store_id: activeStore.id,
     });
     if (error) {
       toast.error("Kunne ikke opprette kategori");
@@ -135,6 +140,7 @@ export function ViktigInfoManager() {
   // --- Info item CRUD ---
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeStore) return;
     const { error } = await supabase.from("shift_info").insert({
       title: newInfo.title,
       description: newInfo.description || null,
@@ -142,6 +148,7 @@ export function ViktigInfoManager() {
       order_index: items.length,
       shift_id: null,
       category_id: newInfo.categoryId || null,
+      store_id: activeStore.id,
     });
     if (error) {
       toast.error("Kunne ikke opprette info");
