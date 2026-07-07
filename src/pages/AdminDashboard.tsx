@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info, Store as StoreIcon } from "lucide-react";
+import { LogOut, Plus, Trash2, Loader2, ArrowLeft, Settings2, KeyRound, Info, Store as StoreIcon, Users as UsersIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -393,6 +393,35 @@ export default function AdminDashboard() {
       <StoreBar />
 
       <main className="container mx-auto px-4 py-6 max-w-6xl pb-20">
+        {/* Global (cross-store) nav pills */}
+        <div className="mb-4 flex justify-end gap-2">
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold tracking-wider uppercase transition-colors ${
+              activeTab === "users"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/15"
+            }`}
+          >
+            <UsersIcon className="h-3 w-3" />
+            Brukere
+          </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveTab("stores")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold tracking-wider uppercase transition-colors ${
+                activeTab === "stores"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/15"
+              }`}
+            >
+              <StoreIcon className="h-3 w-3" />
+              Butikker
+            </button>
+          )}
+        </div>
+
+        {/* Scoped (per-store) tab bar */}
         <div className="mb-6">
           <div className="flex border-b border-border">
             <button
@@ -422,19 +451,6 @@ export default function AdminDashboard() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab("users")}
-              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
-                activeTab === "users"
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Brukere
-              {activeTab === "users" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-            <button
               onClick={() => setActiveTab("info")}
               className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
                 activeTab === "info"
@@ -447,23 +463,9 @@ export default function AdminDashboard() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
-            {isSuperAdmin && (
-              <button
-                onClick={() => setActiveTab("stores")}
-                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
-                  activeTab === "stores"
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Butikker
-                {activeTab === "stores" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
-              </button>
-            )}
           </div>
         </div>
+
 
         {activeTab === "routines" ? (
           <div className="space-y-6">
