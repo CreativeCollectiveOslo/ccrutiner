@@ -256,9 +256,6 @@ export default function EmployeeDashboard() {
     // Fetch routine notifications with routine data
     const { data: routineNotifications } = await supabase
       .from("routine_notifications")
-    // Fetch routine notifications with routine data
-    const { data: routineNotifications } = await supabase
-      .from("routine_notifications")
       .select(`
         *,
         routines (
