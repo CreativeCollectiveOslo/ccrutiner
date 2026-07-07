@@ -116,7 +116,7 @@ interface InfoCategory {
 
 export default function EmployeeDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { activeStore, canSwitchStore } = useStore();
+  const { activeStore, canSwitchStore, loading: storeLoading } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
@@ -154,8 +154,10 @@ export default function EmployeeDashboard() {
       fetchProfiles();
       fetchShiftInfo();
       setSelectedShift(null);
+    } else if (user && !storeLoading && !activeStore) {
+      setLoading(false);
     }
-  }, [user, authLoading, navigate, activeStore]);
+  }, [user, authLoading, navigate, activeStore, storeLoading]);
 
   const checkAdminStatus = async () => {
     if (!user) return;
@@ -567,10 +569,39 @@ export default function EmployeeDashboard() {
     return IconComponent ? <IconComponent className={className} /> : <LucideIcons.Sun className={className} />;
   };
 
-  if (loading || authLoading) {
+  if (loading || authLoading || storeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!activeStore) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-accent">
+        <header className="border-b bg-card/50 backdrop-blur">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
+              <h1 className="text-xl">Mine Rutiner</h1>
+            </div>
+            <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Logg ut</span>
+            </Button>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-10 max-w-2xl">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ingen butikktilgang</CardTitle>
+              <CardDescription>
+                Brukeren din er ikke koblet til Oslo eller Trondheim ennå. Kontakt en admin for tilgang.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </main>
       </div>
     );
   }

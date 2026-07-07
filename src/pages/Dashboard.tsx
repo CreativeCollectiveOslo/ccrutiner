@@ -31,6 +31,7 @@ export default function Dashboard() {
 
     if (error) {
       console.error("Error fetching user role:", error);
+      navigate("/employee");
     } else {
       const roles = (data || []).map((r) => r.role);
       setUserRole(roles[0] || null);
