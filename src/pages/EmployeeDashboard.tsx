@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
+import { StoreSwitcher } from "@/components/StoreSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -114,6 +116,7 @@ interface InfoCategory {
 
 export default function EmployeeDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { activeStore } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
@@ -143,14 +146,16 @@ export default function EmployeeDashboard() {
       navigate("/auth");
       return;
     }
-    if (user) {
+    if (user && activeStore) {
       fetchShifts();
       checkAdminStatus();
       fetchUnreadCount();
       fetchAllShiftProgress();
       fetchProfiles();
+      fetchShiftInfo();
+      setSelectedShift(null);
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, activeStore]);
 
   const checkAdminStatus = async () => {
     if (!user) return;
@@ -185,15 +190,13 @@ export default function EmployeeDashboard() {
     }
   }, [selectedShift]);
 
-  // Fetch global shift info on mount
-  useEffect(() => {
-    fetchShiftInfo();
-  }, []);
+  // fetchShiftInfo triggered from main effect when activeStore changes
 
   const fetchShiftInfo = async () => {
+    if (!activeStore) return;
     const [infoRes, catRes] = await Promise.all([
-      supabase.from("shift_info").select("*").is("shift_id", null).order("order_index"),
-      supabase.from("info_categories").select("*").order("order_index"),
+      supabase.from("shift_info").select("*").eq("store_id", activeStore.id).is("shift_id", null).order("order_index"),
+      supabase.from("info_categories").select("*").eq("store_id", activeStore.id).order("order_index"),
     ]);
 
     if (!infoRes.error && infoRes.data) {
@@ -223,7 +226,7 @@ export default function EmployeeDashboard() {
   // Removed midnight reset timer - tasks now persist until manually cleared
 
   const fetchUnreadCount = async () => {
-    if (!user) return;
+    if (!user || !activeStore) return;
 
     // Get user's profile created_at
     const { data: profile } = await supabase
@@ -238,6 +241,7 @@ export default function EmployeeDashboard() {
     const { data: announcements } = await supabase
       .from("announcements")
       .select("*")
+      .eq("store_id", activeStore.id)
       .gte("created_at", profile.created_at)
       .order("created_at", { ascending: false });
 
@@ -252,6 +256,9 @@ export default function EmployeeDashboard() {
     // Fetch routine notifications with routine data
     const { data: routineNotifications } = await supabase
       .from("routine_notifications")
+    // Fetch routine notifications with routine data
+    const { data: routineNotifications } = await supabase
+      .from("routine_notifications")
       .select(`
         *,
         routines (
@@ -261,6 +268,7 @@ export default function EmployeeDashboard() {
           priority
         )
       `)
+      .eq("store_id", activeStore.id)
       .gte("created_at", profile.created_at)
       .order("created_at", { ascending: false });
 
@@ -287,9 +295,11 @@ export default function EmployeeDashboard() {
   };
 
   const fetchShifts = async () => {
+    if (!activeStore) return;
     const { data, error } = await supabase
       .from("shifts")
       .select("*")
+      .eq("store_id", activeStore.id)
       .order("order_index");
 
     if (error) {
@@ -302,10 +312,12 @@ export default function EmployeeDashboard() {
   };
 
   const fetchAllShiftProgress = async () => {
+    if (!activeStore) return;
     // Fetch all routines grouped by shift
     const { data: allRoutines, error: routinesError } = await supabase
       .from("routines")
-      .select("id, shift_id");
+      .select("id, shift_id")
+      .eq("store_id", activeStore.id);
 
     if (routinesError) {
       console.error(routinesError);
@@ -315,7 +327,8 @@ export default function EmployeeDashboard() {
     // Fetch ALL completions (from all users, no date filter)
     const { data: allCompletions, error: completionsError } = await supabase
       .from("task_completions")
-      .select("routine_id");
+      .select("routine_id")
+      .eq("store_id", activeStore.id);
 
     if (completionsError) {
       console.error(completionsError);
@@ -465,10 +478,12 @@ export default function EmployeeDashboard() {
         }));
       }
     } else {
+      if (!activeStore) return;
       const { error } = await supabase.from("task_completions").insert({
         routine_id: routineId,
         user_id: user.id,
         shift_date: today,
+        store_id: activeStore.id,
       });
 
       if (error) {
