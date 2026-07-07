@@ -32,7 +32,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6 max-w-2xl mx-auto min-h-[40vh] flex flex-col justify-center">
-          <Badge variant="secondary" className="mx-auto">
+          <Badge variant="outline" className="mx-auto px-3 py-1 text-primary border-primary/20 bg-primary/5">
             Brukes av butikkene i Oslo og Trondheim
           </Badge>
           <h1 className="text-5xl md:text-7xl tracking-tight">
