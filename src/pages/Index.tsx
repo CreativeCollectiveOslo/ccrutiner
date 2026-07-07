@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Share, MoreVertical, PlusSquare, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 
 const Index = () => {
