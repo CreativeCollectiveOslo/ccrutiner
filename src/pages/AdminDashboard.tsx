@@ -465,6 +465,8 @@ export default function AdminDashboard() {
           <AnnouncementManager />
         ) : activeTab === "info" ? (
           <ViktigInfoManager />
+        ) : activeTab === "stores" ? (
+          <StoreManager />
         ) : (
           <Card>
             <CardHeader>
@@ -485,6 +487,11 @@ export default function AdminDashboard() {
                   })
                   .map((userItem) => {
                     const isAdmin = userItem.roles.includes("admin");
+                    const isEmployee = userItem.roles.includes("employee");
+                    const memberships = userStoreMemberships[userItem.id] || [];
+                    const memberStoreNames = memberships
+                      .map((sid) => availableStores.find((s) => s.id === sid)?.name)
+                      .filter(Boolean) as string[];
                     return (
                       <div
                         key={userItem.id}
@@ -499,6 +506,12 @@ export default function AdminDashboard() {
                               {isAdmin && (
                                 <Badge variant="default" className="shrink-0">Admin</Badge>
                               )}
+                              {isEmployee && !isAdmin && memberStoreNames.map((n) => (
+                                <Badge key={n} variant="outline" className="shrink-0 gap-1">
+                                  <StoreIcon className="h-3 w-3" />
+                                  {n}
+                                </Badge>
+                              ))}
                               {userItem.has_logged_in && (
                                 <Badge variant="secondary" className="text-xs shrink-0">Har logget inn</Badge>
                               )}
@@ -538,7 +551,12 @@ export default function AdminDashboard() {
                   })}
               </div>
               <div className="mt-6 flex justify-center">
-                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                <Dialog open={inviteDialogOpen} onOpenChange={(o) => {
+                  setInviteDialogOpen(o);
+                  if (o && inviteStoreIds.length === 0 && activeStore) {
+                    setInviteStoreIds([activeStore.id]);
+                  }
+                }}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
@@ -588,6 +606,27 @@ export default function AdminDashboard() {
                           </SelectContent>
                         </Select>
                       </div>
+                      {inviteRole === "employee" && (
+                        <div>
+                          <Label>Butikker *</Label>
+                          <div className="mt-2 space-y-2 rounded-md border p-3">
+                            {availableStores.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">Ingen butikker tilgjengelig</p>
+                            ) : (
+                              availableStores.map((s) => (
+                                <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                                  <Checkbox
+                                    checked={inviteStoreIds.includes(s.id)}
+                                    onCheckedChange={() => toggleInviteStore(s.id)}
+                                  />
+                                  <span className="text-sm">{s.name}</span>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">Velg én eller flere butikker medarbeideren skal ha tilgang til</p>
+                        </div>
+                      )}
                        <DialogFooter>
                          <Button
                            type="button"
