@@ -480,10 +480,10 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 {users
                   .sort((a, b) => {
-                    const aIsAdmin = a.roles.includes("admin");
-                    const bIsAdmin = b.roles.includes("admin");
-                    if (aIsAdmin && !bIsAdmin) return -1;
-                    if (!aIsAdmin && bIsAdmin) return 1;
+                    const rank = (u: UserWithRole) =>
+                      u.roles.includes("super_admin") ? 0 : u.roles.includes("admin") ? 1 : 2;
+                    const rd = rank(a) - rank(b);
+                    if (rd !== 0) return rd;
                     return a.name.localeCompare(b.name);
                   })
                   .map((userItem) => {
