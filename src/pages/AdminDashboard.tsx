@@ -487,8 +487,9 @@ export default function AdminDashboard() {
                     return a.name.localeCompare(b.name);
                   })
                   .map((userItem) => {
-                    const isAdmin = userItem.roles.includes("admin");
-                    const isEmployee = userItem.roles.includes("employee");
+                    const isSuper = userItem.roles.includes("super_admin");
+                    const isAdmin = userItem.roles.includes("admin") || isSuper;
+                    const isEmployee = userItem.roles.includes("employee") && !isAdmin;
                     const memberships = userStoreMemberships[userItem.id] || [];
                     const memberStoreNames = memberships
                       .map((sid) => availableStores.find((s) => s.id === sid)?.name)
@@ -497,17 +498,25 @@ export default function AdminDashboard() {
                       <div
                         key={userItem.id}
                         className={`p-4 rounded-lg border ${
-                          isAdmin ? "bg-primary/5 border-primary" : ""
+                          isSuper ? "bg-primary/10 border-primary" : isAdmin ? "bg-primary/5 border-primary" : ""
                         }`}
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="font-medium truncate max-w-[200px] sm:max-w-none">{userItem.name}</h3>
-                              {isAdmin && (
+                              {isSuper ? (
+                                <Badge variant="default" className="shrink-0 bg-primary">Super-admin</Badge>
+                              ) : isAdmin && (
                                 <Badge variant="default" className="shrink-0">Admin</Badge>
                               )}
-                              {isEmployee && !isAdmin && memberStoreNames.map((n) => (
+                              {isSuper && (
+                                <Badge variant="outline" className="shrink-0 gap-1">
+                                  <StoreIcon className="h-3 w-3" />
+                                  Alle butikker
+                                </Badge>
+                              )}
+                              {!isSuper && memberStoreNames.map((n) => (
                                 <Badge key={n} variant="outline" className="shrink-0 gap-1">
                                   <StoreIcon className="h-3 w-3" />
                                   {n}
@@ -521,7 +530,18 @@ export default function AdminDashboard() {
                               {userItem.email}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                            {!isSuper && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openStoreEditor(userItem.id)}
+                                title="Endre butikktilgang"
+                              >
+                                <StoreIcon className="h-4 w-4 mr-1" />
+                                Butikker
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
