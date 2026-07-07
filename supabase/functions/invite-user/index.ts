@@ -113,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (createError) {
       console.error("Error creating user:", createError);
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: "Kunne ikke opprette bruker" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -165,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in invite-user function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "En uventet feil oppstod. Prøv igjen." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

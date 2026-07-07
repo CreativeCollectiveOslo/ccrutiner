@@ -86,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (deleteError) {
       console.error("Error deleting user:", deleteError);
       return new Response(
-        JSON.stringify({ error: deleteError.message }),
+        JSON.stringify({ error: "Kunne ikke slette bruker" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -106,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in delete-user function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "En uventet feil oppstod. Prøv igjen." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
