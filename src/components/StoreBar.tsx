@@ -11,6 +11,8 @@ export function StoreBar() {
   const { activeStore, availableStores, canSwitchStore, setActiveStore } = useStore();
 
   if (!activeStore) return null;
+  if (!canSwitchStore) return null;
+
 
   return (
     <div className="border-b bg-card/30">
