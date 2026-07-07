@@ -56,6 +56,9 @@ export default function AdminDashboard() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState<string | null>(null);
+  const [storeEditorUserId, setStoreEditorUserId] = useState<string | null>(null);
+  const [storeEditorSelection, setStoreEditorSelection] = useState<string[]>([]);
+  const [storeEditorSaving, setStoreEditorSaving] = useState(false);
   
   
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
