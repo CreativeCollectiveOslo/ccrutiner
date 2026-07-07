@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell, Check, Loader2 } from "lucide-react";
@@ -49,6 +50,7 @@ interface NotificationsTabProps {
 
 export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: NotificationsTabProps) {
   const { user } = useAuth();
+  const { activeStore } = useStore();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [readAnnouncementIds, setReadAnnouncementIds] = useState<Set<string>>(new Set());
@@ -84,11 +86,11 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
   }, [user]);
 
   useEffect(() => {
-    if (user && userCreatedAt) {
+    if (user && userCreatedAt && activeStore) {
       fetchAllNotifications();
       fetchProfiles();
     }
-  }, [user, userCreatedAt]);
+  }, [user, userCreatedAt, activeStore]);
 
   const fetchProfiles = async () => {
     const { data, error } = await supabase
@@ -119,12 +121,13 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
   };
 
   const fetchAllNotifications = async () => {
-    if (!user || !userCreatedAt) return;
+    if (!user || !userCreatedAt || !activeStore) return;
 
     // Fetch announcements created after user joined
     const { data: announcements, error: annError } = await supabase
       .from("announcements")
       .select("*")
+      .eq("store_id", activeStore.id)
       .gte("created_at", userCreatedAt)
       .order("created_at", { ascending: false });
 
@@ -144,6 +147,7 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
           priority
         )
       `)
+      .eq("store_id", activeStore.id)
       .gte("created_at", userCreatedAt)
       .order("created_at", { ascending: false });
 
