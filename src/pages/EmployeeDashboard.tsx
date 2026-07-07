@@ -611,6 +611,9 @@ export default function EmployeeDashboard() {
         </div>
       </header>
 
+      <StoreBar />
+
+
       <SearchDialog
         open={searchOpen}
         onOpenChange={setSearchOpen}
