@@ -581,7 +581,14 @@ export default function EmployeeDashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
-            <h1 className="text-xl">Mine Rutiner</h1>
+            <div className="leading-tight">
+              <h1 className="text-xl">Mine Rutiner</h1>
+              {activeStore && !canSwitchStore && (
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground -mt-0.5">
+                  {activeStore.name}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => setSearchOpen(true)}>
