@@ -490,13 +490,16 @@ export default function AdminDashboard() {
                       <button
                         key={shift.id}
                         onClick={() => setSelectedShift(shift.id)}
-                        className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                        className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors whitespace-nowrap ${
                           isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:text-foreground"
+                            ? "bg-foreground/5 text-foreground font-medium"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
-                        style={isActive ? { backgroundColor: shift.color_code } : {}}
                       >
+                        <span
+                          className="h-1.5 w-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: shift.color_code }}
+                        />
                         {shift.name}
                       </button>
                     );
