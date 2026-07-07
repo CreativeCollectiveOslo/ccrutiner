@@ -113,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (createError) {
       console.error("Error creating user:", createError);
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: "Kunne ikke opprette bruker" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
