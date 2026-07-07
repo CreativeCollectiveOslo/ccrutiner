@@ -42,7 +42,7 @@ interface UserWithRole {
 
 export default function AdminDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { activeStore, availableStores, isSuperAdmin } = useStore();
+  const { activeStore, availableStores, isSuperAdmin, loading: storeLoading } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -100,8 +100,11 @@ export default function AdminDashboard() {
     if (isAdmin && activeStore) {
       fetchShifts();
       fetchUsers();
+    } else if (isAdmin && !storeLoading && !activeStore) {
+      fetchUsers();
+      setLoading(false);
     }
-  }, [isAdmin, activeStore]);
+  }, [isAdmin, activeStore, storeLoading]);
 
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
@@ -359,7 +362,7 @@ export default function AdminDashboard() {
   };
 
 
-  if (loading || authLoading || isAdmin === null) {
+  if (loading || authLoading || storeLoading || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
