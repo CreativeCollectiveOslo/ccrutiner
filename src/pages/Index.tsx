@@ -31,15 +31,18 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-16">
-        <div className="text-center space-y-8 max-w-2xl mx-auto min-h-[40vh] flex flex-col justify-center">
+        <div className="text-center space-y-6 max-w-2xl mx-auto min-h-[40vh] flex flex-col justify-center">
+          <Badge variant="secondary" className="mx-auto">
+            Brukes av butikkene i Oslo og Trondheim
+          </Badge>
           <h1 className="text-5xl md:text-7xl tracking-tight">
             Se dine rutiner
             <span className="block text-primary mt-2">enkelt</span>
           </h1>
           <p className="text-xl text-muted-foreground">
-            Hold oversikt over dagens oppgaver
+            Hold oversikt over daglige oppgaver og rutiner – samme plattform for begge byene.
           </p>
-          <div className="flex flex-col gap-3 items-center pt-6">
+          <div className="flex flex-col gap-3 items-center pt-4">
             <Button size="lg" className="w-full max-w-xs" onClick={() => navigate("/auth")}>
               Logg inn
             </Button>
