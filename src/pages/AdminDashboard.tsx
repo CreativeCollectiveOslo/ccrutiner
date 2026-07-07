@@ -382,16 +382,43 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
-              <LogOut className="h-4 w-4" />
-              <span className="sr-only">Logg ut</span>
-            </Button>
+          <div className="flex items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" title="Administrasjon">
+                  <Menu className="h-4 w-4" />
+                  <span className="sr-only">Administrasjon</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                  På tvers av butikker
+                </DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setActiveTab("users")} className="gap-2">
+                  <UsersIcon className="h-4 w-4 text-primary" />
+                  <span>Brukere</span>
+                  {activeTab === "users" && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                </DropdownMenuItem>
+                {isSuperAdmin && (
+                  <DropdownMenuItem onClick={() => setActiveTab("stores")} className="gap-2">
+                    <StoreIcon className="h-4 w-4 text-primary" />
+                    <span>Butikker</span>
+                    {activeTab === "stores" && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  <span>Logg ut</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
 
-      <StoreBar />
+      {activeTab !== "users" && activeTab !== "stores" && <StoreBar />}
+
 
       <main className="container mx-auto px-4 py-6 max-w-6xl pb-20">
         {/* Global (cross-store) nav pills */}
