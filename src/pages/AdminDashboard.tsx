@@ -372,7 +372,14 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Creative Collective" className="h-8 w-auto" />
-            <h1 className="text-xl">Admin Dashboard</h1>
+            <div className="leading-tight">
+              <h1 className="text-xl">Admin Dashboard</h1>
+              {activeStore && availableStores.length <= 1 && (
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground -mt-0.5">
+                  {activeStore.name}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
