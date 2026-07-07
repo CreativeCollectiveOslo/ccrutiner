@@ -266,6 +266,52 @@ export default function AdminDashboard() {
     );
   };
 
+  const openStoreEditor = (userId: string) => {
+    setStoreEditorUserId(userId);
+    setStoreEditorSelection(userStoreMemberships[userId] || []);
+  };
+
+  const toggleStoreEditor = (id: string) => {
+    setStoreEditorSelection((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  };
+
+  const saveStoreEditor = async () => {
+    if (!storeEditorUserId) return;
+    setStoreEditorSaving(true);
+    try {
+      const current = new Set(userStoreMemberships[storeEditorUserId] || []);
+      const next = new Set(storeEditorSelection);
+      const toAdd = [...next].filter((id) => !current.has(id));
+      const toRemove = [...current].filter((id) => !next.has(id));
+
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from("store_members")
+          .delete()
+          .eq("user_id", storeEditorUserId)
+          .in("store_id", toRemove);
+        if (error) throw error;
+      }
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from("store_members")
+          .insert(toAdd.map((store_id) => ({ store_id, user_id: storeEditorUserId })));
+        if (error) throw error;
+      }
+
+      toast.success("Butikktilgang oppdatert");
+      setStoreEditorUserId(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Kunne ikke oppdatere butikktilgang");
+    } finally {
+      setStoreEditorSaving(false);
+    }
+  };
+
   const handleResetPassword = async (userId: string) => {
     if (!confirm("Er du sikker på at du vil resette passordet for denne brukeren?")) {
       return;
