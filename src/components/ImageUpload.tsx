@@ -44,8 +44,14 @@ export function MultiImageUpload({ folder, currentUrls, onImagesChanged, maxImag
     for (const file of toUpload) {
       if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) continue;
 
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) {
+        toast.error("Du må være logget inn for å laste opp");
+        continue;
+      }
       const fileExt = file.name.split(".").pop();
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${userId}/${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("attachments-private")
