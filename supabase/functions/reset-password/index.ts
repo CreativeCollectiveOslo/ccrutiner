@@ -108,7 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (updateAuthError) {
       console.error("Error updating password:", updateAuthError);
       return new Response(
-        JSON.stringify({ error: updateAuthError.message }),
+        JSON.stringify({ error: "Kunne ikke tilbakestille passord" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
