@@ -326,7 +326,6 @@ export default function AdminDashboard() {
             <h1 className="text-xl">Admin Dashboard</h1>
           </div>
           <div className="flex items-center gap-2">
-            <StoreSwitcher />
             <Button variant="ghost" size="icon" onClick={signOut} title="Logg ut">
               <LogOut className="h-4 w-4" />
               <span className="sr-only">Logg ut</span>
@@ -334,6 +333,8 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
+
+      <StoreBar />
 
       <main className="container mx-auto px-4 py-6 max-w-6xl pb-20">
         <div className="mb-6">
