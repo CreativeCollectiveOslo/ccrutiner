@@ -553,75 +553,98 @@ export default function AdminDashboard() {
                     return (
                       <div
                         key={userItem.id}
-                        className={`p-4 rounded-lg border ${
-                          isSuper ? "bg-primary/10 border-primary" : isAdmin ? "bg-primary/5 border-primary" : ""
+                        className={`rounded-2xl border overflow-hidden flex flex-col ${
+                          isSuper
+                            ? "bg-primary/10 border-primary/40"
+                            : isAdmin
+                            ? "bg-primary/5 border-primary/25"
+                            : "bg-card border-border"
                         }`}
                       >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="font-medium truncate max-w-[200px] sm:max-w-none">{userItem.name}</h3>
-                              {isSuper ? (
-                                <Badge variant="default" className="shrink-0 bg-primary">Super-admin</Badge>
-                              ) : isAdmin && (
-                                <Badge variant="default" className="shrink-0">Admin</Badge>
-                              )}
-                              {isSuper && (
-                                <Badge variant="outline" className="shrink-0 gap-1">
-                                  <StoreIcon className="h-3 w-3" />
-                                  Alle butikker
-                                </Badge>
-                              )}
-                              {!isSuper && memberStoreNames.map((n) => (
-                                <Badge key={n} variant="outline" className="shrink-0 gap-1">
-                                  <StoreIcon className="h-3 w-3" />
-                                  {n}
-                                </Badge>
-                              ))}
-                              {userItem.has_logged_in && (
-                                <Badge variant="secondary" className="text-xs shrink-0">Har logget inn</Badge>
-                              )}
+                        {/* Identity block */}
+                        <div className="p-5 pb-4">
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-2xl leading-none text-foreground font-light truncate">
+                                {userItem.name || "Uten navn"}
+                              </h3>
+                              <p className="mt-1.5 text-xs text-muted-foreground truncate">
+                                {userItem.email}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {userItem.email}
-                            </p>
+                            {isSuper ? (
+                              <span className="shrink-0 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold tracking-wider uppercase">
+                                Super-admin
+                              </span>
+                            ) : isAdmin ? (
+                              <span className="shrink-0 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold tracking-wider uppercase">
+                                Admin
+                              </span>
+                            ) : null}
                           </div>
-                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        </div>
+
+                        {/* Meta / status */}
+                        {(userItem.has_logged_in || isSuper || memberStoreNames.length > 0) && (
+                          <div className="px-5 pb-5 flex flex-wrap gap-2">
+                            {userItem.has_logged_in && (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span className="text-[11px] font-medium">Har logget inn</span>
+                              </div>
+                            )}
+                            {isSuper ? (
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/60 border border-primary/15 text-foreground/80">
+                                <StoreIcon className="w-3 h-3 text-primary" />
+                                <span className="text-[11px] font-medium">Alle butikker</span>
+                              </div>
+                            ) : (
+                              memberStoreNames.map((n) => (
+                                <div
+                                  key={n}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/60 border border-primary/15 text-foreground/80"
+                                >
+                                  <StoreIcon className="w-3 h-3 text-primary" />
+                                  <span className="text-[11px] font-medium">{n}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+
+                        {/* Action footer */}
+                        <div className="mt-auto border-t border-primary/10 bg-background/40 p-3 flex items-center justify-between gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             {!isSuper && (
-                              <Button
-                                variant="outline"
-                                size="sm"
+                              <button
                                 onClick={() => openStoreEditor(userItem.id)}
+                                className="flex items-center gap-2 px-3 py-2 bg-card border border-primary/20 rounded-lg text-foreground active:bg-primary/5 transition-colors"
                                 title="Endre butikktilgang"
                               >
-                                <StoreIcon className="h-4 w-4 mr-1" />
-                                Butikker
-                              </Button>
+                                <StoreIcon className="w-4 h-4 text-primary" />
+                                <span className="text-xs font-semibold uppercase tracking-tight">Butikker</span>
+                              </button>
                             )}
-                            <Button
-                              variant="outline"
-                              size="sm"
+                            <button
                               onClick={() => handleResetPassword(userItem.id)}
                               disabled={resetLoading === userItem.id}
+                              className="flex items-center gap-2 px-3 py-2 bg-card border border-primary/20 rounded-lg text-foreground active:bg-primary/5 transition-colors disabled:opacity-60"
                             >
                               {resetLoading === userItem.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin text-primary" />
                               ) : (
-                                <>
-                                  <KeyRound className="h-4 w-4 mr-1" />
-                                  Reset
-                                </>
+                                <KeyRound className="w-4 h-4 text-primary" />
                               )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteUser(userItem.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                              <span className="text-xs font-semibold uppercase tracking-tight">Reset</span>
+                            </button>
                           </div>
+                          <button
+                            onClick={() => handleDeleteUser(userItem.id)}
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            title="Slett bruker"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
                       </div>
                     );
