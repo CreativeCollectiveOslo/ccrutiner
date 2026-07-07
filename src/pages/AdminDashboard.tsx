@@ -197,9 +197,13 @@ export default function AdminDashboard() {
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!inviteEmail.trim()) {
       toast.error("E-post er påkrevd");
+      return;
+    }
+    if (inviteRole === "employee" && inviteStoreIds.length === 0) {
+      toast.error("Velg minst én butikk for medarbeideren");
       return;
     }
 
@@ -207,7 +211,7 @@ export default function AdminDashboard() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         toast.error("Du må være logget inn");
         return;
@@ -225,6 +229,7 @@ export default function AdminDashboard() {
             email: inviteEmail,
             name: inviteName,
             role: inviteRole,
+            store_ids: inviteRole === "employee" ? inviteStoreIds : [],
           }),
         }
       );
@@ -241,6 +246,7 @@ export default function AdminDashboard() {
       setInviteEmail("");
       setInviteName("");
       setInviteRole("employee");
+      setInviteStoreIds(activeStore ? [activeStore.id] : []);
       setInviteDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
@@ -249,6 +255,12 @@ export default function AdminDashboard() {
     } finally {
       setInviteLoading(false);
     }
+  };
+
+  const toggleInviteStore = (id: string) => {
+    setInviteStoreIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
   };
 
   const handleResetPassword = async (userId: string) => {
