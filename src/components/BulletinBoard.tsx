@@ -29,7 +29,7 @@ interface BulletinPost {
   user_id: string;
   title: string;
   message: string;
-  image_url: string | null;
+  image_url?: string | null;
   image_urls: string[] | null;
   created_at: string;
   updated_at: string;
@@ -54,14 +54,14 @@ const VARIANT_CONFIG = {
     table: "bulletin_posts" as const,
     folder: "bulletin",
     formLabel: "Skriv i loggboka",
-    submitLabel: config.submitLabel,
+    submitLabel: "Legg til i loggbok",
     successMessage: "Innlegg lagt til i loggboka!",
     emptyTitle: "Ingen innlegg i loggboka",
-    emptyBody: "{config.emptyBody}",
+    emptyBody: "Vær den første til å skrive i loggboka!",
   },
   workshop: {
     table: "workshop_logbook_posts" as const,
-    folder: "workshop-logbook",
+    folder: "bulletin",
     formLabel: "Skriv i verksted-loggboka",
     submitLabel: "Legg til i verksted-loggbok",
     successMessage: "Innlegg lagt til i verksted-loggboka!",
