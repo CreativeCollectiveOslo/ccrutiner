@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Settings, RotateCcw, ClipboardList, Search, ShoppingCart, Info } from "lucide-react";
+import { LogOut, Loader2, Bell, Calendar, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Settings, RotateCcw, ClipboardList, Wrench, Search, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
@@ -33,7 +33,7 @@ import { SearchDialog } from "@/components/SearchDialog";
 import { highlightSearchTerm } from "@/lib/highlightText";
 import logo from "@/assets/logo.png";
 import { MultiImageDisplay } from "@/components/ImageUpload";
-import { ShoppingList } from "@/components/ShoppingList";
+// (Handleliste erstattet av verksted-loggbok)
 
 interface RoutineInfo {
   id: string;
@@ -135,7 +135,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [mainTab, setMainTab] = useState<"shifts" | "info" | "notifications" | "bulletin" | "shopping">("shifts");
+  const [mainTab, setMainTab] = useState<"shifts" | "info" | "notifications" | "bulletin" | "workshop">("shifts");
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -733,16 +733,16 @@ export default function EmployeeDashboard() {
                   )}
                 </button>
                 <button
-                  onClick={() => setMainTab("shopping")}
+                  onClick={() => setMainTab("workshop")}
                   className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
-                    mainTab === "shopping"
+                    mainTab === "workshop"
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <ShoppingCart className="h-5 w-5 sm:h-4 sm:w-4" />
-                  <span>Handleliste</span>
-                  {mainTab === "shopping" && (
+                  <Wrench className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span>Verksted</span>
+                  {mainTab === "workshop" && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                   )}
                 </button>
@@ -877,8 +877,8 @@ export default function EmployeeDashboard() {
               </div>
             ) : mainTab === "bulletin" ? (
               <BulletinBoard searchHighlightTerm={searchHighlightTerm} />
-            ) : mainTab === "shopping" ? (
-              <ShoppingList />
+            ) : mainTab === "workshop" ? (
+              <BulletinBoard variant="workshop" searchHighlightTerm={searchHighlightTerm} />
             ) : (
               <div className="space-y-6">
                 {/* Unread notifications banner above shifts */}
