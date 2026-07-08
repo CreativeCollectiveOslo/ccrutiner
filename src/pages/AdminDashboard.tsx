@@ -558,7 +558,51 @@ export default function AdminDashboard() {
         ) : activeTab === "announcements" ? (
           <AnnouncementManager />
         ) : activeTab === "info" ? (
-          <ViktigInfoManager />
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1 flex-1 min-w-0">
+                {infoCategories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Ingen kategorier ennå.</p>
+                ) : (
+                  infoCategories.map((cat) => {
+                    const isActive = selectedInfoCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedInfoCategory(cat.id)}
+                        className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors whitespace-nowrap ${
+                          isActive ? "bg-foreground/5 text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: cat.color_code }} />
+                        {cat.name}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              <Sheet open={infoCategoryManagerOpen} onOpenChange={setInfoCategoryManagerOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Rediger kategorier">
+                    <Settings2 className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Administrer info-kategorier</SheetTitle>
+                    <SheetDescription>Opprett, rediger og omorganiser kategorier</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <InfoCategoryManager onCategoryChange={fetchInfoCategories} />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {selectedInfoCategory && (
+              <InfoSectionManager categoryId={selectedInfoCategory} categories={infoCategories} />
+            )}
+          </div>
         ) : activeTab === "stores" ? (
           <StoreManager />
         ) : (
