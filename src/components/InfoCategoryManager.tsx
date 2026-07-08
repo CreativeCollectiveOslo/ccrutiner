@@ -45,6 +45,7 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [iconsExpanded, setIconsExpanded] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; sections: number; items: number } | null>(null);
 
   const notifyChange = () => onCategoryChange?.();
 
