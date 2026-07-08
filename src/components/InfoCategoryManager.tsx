@@ -120,10 +120,10 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
   };
 
   const requestDelete = async (cat: InfoCategory) => {
-    const [{ count: sectionsCount }, { count: itemsCount }] = await Promise.all([
-      supabase.from("sections").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id),
-      supabase.from("shift_info").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id),
-    ]);
+    const { count: sectionsCount } = await supabase
+      .from("sections").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id);
+    const { count: itemsCount } = await supabase
+      .from("shift_info").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id);
     const sections = sectionsCount ?? 0;
     const items = itemsCount ?? 0;
     if (sections === 0 && items === 0) {
