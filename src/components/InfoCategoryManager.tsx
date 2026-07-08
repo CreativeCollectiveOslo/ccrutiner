@@ -237,7 +237,7 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(cat)}>
                     <Edit className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(cat.id)}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => requestDelete(cat)}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>
@@ -246,6 +246,28 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Denne kategorien inneholder {deleteTarget?.sections ?? 0} seksjon(er) og {deleteTarget?.items ?? 0} info-element(er). Alt innhold vil bli permanent slettet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deleteTarget) await performDelete(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              Slett
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
