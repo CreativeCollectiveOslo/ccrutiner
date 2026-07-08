@@ -123,7 +123,7 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
     const { count: sectionsCount } = await supabase
       .from("sections").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id);
     const { count: itemsCount } = await supabase
-      .from("shift_info").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id);
+      .from("shift_info").select("id", { count: "exact", head: true }).eq("category_id", cat.id);
     const sections = sectionsCount ?? 0;
     const items = itemsCount ?? 0;
     if (sections === 0 && items === 0) {
