@@ -888,7 +888,7 @@ export default function EmployeeDashboard() {
                           >
                             {renderIcon(shift.icon || "Sun", "h-8 w-8 text-white")}
                           </div>
-                          <CardTitle>{shift.name}</CardTitle>
+                          <CardTitle className="[overflow-wrap:anywhere]">{shift.name}</CardTitle>
                           {hasProgress && (
                             <CardDescription className="mt-2">
                               <span className={isComplete ? "text-green-600 font-medium" : ""}>
