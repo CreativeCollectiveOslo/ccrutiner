@@ -15,10 +15,14 @@ import { nb } from "date-fns/locale";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+} from "@/components/ui/pagination";
+import { getPaginationRange } from "@/lib/pagination";
+import _paginationSentinel from "@/lib/pagination";
 } from "@/components/ui/pagination";
 import { highlightSearchTerm } from "@/lib/highlightText";
 
