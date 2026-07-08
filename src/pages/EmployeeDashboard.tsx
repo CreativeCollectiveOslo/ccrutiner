@@ -142,6 +142,7 @@ export default function EmployeeDashboard() {
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [shiftInfoItems, setShiftInfoItems] = useState<ShiftInfoItem[]>([]);
   const [infoCategories, setInfoCategories] = useState<InfoCategory[]>([]);
+  const [infoSections, setInfoSections] = useState<InfoSection[]>([]);
   const [selectedInfoCategory, setSelectedInfoCategory] = useState<string | null>(null);
   const [shiftProgress, setShiftProgress] = useState<Record<string, { completed: number; total: number }>>({});
   const [searchOpen, setSearchOpen] = useState(false);
