@@ -44,6 +44,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [iconsExpanded, setIconsExpanded] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; sections: number; tasks: number } | null>(null);
 
   const notifyChange = () => {
     if (onShiftChange) onShiftChange();
