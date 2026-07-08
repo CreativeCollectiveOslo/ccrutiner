@@ -118,6 +118,10 @@ export function ShoppingList() {
     const completedIds = items.filter((i) => i.completed).map((i) => i.id);
     if (completedIds.length === 0) return;
 
+    // Optimistic update — remove from UI immediately
+    const previous = items;
+    setItems((prev) => prev.filter((i) => !i.completed));
+
     const { error } = await supabase
       .from("shopping_items")
       .delete()
@@ -126,6 +130,7 @@ export function ShoppingList() {
     if (error) {
       toast.error("Kunne ikke fjerne varer");
       console.error(error);
+      setItems(previous); // rollback
     } else {
       toast.success("Avkryssede varer fjernet");
     }
