@@ -136,8 +136,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Create store memberships for employees
-    if (role === "employee" && newUser.user?.id && store_ids.length > 0) {
+    // Create store memberships for both admins and employees
+    if (newUser.user?.id && store_ids.length > 0) {
       const rows = store_ids.map((store_id) => ({
         store_id,
         user_id: newUser.user!.id,
