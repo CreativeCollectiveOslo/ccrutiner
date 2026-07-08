@@ -206,16 +206,20 @@ export default function EmployeeDashboard() {
 
   const fetchShiftInfo = async () => {
     if (!activeStore) return;
-    const [infoRes, catRes] = await Promise.all([
+    const [infoRes, catRes, secRes] = await Promise.all([
       supabase.from("shift_info").select("*").eq("store_id", activeStore.id).is("shift_id", null).order("order_index"),
       supabase.from("info_categories").select("*").eq("store_id", activeStore.id).order("order_index"),
+      supabase.from("sections").select("*").eq("store_id", activeStore.id).not("info_category_id", "is", null).order("order_index"),
     ]);
 
     if (!infoRes.error && infoRes.data) {
-      setShiftInfoItems(infoRes.data);
+      setShiftInfoItems(infoRes.data as any);
     }
     if (!catRes.error && catRes.data) {
-      setInfoCategories(catRes.data);
+      setInfoCategories(catRes.data as any);
+    }
+    if (!secRes.error && secRes.data) {
+      setInfoSections(secRes.data as any);
     }
   };
 
