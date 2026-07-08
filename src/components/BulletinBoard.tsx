@@ -29,7 +29,7 @@ interface BulletinPost {
   user_id: string;
   title: string;
   message: string;
-  image_url: string | null;
+  image_url?: string | null;
   image_urls: string[] | null;
   created_at: string;
   updated_at: string;
