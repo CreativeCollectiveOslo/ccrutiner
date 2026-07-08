@@ -15,11 +15,13 @@ import { nb } from "date-fns/locale";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { getPaginationRange } from "@/lib/pagination";
 import { highlightSearchTerm } from "@/lib/highlightText";
 
 interface BulletinPost {
@@ -391,20 +393,26 @@ export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
                 className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentPage(page);
-                  }}
-                  isActive={page === currentPage}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
+            {getPaginationRange(currentPage, totalPages, 1).map((item, idx) =>
+              item === "ellipsis" ? (
+                <PaginationItem key={`e-${idx}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={item}>
+                  <PaginationLink
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage(item);
+                    }}
+                    isActive={item === currentPage}
+                  >
+                    {item}
+                  </PaginationLink>
+                </PaginationItem>
+              ),
+            )}
             <PaginationItem>
               <PaginationNext
                 href="#"
