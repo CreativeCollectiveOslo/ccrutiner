@@ -752,53 +752,79 @@ export default function EmployeeDashboard() {
             {mainTab === "notifications" ? (
               <NotificationsTab searchHighlightTerm={searchHighlightTerm} />
             ) : mainTab === "info" ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {selectedInfoCategory ? (
                   (() => {
-                    const isUncategorized = selectedInfoCategory === "uncategorized";
-                    const category = isUncategorized ? null : infoCategories.find(c => c.id === selectedInfoCategory);
-                    const categoryItems = isUncategorized
-                      ? shiftInfoItems.filter(i => !i.category_id)
-                      : shiftInfoItems.filter(i => i.category_id === selectedInfoCategory);
-                    const IconComponent = category?.icon ? (LucideIcons as any)[category.icon] || Info : Info;
-                    const categoryName = isUncategorized ? "Generelt" : category?.name;
+                    const category = infoCategories.find(c => c.id === selectedInfoCategory);
+                    if (!category) return null;
+                    const IconComponent = (LucideIcons as any)[category.icon] || Info;
+                    const categoryItems = shiftInfoItems.filter(i => i.category_id === category.id);
+                    const categorySections = infoSections.filter(s => s.info_category_id === category.id);
+                    const unsortedItems = categoryItems.filter(i => !i.section_id);
+
+                    const renderInfoCard = (info: ShiftInfoItem) => (
+                      <Card key={info.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <p className="text-sm font-medium">{info.title}</p>
+                              {info.description && (
+                                <p className="text-sm text-muted-foreground whitespace-pre-line">{info.description}</p>
+                              )}
+                              {info.image_urls && info.image_urls.length > 0 && (
+                                <MultiImageDisplay urls={info.image_urls} className="mt-2" />
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+
                     return (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <button
                           onClick={() => setSelectedInfoCategory(null)}
                           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                         >
                           ← Tilbake
                         </button>
-                        <div className="flex items-center gap-2">
-                          <IconComponent className="h-5 w-5 text-primary" />
-                          <h2 className="text-2xl font-semibold">{categoryName}</h2>
-                        </div>
-                        {categoryItems.length === 0 ? (
-                          <div className="text-center py-8">
-                            <Info className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                            <p className="text-sm text-muted-foreground">Ingen info i denne kategorien ennå</p>
+
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: category.color_code }}
+                          >
+                            <IconComponent className="h-5 w-5 text-white" />
                           </div>
+                          <h2 className="text-2xl font-semibold [overflow-wrap:anywhere]">{category.name}</h2>
+                        </div>
+
+                        {categoryItems.length === 0 ? (
+                          <Card>
+                            <CardContent className="p-6 text-center">
+                              <p className="text-sm text-muted-foreground">Ingen info i denne kategorien ennå</p>
+                            </CardContent>
+                          </Card>
                         ) : (
-                          <div className="space-y-3">
-                            {categoryItems.map((info) => (
-                              <Card key={info.id}>
-                                <CardContent className="p-4">
-                                  <div className="flex items-start gap-3">
-                                    <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                                    <div className="flex-1 min-w-0 space-y-1">
-                                      <p className="text-sm font-medium">{info.title}</p>
-                                      {info.description && (
-                                        <p className="text-sm text-muted-foreground whitespace-pre-line">{info.description}</p>
-                                      )}
-                                      {info.image_urls && info.image_urls.length > 0 && (
-                                        <MultiImageDisplay urls={info.image_urls} className="mt-2" />
-                                      )}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
+                          <div className="space-y-6">
+                            {unsortedItems.length > 0 && (
+                              <div className="space-y-3">
+                                {unsortedItems.map(renderInfoCard)}
+                              </div>
+                            )}
+                            {categorySections.map((section) => {
+                              const sectionItems = categoryItems.filter(i => i.section_id === section.id);
+                              if (sectionItems.length === 0) return null;
+                              return (
+                                <div key={section.id} className="space-y-3">
+                                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground border-b pb-2">
+                                    {section.name}
+                                  </h3>
+                                  {sectionItems.map(renderInfoCard)}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -806,53 +832,44 @@ export default function EmployeeDashboard() {
                   })()
                 ) : (
                   <>
-                    {infoCategories.length === 0 && shiftInfoItems.length === 0 ? (
+                    <div className="text-center space-y-2">
+                      <h2 className="text-xl">Velg kategori</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Bla i info-banken for viktig informasjon
+                      </p>
+                    </div>
+
+                    {infoCategories.length === 0 ? (
                       <div className="text-center py-8">
                         <Info className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                        <p className="text-sm text-muted-foreground">Ingen info ennå</p>
+                        <p className="text-sm text-muted-foreground">Ingen kategorier ennå</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="grid gap-4 md:grid-cols-3">
                         {infoCategories.map((cat) => {
                           const IconComponent = (LucideIcons as any)[cat.icon] || Info;
                           const itemCount = shiftInfoItems.filter(i => i.category_id === cat.id).length;
                           return (
                             <Card
                               key={cat.id}
-                              className="cursor-pointer hover:bg-accent/50 transition-colors"
+                              className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
                               onClick={() => setSelectedInfoCategory(cat.id)}
                             >
-                              <CardContent className="p-4 flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                  <IconComponent className="h-5 w-5 text-primary" />
+                              <CardHeader className="text-center">
+                                <div
+                                  className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                                  style={{ backgroundColor: cat.color_code }}
+                                >
+                                  <IconComponent className="h-8 w-8 text-white" />
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium">{cat.name}</p>
-                                  <p className="text-xs text-muted-foreground">{itemCount} {itemCount === 1 ? 'element' : 'elementer'}</p>
-                                </div>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                              </CardContent>
+                                <CardTitle className="[overflow-wrap:anywhere]">{cat.name}</CardTitle>
+                                <CardDescription className="mt-2">
+                                  {itemCount} {itemCount === 1 ? 'element' : 'elementer'}
+                                </CardDescription>
+                              </CardHeader>
                             </Card>
                           );
                         })}
-                        {/* Uncategorized items */}
-                        {shiftInfoItems.filter(i => !i.category_id).length > 0 && (
-                          <Card
-                            className="cursor-pointer hover:bg-accent/50 transition-colors"
-                            onClick={() => setSelectedInfoCategory("uncategorized")}
-                          >
-                            <CardContent className="p-4 flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                <Info className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium">Generelt</p>
-                                <p className="text-xs text-muted-foreground">{shiftInfoItems.filter(i => !i.category_id).length} elementer</p>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                            </CardContent>
-                          </Card>
-                        )}
                       </div>
                     )}
                   </>
