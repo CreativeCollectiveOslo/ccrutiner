@@ -42,11 +42,36 @@ interface UserProfile {
 
 const POSTS_PER_PAGE = 10;
 
+export type BulletinBoardVariant = "bulletin" | "workshop";
+
 interface BulletinBoardProps {
   searchHighlightTerm?: string | null;
+  variant?: BulletinBoardVariant;
 }
 
-export function BulletinBoard({ searchHighlightTerm }: BulletinBoardProps) {
+const VARIANT_CONFIG = {
+  bulletin: {
+    table: "bulletin_posts" as const,
+    folder: "bulletin",
+    formLabel: "Skriv i loggboka",
+    submitLabel: "Legg til i loggbok",
+    successMessage: "Innlegg lagt til i loggboka!",
+    emptyTitle: "Ingen innlegg i loggboka",
+    emptyBody: "Vær den første til å skrive i loggboka!",
+  },
+  workshop: {
+    table: "workshop_logbook_posts" as const,
+    folder: "workshop-logbook",
+    formLabel: "Skriv i verksted-loggboka",
+    submitLabel: "Legg til i verksted-loggbok",
+    successMessage: "Innlegg lagt til i verksted-loggboka!",
+    emptyTitle: "Ingen innlegg i verksted-loggboka",
+    emptyBody: "Vær den første til å skrive i verksted-loggboka!",
+  },
+} as const;
+
+export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: BulletinBoardProps) {
+  const config = VARIANT_CONFIG[variant];
   const { user } = useAuth();
   const { activeStore } = useStore();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
