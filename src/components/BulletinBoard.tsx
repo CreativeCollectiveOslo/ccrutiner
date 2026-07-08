@@ -54,10 +54,10 @@ const VARIANT_CONFIG = {
     table: "bulletin_posts" as const,
     folder: "bulletin",
     formLabel: "Skriv i loggboka",
-    submitLabel: "Legg til i loggbok",
+    submitLabel: config.submitLabel,
     successMessage: "Innlegg lagt til i loggboka!",
     emptyTitle: "Ingen innlegg i loggboka",
-    emptyBody: "Vær den første til å skrive i loggboka!",
+    emptyBody: "{config.emptyBody}",
   },
   workshop: {
     table: "workshop_logbook_posts" as const,
@@ -143,7 +143,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
 
     // Get total count
     const { count, error: countError } = await supabase
-      .from("bulletin_posts")
+      .from(config.table)
       .select("*", { count: "exact", head: true })
       .eq("store_id", activeStore.id);
 
@@ -161,7 +161,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
 
     // Fetch posts with pagination (newest first)
     const { data, error } = await supabase
-      .from("bulletin_posts")
+      .from(config.table)
       .select("*")
       .eq("store_id", activeStore.id)
       .order("created_at", { ascending: false })
@@ -183,7 +183,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
 
     setSubmitting(true);
 
-    const { error } = await supabase.from("bulletin_posts").insert({
+    const { error } = await supabase.from(config.table).insert({
       user_id: user.id,
       title: newTitle.trim(),
       message: newMessage.trim(),
@@ -196,7 +196,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
       toast.error("Kunne ikke opprette innlegg");
       console.error(error);
     } else {
-      toast.success("Innlegg lagt til i loggboka!");
+      toast.success(config.successMessage);
       setNewTitle("");
       setNewMessage("");
       setNewImageUrls([]);
@@ -225,7 +225,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
     if (!editTitle.trim() || !editMessage.trim()) return;
 
     const { error } = await supabase
-      .from("bulletin_posts")
+      .from(config.table)
       .update({ 
         title: editTitle.trim(),
         message: editMessage.trim(),
@@ -273,7 +273,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
       <Card>
         <CardContent className="p-4">
           <form onSubmit={handleSubmit} className="space-y-3">
-            <Label className="text-sm font-medium">Skriv i loggboka</Label>
+            <Label className="text-sm font-medium">{config.formLabel}</Label>
             <div className="space-y-2">
               <Input
                 placeholder="Overskrift"
@@ -287,7 +287,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
                 className="min-h-[100px]"
               />
               <MultiImageUpload
-                folder="bulletin"
+                folder={config.folder}
                 currentUrls={newImageUrls}
                 onImagesChanged={setNewImageUrls}
               />
@@ -299,7 +299,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
                   Lagrer...
                 </>
               ) : (
-                "Legg til i loggbok"
+                config.submitLabel
               )}
             </Button>
           </form>
@@ -311,9 +311,9 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
         <Card>
           <CardContent className="py-12 px-4 text-center">
             <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Ingen innlegg i loggboka</h3>
+            <h3 className="text-lg font-medium mb-2">{config.emptyTitle}</h3>
             <p className="text-sm text-muted-foreground">
-              Vær den første til å skrive i loggboka!
+              {config.emptyBody}
             </p>
           </CardContent>
         </Card>
@@ -347,7 +347,7 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
                       className="min-h-[100px]"
                     />
                     <MultiImageUpload
-                      folder="bulletin"
+                      folder={config.folder}
                       currentUrls={editImageUrls}
                       onImagesChanged={setEditImageUrls}
                     />
