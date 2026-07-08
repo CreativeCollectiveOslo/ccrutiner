@@ -103,12 +103,30 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAdmin && activeStore) {
       fetchShifts();
+      fetchInfoCategories();
       fetchUsers();
     } else if (isAdmin && !storeLoading && !activeStore) {
       fetchUsers();
       setLoading(false);
     }
   }, [isAdmin, activeStore, storeLoading]);
+
+  const fetchInfoCategories = async () => {
+    if (!activeStore) return;
+    const { data, error } = await supabase
+      .from("info_categories")
+      .select("*")
+      .eq("store_id", activeStore.id)
+      .order("order_index");
+    if (!error && data) {
+      setInfoCategories(data as any);
+      if (data.length > 0 && !selectedInfoCategory) {
+        setSelectedInfoCategory(data[0].id);
+      } else if (data.length === 0) {
+        setSelectedInfoCategory("");
+      }
+    }
+  };
 
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
