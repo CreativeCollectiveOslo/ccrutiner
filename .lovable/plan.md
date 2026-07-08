@@ -1,61 +1,21 @@
+## Mål
+Kopiere alt innhold fra vaktene **"Tips til introduksjon til kunder"** og **"Info"** (Oslo-butikken) inn i Info-fanen, slik at samme innhold blir tilgjengelig som info-bank uten avkrysning.
 
+## Hva som finnes i dag
+- Vakten **"Info"**: 6 seksjoner, 23 rutiner (med beskrivelser/bilder).
+- Vakten **"Tips til introduksjon til kunder"**: 0 seksjoner, 15 rutiner (ligger direkte under vakten uten seksjon).
 
-# Info-kategorier: Gruppering av viktig informasjon
+## Plan
+Én database-migrasjon som kopierer data. Ingenting slettes — originalvaktene forblir uendret.
 
-## Konsept
+1. **Opprett to nye info-kategorier** i Oslo-butikken:
+   - "Info" — farge `#f73b3b`, ikon `Briefcase` (samme som vakten).
+   - "Tips til introduksjon til kunder" — farge `#3bf4f7`, ikon `Sun`.
+2. **Kopier seksjoner** fra vakten "Info" til den nye "Info"-kategorien (samme navn og rekkefølge).
+3. **Kopier rutiner som info-elementer** (`shift_info`):
+   - Rutiner fra "Info" → knyttes til tilhørende ny seksjon i "Info"-kategorien.
+   - Rutiner fra "Tips til introduksjon til kunder" → legges direkte under kategorien (uten seksjon, siden vakten ikke har seksjoner).
+   - Tittel, beskrivelse, bilder (`image_urls`) og rekkefølge (`order_index`) beholdes.
 
-Info-siden faar et mellomlag med **kategorier** (f.eks. "Betaling", "Sikkerhet", "Utstyr"). Naar man aapner Info-fanen ser man kategori-kort. Klikk paa et kort viser info-elementene i den kategorien.
-
-## Database-endring
-
-Ny tabell `info_categories`:
-
-| Kolonne | Type | Default |
-|---------|------|---------|
-| id | uuid | gen_random_uuid() |
-| name | text | required |
-| icon | text | 'Info' |
-| order_index | integer | 0 |
-| created_at | timestamptz | now() |
-
-RLS: Authenticated kan lese, admin kan CRUD.
-
-Legg til kolonne paa `shift_info`:
-- `category_id uuid REFERENCES info_categories(id) ON DELETE SET NULL` (nullable for bakoverkompatibilitet)
-
-## Brukerflyt
-
-```text
-Info-fanen:
-┌─────────────┐ ┌─────────────┐
-│  Betaling   │ │  Sikkerhet  │
-│      💰     │ │      🛡     │
-└─────────────┘ └─────────────┘
-┌─────────────┐
-│   Utstyr    │
-│      🔧     │
-└─────────────┘
-
-Klikk "Betaling":
-← Tilbake
-Betaling
-┌─ Info-kort 1 ──────────────┐
-│ Loennsdag er den 25. ...   │
-└────────────────────────────┘
-┌─ Info-kort 2 ──────────────┐
-│ Overtid registreres i ...  │
-└────────────────────────────┘
-```
-
-## Filer som endres
-
-| Fil | Endring |
-|-----|---------|
-| Ny migration | `info_categories`-tabell + `category_id` paa `shift_info` + RLS |
-| `src/pages/EmployeeDashboard.tsx` | Info-fanen viser kategorier, klikk aapner kategori-detalj med tilbake-knapp |
-| `src/components/ViktigInfoManager.tsx` | Admin: CRUD for kategorier + tildel info til kategori |
-| `src/pages/AdminDashboard.tsx` | Eventuelt oppdater admin info-tab |
-
-### Ingen breaking changes
-Eksisterende info uten kategori vises i en "Generelt"-gruppe.
-
+## Etterpå
+Bekreft i Info-fanen at begge kategoriene vises med korrekt innhold. Originalvaktene i Vakter-fanen røres ikke — si fra hvis du vil at jeg fjerner dem etterpå.
