@@ -24,7 +24,7 @@ interface StoreRow {
 }
 
 export function StoreManager() {
-  const { refreshStores } = useStore();
+  const { refreshStores, isSuperAdmin } = useStore();
   const [stores, setStores] = useState<StoreRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -112,10 +112,12 @@ export function StoreManager() {
             <CardTitle>Butikker</CardTitle>
             <CardDescription>Administrer alle butikker</CardDescription>
           </div>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ny butikk
-          </Button>
+          {isSuperAdmin && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ny butikk
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -136,19 +138,21 @@ export function StoreManager() {
                     <p className="text-xs text-muted-foreground">/{s.slug}</p>
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(s)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => handleDelete(s.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                {isSuperAdmin && (
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(s)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => handleDelete(s.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
               </div>
             ))
           )}
