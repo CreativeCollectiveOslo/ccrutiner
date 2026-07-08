@@ -7,6 +7,16 @@ import { toast } from "sonner";
 import { Trash2, Edit, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Shift {
   id: string;
@@ -34,6 +44,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [iconsExpanded, setIconsExpanded] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; sections: number; tasks: number } | null>(null);
 
   const notifyChange = () => {
     if (onShiftChange) onShiftChange();
@@ -139,12 +150,22 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
     setSelectedIcon(shift.icon || "Sun");
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase
-      .from("shifts")
-      .delete()
-      .eq("id", id);
+  const requestDelete = async (shift: Shift) => {
+    const [{ count: sectionsCount }, { count: tasksCount }] = await Promise.all([
+      supabase.from("sections").select("id", { count: "exact", head: true }).eq("shift_id", shift.id),
+      supabase.from("routines").select("id", { count: "exact", head: true }).eq("shift_id", shift.id),
+    ]);
+    const sections = sectionsCount ?? 0;
+    const tasks = tasksCount ?? 0;
+    if (sections === 0 && tasks === 0) {
+      await performDelete(shift.id);
+    } else {
+      setDeleteTarget({ id: shift.id, name: shift.name, sections, tasks });
+    }
+  };
 
+  const performDelete = async (id: string) => {
+    const { error } = await supabase.from("shifts").delete().eq("id", id);
     if (error) {
       toast.error("Kunne ikke slette vakt");
     } else {
@@ -287,7 +308,7 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    onClick={() => handleDelete(shift.id)}
+                    onClick={() => requestDelete(shift)}
                   >
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
@@ -297,6 +318,28 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Denne vakten inneholder {deleteTarget?.sections ?? 0} seksjon(er) og {deleteTarget?.tasks ?? 0} oppgave(r). Alt innhold vil bli permanent slettet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deleteTarget) await performDelete(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              Slett
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

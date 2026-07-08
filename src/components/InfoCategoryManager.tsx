@@ -7,6 +7,16 @@ import { toast } from "sonner";
 import { Trash2, Edit, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface InfoCategory {
   id: string;
@@ -35,6 +45,7 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [iconsExpanded, setIconsExpanded] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; sections: number; items: number } | null>(null);
 
   const notifyChange = () => onCategoryChange?.();
 
@@ -108,7 +119,21 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
     setSelectedIcon(cat.icon || "Info");
   };
 
-  const handleDelete = async (id: string) => {
+  const requestDelete = async (cat: InfoCategory) => {
+    const { count: sectionsCount } = await supabase
+      .from("sections").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id);
+    const { count: itemsCount } = await supabase
+      .from("shift_info").select("id", { count: "exact", head: true }).eq("category_id", cat.id);
+    const sections = sectionsCount ?? 0;
+    const items = itemsCount ?? 0;
+    if (sections === 0 && items === 0) {
+      await performDelete(cat.id);
+    } else {
+      setDeleteTarget({ id: cat.id, name: cat.name, sections, items });
+    }
+  };
+
+  const performDelete = async (id: string) => {
     const { error } = await supabase.from("info_categories").delete().eq("id", id);
     if (error) toast.error("Kunne ikke slette kategori");
     else {
@@ -212,7 +237,7 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(cat)}>
                     <Edit className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(cat.id)}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => requestDelete(cat)}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>
@@ -221,6 +246,28 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Denne kategorien inneholder {deleteTarget?.sections ?? 0} seksjon(er) og {deleteTarget?.items ?? 0} info-element(er). Alt innhold vil bli permanent slettet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deleteTarget) await performDelete(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              Slett
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
