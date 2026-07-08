@@ -119,7 +119,21 @@ export function InfoCategoryManager({ onCategoryChange }: Props) {
     setSelectedIcon(cat.icon || "Info");
   };
 
-  const handleDelete = async (id: string) => {
+  const requestDelete = async (cat: InfoCategory) => {
+    const [{ count: sectionsCount }, { count: itemsCount }] = await Promise.all([
+      supabase.from("sections").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id),
+      supabase.from("shift_info").select("id", { count: "exact", head: true }).eq("info_category_id", cat.id),
+    ]);
+    const sections = sectionsCount ?? 0;
+    const items = itemsCount ?? 0;
+    if (sections === 0 && items === 0) {
+      await performDelete(cat.id);
+    } else {
+      setDeleteTarget({ id: cat.id, name: cat.name, sections, items });
+    }
+  };
+
+  const performDelete = async (id: string) => {
     const { error } = await supabase.from("info_categories").delete().eq("id", id);
     if (error) toast.error("Kunne ikke slette kategori");
     else {
