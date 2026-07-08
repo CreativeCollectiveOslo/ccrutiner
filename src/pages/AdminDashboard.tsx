@@ -21,7 +21,8 @@ import logo from "@/assets/logo.png";
 import { ShiftManager } from "@/components/ShiftManager";
 import { AnnouncementManager } from "@/components/AnnouncementManager";
 import { SectionManager } from "@/components/SectionManager";
-import { ViktigInfoManager } from "@/components/ViktigInfoManager";
+import { InfoCategoryManager } from "@/components/InfoCategoryManager";
+import { InfoSectionManager } from "@/components/InfoSectionManager";
 import { StoreManager } from "@/components/StoreManager";
 
 
