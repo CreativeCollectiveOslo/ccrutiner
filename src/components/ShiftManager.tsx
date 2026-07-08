@@ -318,6 +318,28 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Denne vakten inneholder {deleteTarget?.sections ?? 0} seksjon(er) og {deleteTarget?.tasks ?? 0} oppgave(r). Alt innhold vil bli permanent slettet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deleteTarget) await performDelete(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              Slett
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
