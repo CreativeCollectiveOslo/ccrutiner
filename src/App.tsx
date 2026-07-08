@@ -12,30 +12,38 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import HeadingsDemo from "./pages/HeadingsDemo";
 import NotFound from "./pages/NotFound";
+import { useBlurOnScroll } from "./hooks/use-blur-on-scroll";
 
 const queryClient = new QueryClient();
+
+const AppInner = () => {
+  useBlurOnScroll();
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <StoreProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/employee" element={<EmployeeDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/headings" element={<HeadingsDemo />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </StoreProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <StoreProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/employee" element={<EmployeeDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/headings" element={<HeadingsDemo />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </StoreProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <AppInner />
     </TooltipProvider>
   </QueryClientProvider>
 );
