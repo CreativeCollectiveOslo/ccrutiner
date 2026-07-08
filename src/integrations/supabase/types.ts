@@ -133,6 +133,7 @@ export type Database = {
       }
       info_categories: {
         Row: {
+          color_code: string
           created_at: string
           icon: string
           id: string
@@ -141,6 +142,7 @@ export type Database = {
           store_id: string
         }
         Insert: {
+          color_code?: string
           created_at?: string
           icon?: string
           id?: string
@@ -149,6 +151,7 @@ export type Database = {
           store_id: string
         }
         Update: {
+          color_code?: string
           created_at?: string
           icon?: string
           id?: string
@@ -342,27 +345,30 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          info_category_id: string | null
           name: string
           order_index: number | null
-          shift_id: string
+          shift_id: string | null
           store_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          info_category_id?: string | null
           name: string
           order_index?: number | null
-          shift_id: string
+          shift_id?: string | null
           store_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          info_category_id?: string | null
           name?: string
           order_index?: number | null
-          shift_id?: string
+          shift_id?: string | null
           store_id?: string
           updated_at?: string
         }
@@ -391,6 +397,7 @@ export type Database = {
           id: string
           image_urls: string[] | null
           order_index: number | null
+          section_id: string | null
           shift_id: string | null
           store_id: string
           title: string
@@ -402,6 +409,7 @@ export type Database = {
           id?: string
           image_urls?: string[] | null
           order_index?: number | null
+          section_id?: string | null
           shift_id?: string | null
           store_id: string
           title: string
@@ -413,6 +421,7 @@ export type Database = {
           id?: string
           image_urls?: string[] | null
           order_index?: number | null
+          section_id?: string | null
           shift_id?: string | null
           store_id?: string
           title?: string
