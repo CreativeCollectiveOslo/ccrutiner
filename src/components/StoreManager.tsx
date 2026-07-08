@@ -24,7 +24,7 @@ interface StoreRow {
 }
 
 export function StoreManager() {
-  const { refreshStores } = useStore();
+  const { refreshStores, isSuperAdmin } = useStore();
   const [stores, setStores] = useState<StoreRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
