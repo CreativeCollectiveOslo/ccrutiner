@@ -150,12 +150,22 @@ export function ShiftManager({ onShiftChange }: ShiftManagerProps) {
     setSelectedIcon(shift.icon || "Sun");
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase
-      .from("shifts")
-      .delete()
-      .eq("id", id);
+  const requestDelete = async (shift: Shift) => {
+    const [{ count: sectionsCount }, { count: tasksCount }] = await Promise.all([
+      supabase.from("sections").select("id", { count: "exact", head: true }).eq("shift_id", shift.id),
+      supabase.from("routines").select("id", { count: "exact", head: true }).eq("shift_id", shift.id),
+    ]);
+    const sections = sectionsCount ?? 0;
+    const tasks = tasksCount ?? 0;
+    if (sections === 0 && tasks === 0) {
+      await performDelete(shift.id);
+    } else {
+      setDeleteTarget({ id: shift.id, name: shift.name, sections, tasks });
+    }
+  };
 
+  const performDelete = async (id: string) => {
+    const { error } = await supabase.from("shifts").delete().eq("id", id);
     if (error) {
       toast.error("Kunne ikke slette vakt");
     } else {
