@@ -112,10 +112,12 @@ export function StoreManager() {
             <CardTitle>Butikker</CardTitle>
             <CardDescription>Administrer alle butikker</CardDescription>
           </div>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ny butikk
-          </Button>
+          {isSuperAdmin && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ny butikk
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
