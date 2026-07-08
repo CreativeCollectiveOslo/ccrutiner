@@ -46,11 +46,14 @@ export default function AdminDashboard() {
   const { activeStore, availableStores, isSuperAdmin, loading: storeLoading } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<string>("");
+  const [infoCategories, setInfoCategories] = useState<{ id: string; name: string; color_code: string; order_index: number }[]>([]);
+  const [selectedInfoCategory, setSelectedInfoCategory] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [userStoreMemberships, setUserStoreMemberships] = useState<Record<string, string[]>>({});
   const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info" | "stores">("routines");
   const [shiftManagerOpen, setShiftManagerOpen] = useState(false);
+  const [infoCategoryManagerOpen, setInfoCategoryManagerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "employee">("employee");
