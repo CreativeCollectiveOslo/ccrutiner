@@ -209,8 +209,8 @@ export default function AdminDashboard() {
       toast.error("E-post er påkrevd");
       return;
     }
-    if (inviteRole === "employee" && inviteStoreIds.length === 0) {
-      toast.error("Velg minst én butikk for medarbeideren");
+    if (inviteStoreIds.length === 0) {
+      toast.error("Velg minst én butikk for brukeren");
       return;
     }
 
