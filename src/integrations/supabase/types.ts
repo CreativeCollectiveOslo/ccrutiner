@@ -642,6 +642,47 @@ export type Database = {
         }
         Relationships: []
       }
+      workshop_logbook_posts: {
+        Row: {
+          created_at: string
+          id: string
+          image_urls: string[] | null
+          message: string
+          store_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_urls?: string[] | null
+          message: string
+          store_id: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_urls?: string[] | null
+          message?: string
+          store_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workshop_logbook_posts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
