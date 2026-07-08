@@ -209,8 +209,8 @@ export default function AdminDashboard() {
       toast.error("E-post er påkrevd");
       return;
     }
-    if (inviteRole === "employee" && inviteStoreIds.length === 0) {
-      toast.error("Velg minst én butikk for medarbeideren");
+    if (inviteStoreIds.length === 0) {
+      toast.error("Velg minst én butikk for brukeren");
       return;
     }
 
@@ -236,7 +236,7 @@ export default function AdminDashboard() {
             email: inviteEmail,
             name: inviteName,
             role: inviteRole,
-            store_ids: inviteRole === "employee" ? inviteStoreIds : [],
+            store_ids: inviteStoreIds,
           }),
         }
       );
@@ -721,27 +721,25 @@ export default function AdminDashboard() {
                           </SelectContent>
                         </Select>
                       </div>
-                      {inviteRole === "employee" && (
-                        <div>
-                          <Label>Butikker *</Label>
-                          <div className="mt-2 space-y-2 rounded-md border p-3">
-                            {availableStores.length === 0 ? (
-                              <p className="text-xs text-muted-foreground">Ingen butikker tilgjengelig</p>
-                            ) : (
-                              availableStores.map((s) => (
-                                <label key={s.id} className="flex items-center gap-2 cursor-pointer">
-                                  <Checkbox
-                                    checked={inviteStoreIds.includes(s.id)}
-                                    onCheckedChange={() => toggleInviteStore(s.id)}
-                                  />
-                                  <span className="text-sm">{s.name}</span>
-                                </label>
-                              ))
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">Velg én eller flere butikker medarbeideren skal ha tilgang til</p>
+                      <div>
+                        <Label>Butikker *</Label>
+                        <div className="mt-2 space-y-2 rounded-md border p-3">
+                          {availableStores.length === 0 ? (
+                            <p className="text-xs text-muted-foreground">Ingen butikker tilgjengelig</p>
+                          ) : (
+                            availableStores.map((s) => (
+                              <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                                <Checkbox
+                                  checked={inviteStoreIds.includes(s.id)}
+                                  onCheckedChange={() => toggleInviteStore(s.id)}
+                                />
+                                <span className="text-sm">{s.name}</span>
+                              </label>
+                            ))
+                          )}
                         </div>
-                      )}
+                        <p className="text-xs text-muted-foreground mt-1">Velg én eller flere butikker brukeren skal ha tilgang til</p>
+                      </div>
                        <DialogFooter>
                          <Button
                            type="button"
