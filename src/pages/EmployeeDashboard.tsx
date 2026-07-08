@@ -103,15 +103,24 @@ interface ShiftInfoItem {
   title: string;
   description: string | null;
   image_urls: string[] | null;
-  order_index: number;
+  order_index: number | null;
   category_id: string | null;
+  section_id: string | null;
 }
 
 interface InfoCategory {
   id: string;
   name: string;
   icon: string;
+  color_code: string;
   order_index: number;
+}
+
+interface InfoSection {
+  id: string;
+  name: string;
+  order_index: number | null;
+  info_category_id: string | null;
 }
 
 export default function EmployeeDashboard() {
