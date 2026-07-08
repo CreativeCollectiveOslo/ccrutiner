@@ -236,7 +236,7 @@ export default function AdminDashboard() {
             email: inviteEmail,
             name: inviteName,
             role: inviteRole,
-            store_ids: inviteRole === "employee" ? inviteStoreIds : [],
+            store_ids: inviteStoreIds,
           }),
         }
       );
