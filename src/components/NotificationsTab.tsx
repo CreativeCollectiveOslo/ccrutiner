@@ -8,6 +8,7 @@ import { Bell, Check, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { highlightSearchTerm } from "@/lib/highlightText";
+import { MultiImageDisplay } from "@/components/ImageUpload";
 
 interface Routine {
   id: string;
@@ -22,6 +23,8 @@ interface Announcement {
   message: string;
   created_at: string;
   created_by: string;
+  image_url?: string | null;
+  image_urls?: string[] | null;
   type: "announcement";
 }
 
@@ -289,6 +292,14 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
                     <>
                       <h3 className="text-sm font-medium mb-1">{highlightSearchTerm(notification.title, searchHighlightTerm)}</h3>
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">{highlightSearchTerm(notification.message, searchHighlightTerm)}</p>
+                      {(() => {
+                        const urls = notification.image_urls?.length
+                          ? notification.image_urls
+                          : notification.image_url
+                          ? [notification.image_url]
+                          : [];
+                        return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-3" />;
+                      })()}
                     </>
                   ) : (
                     <>
