@@ -1,9 +1,89 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ImagePlus, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+
+// ===== Shared Lightbox =====
+
+interface LightboxProps {
+  urls: string[];
+  index: number;
+  onClose: () => void;
+  onIndexChange: (i: number) => void;
+}
+
+export function Lightbox({ urls, index, onClose, onIndexChange }: LightboxProps) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && urls.length > 1) onIndexChange((index - 1 + urls.length) % urls.length);
+      if (e.key === "ArrowRight" && urls.length > 1) onIndexChange((index + 1) % urls.length);
+    };
+    document.addEventListener("keydown", handleKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [index, urls.length, onClose, onIndexChange]);
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center animate-in fade-in-0"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* Close button - large tap target, always visible */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="absolute top-4 right-4 z-10 h-11 w-11 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+        style={{ top: "max(1rem, env(safe-area-inset-top))", right: "max(1rem, env(safe-area-inset-right))" }}
+        aria-label="Lukk"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
+      {urls.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onIndexChange((index - 1 + urls.length) % urls.length); }}
+            className="absolute left-2 sm:left-4 z-10 h-11 w-11 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+            aria-label="Forrige"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onIndexChange((index + 1) % urls.length); }}
+            className="absolute right-2 sm:right-4 z-10 h-11 w-11 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+            aria-label="Neste"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-black/60 text-white text-sm">
+            {index + 1} / {urls.length}
+          </div>
+        </>
+      )}
+
+      <img
+        src={urls[index]}
+        alt={`Billede ${index + 1}`}
+        className="max-w-[95vw] max-h-[90vh] object-contain select-none"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>,
+    document.body
+  );
+}
 
 // ===== Multi-image upload =====
 
