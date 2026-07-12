@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MultiImageDisplay } from "@/components/ImageUpload";
 import { toast } from "sonner";
 
 interface Routine {
@@ -20,6 +21,8 @@ interface Announcement {
   message: string;
   created_at: string;
   created_by: string;
+  image_url?: string | null;
+  image_urls?: string[] | null;
   type: "announcement";
 }
 
@@ -91,13 +94,19 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
       if (notification.type === "announcement") {
         const { error } = await supabase
           .from("announcements_read")
-          .insert([{ announcement_id: notification.id, user_id: user.id }]);
+          .upsert(
+            { announcement_id: notification.id, user_id: user.id },
+            { onConflict: "announcement_id,user_id", ignoreDuplicates: true }
+          );
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("routine_notifications_read")
-          .insert({ notification_id: notification.id, user_id: user.id });
+          .upsert(
+            { notification_id: notification.id, user_id: user.id },
+            { onConflict: "notification_id,user_id", ignoreDuplicates: true }
+          );
 
         if (error) throw error;
       }
@@ -177,6 +186,14 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
                           </button>
                         )}
                       </div>
+                      {(() => {
+                        const urls = notification.image_urls?.length
+                          ? notification.image_urls
+                          : notification.image_url
+                          ? [notification.image_url]
+                          : [];
+                        return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-3" />;
+                      })()}
                     </>
                   ) : (
                     <>
