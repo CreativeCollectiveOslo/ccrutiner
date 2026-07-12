@@ -228,40 +228,14 @@ export function MultiImageUpload({ folder, currentUrls, onImagesChanged, maxImag
         </Button>
       )}
 
-      {/* Lightbox */}
-      <Dialog open={previewIndex !== null} onOpenChange={() => setPreviewIndex(null)}>
-        <DialogContent className="max-w-3xl p-2">
-          {previewIndex !== null && (
-            <div className="relative">
-              <img
-                src={currentUrls[previewIndex]}
-                alt="Billede i fuld størrelse"
-                className="w-full rounded-lg"
-              />
-              {currentUrls.length > 1 && (
-                <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-2">
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="rounded-full opacity-80"
-                    onClick={() => setPreviewIndex((previewIndex - 1 + currentUrls.length) % currentUrls.length)}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="rounded-full opacity-80"
-                    onClick={() => setPreviewIndex((previewIndex + 1) % currentUrls.length)}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {previewIndex !== null && (
+        <Lightbox
+          urls={currentUrls}
+          index={previewIndex}
+          onClose={() => setPreviewIndex(null)}
+          onIndexChange={setPreviewIndex}
+        />
+      )}
     </div>
   );
 }
