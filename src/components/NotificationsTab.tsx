@@ -23,6 +23,8 @@ interface Announcement {
   message: string;
   created_at: string;
   created_by: string;
+  image_url?: string | null;
+  image_urls?: string[] | null;
   type: "announcement";
 }
 
