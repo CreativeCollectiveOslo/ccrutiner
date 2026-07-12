@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MultiImageDisplay } from "@/components/ImageUpload";
 import { toast } from "sonner";
 
 interface Routine {
