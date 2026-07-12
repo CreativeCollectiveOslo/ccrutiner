@@ -292,6 +292,14 @@ export function NotificationsTab({ onMarkAsRead, searchHighlightTerm }: Notifica
                     <>
                       <h3 className="text-sm font-medium mb-1">{highlightSearchTerm(notification.title, searchHighlightTerm)}</h3>
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">{highlightSearchTerm(notification.message, searchHighlightTerm)}</p>
+                      {(() => {
+                        const urls = notification.image_urls?.length
+                          ? notification.image_urls
+                          : notification.image_url
+                          ? [notification.image_url]
+                          : [];
+                        return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-3" />;
+                      })()}
                     </>
                   ) : (
                     <>
