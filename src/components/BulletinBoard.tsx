@@ -53,11 +53,11 @@ const VARIANT_CONFIG = {
   bulletin: {
     table: "bulletin_posts" as const,
     folder: "bulletin",
-    formLabel: "Skriv i loggboka",
-    submitLabel: "Legg til i loggbok",
-    successMessage: "Innlegg lagt til i loggboka!",
-    emptyTitle: "Ingen innlegg i loggboka",
-    emptyBody: "Vær den første til å skrive i loggboka!",
+    formLabel: "Skriv i kaféloggboka",
+    submitLabel: "Legg til i kaféloggbok",
+    successMessage: "Innlegg lagt til i kaféloggboka!",
+    emptyTitle: "Ingen innlegg i kaféloggboka",
+    emptyBody: "Vær den første til å skrive i kaféloggboka!",
   },
   workshop: {
     table: "workshop_logbook_posts" as const,
