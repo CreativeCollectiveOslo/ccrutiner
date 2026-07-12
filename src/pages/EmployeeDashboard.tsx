@@ -202,6 +202,50 @@ export default function EmployeeDashboard() {
     }
   }, [selectedShift]);
 
+  // Realtime: watch task_completions for this store so all users stay in sync
+  useEffect(() => {
+    if (!activeStore) return;
+
+    const channel = supabase
+      .channel(`task_completions_${activeStore.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "task_completions",
+          filter: `store_id=eq.${activeStore.id}`,
+        },
+        () => {
+          fetchAllShiftProgress();
+          if (selectedShift) fetchCompletions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeStore?.id, selectedShift?.id]);
+
+  // Refetch when app becomes visible again (defense against missed realtime events)
+  useEffect(() => {
+    if (!activeStore) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        fetchAllShiftProgress();
+        if (selectedShift) fetchCompletions();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [activeStore?.id, selectedShift?.id]);
+
+
   // fetchShiftInfo triggered from main effect when activeStore changes
 
   const fetchShiftInfo = async () => {
