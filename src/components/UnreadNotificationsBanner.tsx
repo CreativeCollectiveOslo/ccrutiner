@@ -186,6 +186,14 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
                           </button>
                         )}
                       </div>
+                      {(() => {
+                        const urls = notification.image_urls?.length
+                          ? notification.image_urls
+                          : notification.image_url
+                          ? [notification.image_url]
+                          : [];
+                        return urls.length > 0 && <MultiImageDisplay urls={urls} className="mt-3" />;
+                      })()}
                     </>
                   ) : (
                     <>
