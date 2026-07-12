@@ -202,6 +202,50 @@ export default function EmployeeDashboard() {
     }
   }, [selectedShift]);
 
+  // Realtime: watch task_completions for this store so all users stay in sync
+  useEffect(() => {
+    if (!activeStore) return;
+
+    const channel = supabase
+      .channel(`task_completions_${activeStore.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "task_completions",
+          filter: `store_id=eq.${activeStore.id}`,
+        },
+        () => {
+          fetchAllShiftProgress();
+          if (selectedShift) fetchCompletions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeStore?.id, selectedShift?.id]);
+
+  // Refetch when app becomes visible again (defense against missed realtime events)
+  useEffect(() => {
+    if (!activeStore) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        fetchAllShiftProgress();
+        if (selectedShift) fetchCompletions();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [activeStore?.id, selectedShift?.id]);
+
+
   // fetchShiftInfo triggered from main effect when activeStore changes
 
   const fetchShiftInfo = async () => {
@@ -466,12 +510,13 @@ export default function EmployeeDashboard() {
     const today = new Date().toISOString().split("T")[0];
 
     if (isCompleted) {
+      if (!activeStore) return;
+      // Delete all completions for this routine (shared state across users/dates)
       const { error } = await supabase
         .from("task_completions")
         .delete()
         .eq("routine_id", routineId)
-        .eq("user_id", user.id)
-        .eq("shift_date", today);
+        .eq("store_id", activeStore.id);
 
       if (error) {
         toast.error("Kunne ikke oppdatere oppgave");
@@ -480,7 +525,7 @@ export default function EmployeeDashboard() {
         const newCompletions = new Set(completions);
         newCompletions.delete(routineId);
         setCompletions(newCompletions);
-        
+
         // Update shift progress
         setShiftProgress((prev) => ({
           ...prev,
@@ -492,12 +537,16 @@ export default function EmployeeDashboard() {
       }
     } else {
       if (!activeStore) return;
-      const { error } = await supabase.from("task_completions").insert({
-        routine_id: routineId,
-        user_id: user.id,
-        shift_date: today,
-        store_id: activeStore.id,
-      });
+      const { error } = await supabase.from("task_completions").upsert(
+        {
+          routine_id: routineId,
+          user_id: user.id,
+          shift_date: today,
+          store_id: activeStore.id,
+        },
+        { onConflict: "routine_id" }
+      );
+
 
       if (error) {
         toast.error("Kunne ikke oppdatere oppgave");
