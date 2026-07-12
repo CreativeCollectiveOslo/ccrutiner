@@ -476,7 +476,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               <DialogHeader>
                 <DialogTitle>Opprett nytt avsnitt</DialogTitle>
                 <DialogDescription>
-                  Organiser rutinene dine i avsnitt som f.eks. "Kafe", "Toalett" osv.
+                  Organiser rutinene dine i avsnitt som f.eks. "Kafé", "Toalett" osv.
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
@@ -485,7 +485,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
                   id="section-name"
                   value={newSectionName}
                   onChange={(e) => setNewSectionName(e.target.value)}
-                  placeholder="F.eks. Kafe"
+                  placeholder="F.eks. Kafé"
                   required
                 />
               </div>
