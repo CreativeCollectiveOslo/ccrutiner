@@ -91,13 +91,19 @@ export function UnreadNotificationsBanner({ notifications, profiles, onMarkAsRea
       if (notification.type === "announcement") {
         const { error } = await supabase
           .from("announcements_read")
-          .insert([{ announcement_id: notification.id, user_id: user.id }]);
+          .upsert(
+            { announcement_id: notification.id, user_id: user.id },
+            { onConflict: "announcement_id,user_id", ignoreDuplicates: true }
+          );
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("routine_notifications_read")
-          .insert({ notification_id: notification.id, user_id: user.id });
+          .upsert(
+            { notification_id: notification.id, user_id: user.id },
+            { onConflict: "notification_id,user_id", ignoreDuplicates: true }
+          );
 
         if (error) throw error;
       }
