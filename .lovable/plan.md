@@ -1,77 +1,35 @@
 ## Problem
 
-Brukere opplever at avkryssede rutiner "kommer tilbake" etter få minutter. To sammenhengende feil i `EmployeeDashboard.tsx`:
+De to loggbøkene skriver til separate tabeller (`bulletin_posts` og `workshop_logbook_posts`), men i UI-et ser innholdet likt ut. Årsaken er at når man bytter fane mellom "Loggbok" og "Verksted", monteres `BulletinBoard`-komponenten ikke på nytt — React gjenbruker samme instans og bare bytter `variant`-propen. `useEffect` som henter innlegg har kun `[currentPage, activeStore]` som dependencies, så den kaller ikke `fetchPosts()` når `variant` endres. Resultatet: verksted-fanen viser gamle innlegg fra kafé-loggboken helt til man refresher.
 
-### Bug 1 — Uncheck matcher bare din egen rad fra i dag
-`toggleTaskCompletion` sletter med filter `user_id = current` OG `shift_date = today`:
+(Verifisert: `bulletin_posts` har 180 innlegg, `workshop_logbook_posts` har 0 — tabellene er allerede korrekt adskilte i databasen.)
 
-```ts
-.delete()
-.eq("routine_id", routineId)
-.eq("user_id", user.id)
-.eq("shift_date", today);
+## Endringer
+
+### 1. `src/components/BulletinBoard.tsx` — reager på variant-bytte
+- Legg til `variant` (eller `config.table`) i `useEffect`-dependency-arrayet som kaller `fetchPosts`.
+- Nullstill lokal state ved variant-bytte: `posts`, `currentPage`, `totalCount`, `editingPostId`, `newTitle/newMessage/newImageUrls`, `searchHighlightTerm`-scroll-flagget.
+- Alternativt (enklere og sikrere): gi komponenten en `key={variant}` der den brukes i `EmployeeDashboard`, slik at React monterer den på nytt ved fanebytte. Foretrukket løsning fordi det garantert isolerer all state.
+
+### 2. `src/pages/EmployeeDashboard.tsx` — kortere fane-navn for mobil
+Erstatt de nåværende etikettene:
+- "Loggbok" → **"Kafé"**
+- "Verksted" → **"Verksted"** (uendret — allerede kort)
+
+Begrunnelse: fanene representerer henholdsvis kafé-loggboken og verksted-loggboken. "Kafé" og "Verksted" er like korte, symmetriske, og passer i mobil-visning.
+
+### 3. Ingen databaseendringer
+Tabellene er allerede separate og RLS er på plass. Ingen migrasjon nødvendig.
+
+## Teknisk detalj
+
+```tsx
+// EmployeeDashboard.tsx render-blokk
+) : mainTab === "bulletin" ? (
+  <BulletinBoard key="cafe" searchHighlightTerm={searchHighlightTerm} />
+) : mainTab === "workshop" ? (
+  <BulletinBoard key="workshop" variant="workshop" searchHighlightTerm={searchHighlightTerm} />
+) : ...
 ```
 
-Fordi avkryssinger er delte mellom alle brukere, kan raden være opprettet av en kollega eller på en annen dato. Da matcher slettingen 0 rader. UI oppdaterer lokal state og "ser" tom, men raden ligger fortsatt i databasen. Neste refetch/reload henter den inn igjen → haken kommer tilbake. Dette forklarer nøyaktig symptomet.
-
-### Bug 2 — Ingen realtime
-Ingen abonnement på `task_completions`. Bruker A ser ikke bruker Bs endringer før manuell reload, og omvendt. Kombinert med Bug 1 gir det inntrykk av at appen "husker feil vakt".
-
-## Løsning
-
-### 1. Slette delt tilstand riktig
-I `toggleTaskCompletion`, endre uncheck til å slette alle rader for `routine_id` innenfor butikken (siden avkryssing er delt):
-
-```ts
-.delete()
-.eq("routine_id", routineId)
-.eq("store_id", activeStore.id);
-```
-
-Ingen `user_id`/`shift_date`-filter. Samme prinsipp som `clearAllCompletions` allerede bruker.
-
-### 2. Unngå duplikater ved check
-Bruk `upsert` istedenfor `insert` slik at samme rutine ikke får to rader hvis to brukere krysser samtidig:
-
-```ts
-.upsert(
-  { routine_id, user_id, store_id, shift_date: today },
-  { onConflict: "routine_id" }
-)
-```
-
-Krever en unik indeks — se Teknisk-seksjon.
-
-### 3. Realtime-abonnement
-Legg til `useEffect` i `EmployeeDashboard` som abonnerer på `postgres_changes` for `task_completions` filtrert på `store_id=eq.<activeStore.id>`. Ved INSERT/DELETE oppdater både `completions` (hvis raden gjelder valgt vakt) og `shiftProgress`. Rydd opp med `supabase.removeChannel` i return.
-
-### 4. Refetch ved focus/visibility (defense)
-Legg til lytter for `visibilitychange` og `focus` som kaller `fetchCompletions()` + `fetchAllShiftProgress()` når appen blir synlig igjen. Fanger opp tilfeller hvor realtime mistet en melding.
-
-## Teknisk
-
-**Migrasjon** (unik indeks for upsert + realtime-publisering):
-
-```sql
--- Rydd eventuelle duplikater først
-DELETE FROM public.task_completions a
-USING public.task_completions b
-WHERE a.ctid < b.ctid AND a.routine_id = b.routine_id;
-
-CREATE UNIQUE INDEX IF NOT EXISTS task_completions_routine_unique
-  ON public.task_completions(routine_id);
-
-ALTER TABLE public.task_completions REPLICA IDENTITY FULL;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.task_completions;
-```
-
-## Filer som endres
-
-- `src/pages/EmployeeDashboard.tsx` — fix uncheck-filter, bytt insert→upsert, nytt realtime-`useEffect`, visibility/focus-refetch
-- Ny migrasjon — unik indeks + realtime-publisering
-
-## Ikke endret
-
-- `clearAllCompletions` er allerede korrekt
-- Ingen UI-endringer
-- Ingen endring i admin-dashboard (avkryssing skjer kun i EmployeeDashboard)
+Tab-knapp-tekster oppdateres på linjene rundt 779 og 793.
