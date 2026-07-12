@@ -8,6 +8,7 @@ import { Bell, Check, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { highlightSearchTerm } from "@/lib/highlightText";
+import { MultiImageDisplay } from "@/components/ImageUpload";
 
 interface Routine {
   id: string;
