@@ -927,7 +927,7 @@ export default function EmployeeDashboard() {
             ) : mainTab === "bulletin" ? (
               <BulletinBoard key="cafe" searchHighlightTerm={searchHighlightTerm} />
             ) : mainTab === "workshop" ? (
-              <BulletinBoard key="workshop" variant="workshop" searchHighlightTerm={searchHighlightTerm} />)
+              <BulletinBoard key="workshop" variant="workshop" searchHighlightTerm={searchHighlightTerm} />
             ) : (
               <div className="space-y-6">
                 {/* Unread notifications banner above shifts */}
