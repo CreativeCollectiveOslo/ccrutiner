@@ -494,6 +494,19 @@ export default function AdminDashboard() {
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
+              <button
+                onClick={() => setActiveTab("temperature")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                  activeTab === "temperature"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Temperatur
+                {activeTab === "temperature" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
             </div>
           </div>
         )}
