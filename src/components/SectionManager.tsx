@@ -140,6 +140,13 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     fetchRoutines();
   }, [shiftId]);
 
+  useEffect(() => {
+    if (!activeStore) return;
+    supabase.from("temperature_units").select("id, name")
+      .eq("store_id", activeStore.id).order("order_index")
+      .then(({ data }) => setMeasurementPoints((data || []) as MeasurementPoint[]));
+  }, [activeStore?.id]);
+
   const fetchSections = async () => {
     const { data, error } = await supabase
       .from("sections")
