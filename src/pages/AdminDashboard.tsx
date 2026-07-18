@@ -617,6 +617,8 @@ export default function AdminDashboard() {
               <InfoSectionManager categoryId={selectedInfoCategory} categories={infoCategories} />
             )}
           </div>
+        ) : activeTab === "temperature" ? (
+          <TemperatureManager />
         ) : activeTab === "stores" ? (
           <StoreManager />
         ) : (
