@@ -425,8 +425,8 @@ function PointDetail({
           <AlertDialogHeader>
             <AlertDialogTitle>Slette målepunkt?</AlertDialogTitle>
             <AlertDialogDescription>
-              Målepunktet fjernes fra valglisten i rutiner. Målinger beholdes i historikken,
-              men mister koblingen til navnet.
+              Målepunktet og alle tilhørende målinger slettes permanent. Loggførings-rutiner
+              som brukte målepunktet mister koblingen.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

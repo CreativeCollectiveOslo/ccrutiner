@@ -1,0 +1,1 @@
+ALTER TABLE public.temperature_readings DROP CONSTRAINT temperature_readings_unit_id_fkey, ADD CONSTRAINT temperature_readings_unit_id_fkey FOREIGN KEY (unit_id) REFERENCES public.temperature_units(id) ON DELETE CASCADE;
