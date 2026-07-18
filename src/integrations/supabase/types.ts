@@ -280,12 +280,14 @@ export type Database = {
           description: string | null
           id: string
           image_urls: string[] | null
+          measurement_point_id: string | null
           multimedia_url: string | null
           order_index: number | null
           priority: number | null
           section_id: string | null
           shift_id: string
           store_id: string
+          task_type: string
           title: string
           updated_at: string
         }
@@ -294,12 +296,14 @@ export type Database = {
           description?: string | null
           id?: string
           image_urls?: string[] | null
+          measurement_point_id?: string | null
           multimedia_url?: string | null
           order_index?: number | null
           priority?: number | null
           section_id?: string | null
           shift_id: string
           store_id: string
+          task_type?: string
           title: string
           updated_at?: string
         }
@@ -308,16 +312,25 @@ export type Database = {
           description?: string | null
           id?: string
           image_urls?: string[] | null
+          measurement_point_id?: string | null
           multimedia_url?: string | null
           order_index?: number | null
           priority?: number | null
           section_id?: string | null
           shift_id?: string
           store_id?: string
+          task_type?: string
           title?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "routines_measurement_point_id_fkey"
+            columns: ["measurement_point_id"]
+            isOneToOne: false
+            referencedRelation: "temperature_units"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "routines_section_id_fkey"
             columns: ["section_id"]
@@ -626,6 +639,7 @@ export type Database = {
           created_at: string
           id: string
           note: string | null
+          routine_id: string | null
           store_id: string
           unit_id: string
           user_id: string
@@ -636,6 +650,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
+          routine_id?: string | null
           store_id: string
           unit_id: string
           user_id?: string
@@ -646,6 +661,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
+          routine_id?: string | null
           store_id?: string
           unit_id?: string
           user_id?: string
@@ -653,6 +669,13 @@ export type Database = {
           widget_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "temperature_readings_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "routines"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "temperature_readings_store_id_fkey"
             columns: ["store_id"]
@@ -665,13 +688,6 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "temperature_units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "temperature_readings_widget_id_fkey"
-            columns: ["widget_id"]
-            isOneToOne: false
-            referencedRelation: "temperature_widgets"
             referencedColumns: ["id"]
           },
         ]
@@ -704,94 +720,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "temperature_units_store_id_fkey"
-            columns: ["store_id"]
-            isOneToOne: false
-            referencedRelation: "stores"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      temperature_widget_units: {
-        Row: {
-          order_index: number
-          unit_id: string
-          widget_id: string
-        }
-        Insert: {
-          order_index?: number
-          unit_id: string
-          widget_id: string
-        }
-        Update: {
-          order_index?: number
-          unit_id?: string
-          widget_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "temperature_widget_units_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "temperature_units"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "temperature_widget_units_widget_id_fkey"
-            columns: ["widget_id"]
-            isOneToOne: false
-            referencedRelation: "temperature_widgets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      temperature_widgets: {
-        Row: {
-          created_at: string
-          id: string
-          order_index: number
-          section_id: string | null
-          shift_id: string
-          store_id: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          order_index?: number
-          section_id?: string | null
-          shift_id: string
-          store_id: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          order_index?: number
-          section_id?: string | null
-          shift_id?: string
-          store_id?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "temperature_widgets_section_id_fkey"
-            columns: ["section_id"]
-            isOneToOne: false
-            referencedRelation: "sections"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "temperature_widgets_shift_id_fkey"
-            columns: ["shift_id"]
-            isOneToOne: false
-            referencedRelation: "shifts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "temperature_widgets_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
