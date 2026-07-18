@@ -317,7 +317,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
       toast.success("Rutine opprettet!");
       setRoutineDialogOpen(false);
-      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [] });
+      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [], taskType: "vanlig", measurementPointId: "" });
       setCurrentSectionForNewRoutine(null);
       fetchRoutines();
     }
@@ -329,11 +329,20 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
     const { error } = await supabase
       .from("routines")
+    if (editRoutine.taskType === "loggforing" && !editRoutine.measurementPointId) {
+      toast.error("Velg et målepunkt for loggføring");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("routines")
       .update({
         title: editRoutine.title,
         description: editRoutine.description || null,
         priority: editRoutine.priority,
         image_urls: editRoutine.imageUrls.length > 0 ? editRoutine.imageUrls : null,
+        task_type: editRoutine.taskType,
+        measurement_point_id: editRoutine.taskType === "loggforing" ? editRoutine.measurementPointId : null,
       })
       .eq("id", editingRoutineId);
 
