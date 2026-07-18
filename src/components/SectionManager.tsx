@@ -720,6 +720,37 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
+                <Label>Type oppgave</Label>
+                <Select
+                  value={newRoutine.taskType}
+                  onValueChange={(v) => setNewRoutine({ ...newRoutine, taskType: v as "vanlig" | "loggforing" })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vanlig">Vanlig</SelectItem>
+                    <SelectItem value="loggforing">Loggføring (temperatur)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {newRoutine.taskType === "loggforing" && (
+                <div className="space-y-2">
+                  <Label>Målepunkt *</Label>
+                  <Select
+                    value={newRoutine.measurementPointId}
+                    onValueChange={(v) => setNewRoutine({ ...newRoutine, measurementPointId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={measurementPoints.length === 0 ? "Ingen målepunkter — opprett under Logger" : "Velg målepunkt"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {measurementPoints.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
                 <Label htmlFor="new-title">Tittel *</Label>
                 <Input
                   id="new-title"
