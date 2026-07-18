@@ -33,7 +33,7 @@ import { SearchDialog } from "@/components/SearchDialog";
 import { highlightSearchTerm } from "@/lib/highlightText";
 import logo from "@/assets/logo.png";
 import { MultiImageDisplay } from "@/components/ImageUpload";
-import { TemperatureShiftWidgets } from "@/components/TemperatureShiftWidgets";
+import { LogReadingDialog } from "@/components/LogReadingDialog";
 // (Handleliste erstattet av verkstedloggbok)
 
 interface RoutineInfo {
@@ -93,6 +93,8 @@ interface Routine {
   multimedia_url: string | null;
   image_urls: string[] | null;
   section_id: string | null;
+  task_type: string | null;
+  measurement_point_id: string | null;
 }
 
 interface TaskCompletion {
@@ -1245,8 +1247,43 @@ export default function EmployeeDashboard() {
                   })}
                 </>
               )}
-              {selectedShift && <TemperatureShiftWidgets shiftId={selectedShift.id} />}
             </div>
+          </div>
+        )}
+      </main>
+
+      {logRoutine && activeStore && user && (
+        <LogReadingDialog
+          open={!!logRoutine}
+          onOpenChange={(o) => !o && setLogRoutine(null)}
+          routineId={logRoutine.id}
+          routineTitle={logRoutine.title}
+          measurementPointId={logRoutine.measurement_point_id!}
+          storeId={activeStore.id}
+          userId={user.id}
+          onSaved={() => {
+            const newCompletions = new Set(completions);
+            newCompletions.add(logRoutine.id);
+            setCompletions(newCompletions);
+            setRecentlyCompleted((prev) => new Set(prev).add(logRoutine.id));
+            setTimeout(() => {
+              setRecentlyCompleted((prev) => {
+                const u = new Set(prev); u.delete(logRoutine.id); return u;
+              });
+            }, 1000);
+            if (selectedShift) {
+              setShiftProgress((prev) => ({
+                ...prev,
+                [selectedShift.id]: {
+                  ...prev[selectedShift.id],
+                  completed: (prev[selectedShift.id]?.completed || 0) + 1,
+                },
+              }));
+            }
+            setLogRoutine(null);
+          }}
+        />
+      )}
           </div>
         )}
       </main>
