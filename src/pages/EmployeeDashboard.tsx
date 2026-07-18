@@ -1244,6 +1244,7 @@ export default function EmployeeDashboard() {
                   })}
                 </>
               )}
+              {selectedShift && <TemperatureShiftWidgets shiftId={selectedShift.id} />}
             </div>
           </div>
         )}
