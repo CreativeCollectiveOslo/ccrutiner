@@ -62,6 +62,13 @@ interface Routine {
   multimedia_url: string | null;
   image_urls: string[] | null;
   section_id: string | null;
+  task_type: string | null;
+  measurement_point_id: string | null;
+}
+
+interface MeasurementPoint {
+  id: string;
+  name: string;
 }
 
 interface Shift {
@@ -102,6 +109,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     priority: 0,
     sendNotification: false,
     imageUrls: [] as string[],
+    taskType: "vanlig" as "vanlig" | "loggforing",
+    measurementPointId: "" as string,
   });
 
   // Edit routine state
@@ -113,7 +122,11 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     priority: 0,
     sendNotification: false,
     imageUrls: [] as string[],
+    taskType: "vanlig" as "vanlig" | "loggforing",
+    measurementPointId: "" as string,
   });
+
+  const [measurementPoints, setMeasurementPoints] = useState<MeasurementPoint[]>([]);
 
   // Move routine state
   const [moveRoutineDialogOpen, setMoveRoutineDialogOpen] = useState(false);
