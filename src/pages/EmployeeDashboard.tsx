@@ -33,6 +33,7 @@ import { SearchDialog } from "@/components/SearchDialog";
 import { highlightSearchTerm } from "@/lib/highlightText";
 import logo from "@/assets/logo.png";
 import { MultiImageDisplay } from "@/components/ImageUpload";
+import { TemperatureShiftWidgets } from "@/components/TemperatureShiftWidgets";
 // (Handleliste erstattet av verkstedloggbok)
 
 interface RoutineInfo {
