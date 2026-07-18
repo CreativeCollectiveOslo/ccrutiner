@@ -463,6 +463,22 @@ function PointDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!deleteReadingId} onOpenChange={(o) => !o && setDeleteReadingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette måling?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Denne målingen slettes permanent.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteReading}
+              className="bg-destructive hover:bg-destructive/90">Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
