@@ -33,7 +33,7 @@ import { SearchDialog } from "@/components/SearchDialog";
 import { highlightSearchTerm } from "@/lib/highlightText";
 import logo from "@/assets/logo.png";
 import { MultiImageDisplay } from "@/components/ImageUpload";
-import { TemperatureShiftWidgets } from "@/components/TemperatureShiftWidgets";
+import { LogReadingDialog } from "@/components/LogReadingDialog";
 // (Handleliste erstattet av verkstedloggbok)
 
 interface RoutineInfo {
@@ -93,6 +93,8 @@ interface Routine {
   multimedia_url: string | null;
   image_urls: string[] | null;
   section_id: string | null;
+  task_type: string | null;
+  measurement_point_id: string | null;
 }
 
 interface TaskCompletion {
@@ -150,6 +152,7 @@ export default function EmployeeDashboard() {
   const [highlightedRoutineId, setHighlightedRoutineId] = useState<string | null>(null);
   const [searchHighlightTerm, setSearchHighlightTerm] = useState<string | null>(null);
   const { isSupported: wakeLockSupported, isActive: wakeLockActive, toggleWakeLock } = useWakeLock();
+  const [logRoutine, setLogRoutine] = useState<Routine | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -508,7 +511,14 @@ export default function EmployeeDashboard() {
     if (!user || !selectedShift) return;
 
     const isCompleted = completions.has(routineId);
+    const routine = routines.find((r) => r.id === routineId);
     const today = new Date().toISOString().split("T")[0];
+
+    if (!isCompleted && routine?.task_type === "loggforing" && routine.measurement_point_id) {
+      setLogRoutine(routine);
+      return;
+    }
+
 
     if (isCompleted) {
       if (!activeStore) return;
@@ -1245,11 +1255,44 @@ export default function EmployeeDashboard() {
                   })}
                 </>
               )}
-              {selectedShift && <TemperatureShiftWidgets shiftId={selectedShift.id} />}
             </div>
           </div>
         )}
       </main>
+
+      {logRoutine && activeStore && user && (
+        <LogReadingDialog
+          open={!!logRoutine}
+          onOpenChange={(o) => !o && setLogRoutine(null)}
+          routineId={logRoutine.id}
+          routineTitle={logRoutine.title}
+          measurementPointId={logRoutine.measurement_point_id!}
+          storeId={activeStore.id}
+          userId={user.id}
+          onSaved={() => {
+            const newCompletions = new Set(completions);
+            newCompletions.add(logRoutine.id);
+            setCompletions(newCompletions);
+            setRecentlyCompleted((prev) => new Set(prev).add(logRoutine.id));
+            setTimeout(() => {
+              setRecentlyCompleted((prev) => {
+                const u = new Set(prev); u.delete(logRoutine.id); return u;
+              });
+            }, 1000);
+            if (selectedShift) {
+              setShiftProgress((prev) => ({
+                ...prev,
+                [selectedShift.id]: {
+                  ...prev[selectedShift.id],
+                  completed: (prev[selectedShift.id]?.completed || 0) + 1,
+                },
+              }));
+            }
+            setLogRoutine(null);
+          }}
+        />
+      )}
+
 
       {isAdmin && (
         <footer className="fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur">

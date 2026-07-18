@@ -62,6 +62,13 @@ interface Routine {
   multimedia_url: string | null;
   image_urls: string[] | null;
   section_id: string | null;
+  task_type: string | null;
+  measurement_point_id: string | null;
+}
+
+interface MeasurementPoint {
+  id: string;
+  name: string;
 }
 
 interface Shift {
@@ -102,6 +109,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     priority: 0,
     sendNotification: false,
     imageUrls: [] as string[],
+    taskType: "vanlig" as "vanlig" | "loggforing",
+    measurementPointId: "" as string,
   });
 
   // Edit routine state
@@ -113,7 +122,11 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     priority: 0,
     sendNotification: false,
     imageUrls: [] as string[],
+    taskType: "vanlig" as "vanlig" | "loggforing",
+    measurementPointId: "" as string,
   });
+
+  const [measurementPoints, setMeasurementPoints] = useState<MeasurementPoint[]>([]);
 
   // Move routine state
   const [moveRoutineDialogOpen, setMoveRoutineDialogOpen] = useState(false);
@@ -126,6 +139,13 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     fetchSections();
     fetchRoutines();
   }, [shiftId]);
+
+  useEffect(() => {
+    if (!activeStore) return;
+    supabase.from("temperature_units").select("id, name")
+      .eq("store_id", activeStore.id).order("order_index")
+      .then(({ data }) => setMeasurementPoints((data || []) as MeasurementPoint[]));
+  }, [activeStore?.id]);
 
   const fetchSections = async () => {
     const { data, error } = await supabase
@@ -265,6 +285,11 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       ? Math.max(...routines.map((r) => r.order_index ?? 0)) + 1
       : 0;
 
+    if (newRoutine.taskType === "loggforing" && !newRoutine.measurementPointId) {
+      toast.error("Velg et målepunkt for loggføring");
+      return;
+    }
+
     const { data: routineData, error } = await supabase
       .from("routines")
       .insert({
@@ -276,6 +301,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         section_id: currentSectionForNewRoutine,
         image_urls: newRoutine.imageUrls.length > 0 ? newRoutine.imageUrls : null,
         store_id: activeStore.id,
+        task_type: newRoutine.taskType,
+        measurement_point_id: newRoutine.taskType === "loggforing" ? newRoutine.measurementPointId : null,
       })
       .select()
       .single();
@@ -297,7 +324,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
       toast.success("Rutine opprettet!");
       setRoutineDialogOpen(false);
-      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [] });
+      setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [], taskType: "vanlig", measurementPointId: "" });
       setCurrentSectionForNewRoutine(null);
       fetchRoutines();
     }
@@ -307,6 +334,11 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     e.preventDefault();
     if (!editingRoutineId) return;
 
+    if (editRoutine.taskType === "loggforing" && !editRoutine.measurementPointId) {
+      toast.error("Velg et målepunkt for loggføring");
+      return;
+    }
+
     const { error } = await supabase
       .from("routines")
       .update({
@@ -314,6 +346,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         description: editRoutine.description || null,
         priority: editRoutine.priority,
         image_urls: editRoutine.imageUrls.length > 0 ? editRoutine.imageUrls : null,
+        task_type: editRoutine.taskType,
+        measurement_point_id: editRoutine.taskType === "loggforing" ? editRoutine.measurementPointId : null,
       })
       .eq("id", editingRoutineId);
 
@@ -385,7 +419,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const openNewRoutine = (sectionId: string | null) => {
     setCurrentSectionForNewRoutine(sectionId);
-    setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [] });
+    setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [], taskType: "vanlig", measurementPointId: "" });
     setRoutineDialogOpen(true);
   };
 
@@ -397,6 +431,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       priority: routine.priority,
       sendNotification: false,
       imageUrls: routine.image_urls || [],
+      taskType: (routine.task_type === "loggforing" ? "loggforing" : "vanlig"),
+      measurementPointId: routine.measurement_point_id || "",
     });
     setEditRoutineDialogOpen(true);
   };
@@ -413,11 +449,16 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       className="flex items-start justify-between py-3 border-b last:border-b-0"
     >
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-sm font-medium">{routine.title}</h4>
           {routine.priority > 0 && (
             <Badge variant="secondary" className="text-xs">
               P{routine.priority}
+            </Badge>
+          )}
+          {routine.task_type === "loggforing" && (
+            <Badge variant="outline" className="text-xs">
+              Loggføring{routine.measurement_point_id ? ` · ${measurementPoints.find(p => p.id === routine.measurement_point_id)?.name || "—"}` : ""}
             </Badge>
           )}
         </div>
@@ -679,6 +720,37 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
+                <Label>Type oppgave</Label>
+                <Select
+                  value={newRoutine.taskType}
+                  onValueChange={(v) => setNewRoutine({ ...newRoutine, taskType: v as "vanlig" | "loggforing" })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vanlig">Vanlig</SelectItem>
+                    <SelectItem value="loggforing">Loggføring (temperatur)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {newRoutine.taskType === "loggforing" && (
+                <div className="space-y-2">
+                  <Label>Målepunkt *</Label>
+                  <Select
+                    value={newRoutine.measurementPointId}
+                    onValueChange={(v) => setNewRoutine({ ...newRoutine, measurementPointId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={measurementPoints.length === 0 ? "Ingen målepunkter — opprett under Logger" : "Velg målepunkt"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {measurementPoints.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
                 <Label htmlFor="new-title">Tittel *</Label>
                 <Input
                   id="new-title"
@@ -746,6 +818,37 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
               <DialogTitle>Rediger rutine</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Type oppgave</Label>
+                <Select
+                  value={editRoutine.taskType}
+                  onValueChange={(v) => setEditRoutine({ ...editRoutine, taskType: v as "vanlig" | "loggforing" })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vanlig">Vanlig</SelectItem>
+                    <SelectItem value="loggforing">Loggføring (temperatur)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {editRoutine.taskType === "loggforing" && (
+                <div className="space-y-2">
+                  <Label>Målepunkt *</Label>
+                  <Select
+                    value={editRoutine.measurementPointId}
+                    onValueChange={(v) => setEditRoutine({ ...editRoutine, measurementPointId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={measurementPoints.length === 0 ? "Ingen målepunkter — opprett under Logger" : "Velg målepunkt"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {measurementPoints.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="edit-title">Tittel *</Label>
                 <Input

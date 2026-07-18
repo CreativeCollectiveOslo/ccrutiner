@@ -1,59 +1,68 @@
+
 ## Mål
+Erstatte det frittstående temperatur-systemet med:
+1. En «Logger»-fane hos admin som administrerer **målepunkter** (f.eks. «Kjøleskapet under kaffemaskinen»).
+2. Loggføring som en **rutine-type** inne i vaktene — ansatte krysser av en logg-rutine ved å angi en temperatur.
 
-Ansatte skal kunne loggføre temperaturer på kjøle-/fryseenheter som en del av arbeidsflyten i en vakt. Admin skal kunne definere hvilke enheter som finnes pr. butikk, og kunne se en filtrerbar logg for dokumentasjon til Mattilsynet.
+## Admin — «Logger»-fanen (erstatter «Temperatur»)
 
-## Konsept: "Temperatur-widget" som legges inn i valgt vakt
+Ett nivå, en liste med målepunkter per butikk:
 
-Widgeten oppfører seg som et rutine-element (samme kort-utseende som andre rutiner), men i stedet for en avkryssingsboks har den et lite skjema med tallfelt for hver enhet + valgfri kommentar. Admin bestemmer i hvilken vakt widgeten skal ligge og hvilke seksjon den plasseres under — akkurat som med vanlige rutiner. Det gjør at ansatte finner temperaturloggingen der det passer i flowet (morgenåpning, kveldsvakt, etc.).
+- **Opprett målepunkt** — kun navn.
+- **Åpne målepunkt** viser detaljvisning med:
+  - Redigerbart navn (lagres inline).
+  - Alle målinger (nyeste først, paginert) med temperatur, dato/tid, hvem som logget, evt. notat, og hvilken rutine/vakt den kom fra.
+  - Filtre: fra/til dato.
+  - Knapp **«Eksporter CSV»** — laster ned filtrerte målinger (`dato, temperatur_c, målepunkt, bruker, vakt, rutine, notat`).
+  - Knapp **«Slett målepunkt»** med bekreftelse (målinger beholdes historisk, men målepunktet fjernes fra valglisten i rutiner).
 
-## Datamodell (nytt)
+«Skjemaer»-underfanen og widget-visningen i vaktene fjernes helt.
 
-**`temperature_units`** — enheter admin har opprettet pr. butikk (f.eks. «Kjøleskap kaffedisk», «Fryser bakrom»).
-- `store_id`, `name`, `order_index`
+## Admin — Rutiner: ny oppgavetype
 
-**`temperature_widgets`** — plassering av et loggeskjema i en vakt.
-- `store_id`, `shift_id`, `section_id` (valgfri), `title` (f.eks. «Morgentemperaturer»), `order_index`
-- Kobles til enheter via en join-tabell så samme enhet kan brukes i flere widgets.
+I «Ny rutine»- og «Rediger rutine»-dialogen (i `SectionManager.tsx`):
 
-**`temperature_widget_units`** (join) — hvilke enheter som skal fylles ut i widgeten.
+- Nytt felt **«Type oppgave»** øverst: `Vanlig` (default) eller `Loggføring`.
+- Hvis `Loggføring` velges: vis en **«Målepunkt»**-dropdown med alle målepunkter i butikken (påkrevd). Beskrivelse/bilder/prioritet fungerer som før.
+- Hvis `Vanlig`: skjul målepunkt-feltet.
 
-**`temperature_readings`** — selve loggen.
-- `store_id`, `widget_id`, `unit_id`, `user_id`, `value_celsius` (numeric), `note` (valgfri), `created_at`
+Rutinekortet i admin-listen får en liten badge «Loggføring · {målepunkt}» når type er loggføring.
 
-Alle tabeller får RLS med samme `has_store_access`-mønster som resten av appen (SELECT for butikkmedlemmer, INSERT/UPDATE/DELETE for admin med butikktilgang; ansatte kan bare INSERTe readings).
+## Ansatt — kryss av loggføring med temperatur
 
-## Admin-UI
+I `EmployeeDashboard.tsx` render av rutiner:
 
-1. **Under «Innstillinger» / ny fane «Temperatur»**: liste over enheter pr. butikk (opprett/rediger/slett), samme mønster som seksjoner.
-2. **Inne i en vakt** (`ShiftManager`): ny «+ Temperatur-widget»-knapp ved siden av «+ Seksjon». Åpner dialog: velg tittel, seksjon (valgfri), og hvilke enheter som skal inngå.
-3. **Ny fane «Temperaturlogg»** i AdminDashboard:
-   - Tabell med kolonner: Dato/tid, Enhet, Temperatur (°C), Loggført av, Kommentar
-   - Filtre: datointervall (fra/til), enhet (dropdown), butikkvelger (styres av aktiv butikk som ellers)
-   - Sortering: nyeste først, paginert med samme `getPaginationRange`-helper som resten av appen
-   - Ingen eksport i første omgang (kan legges til senere)
+- Vanlige rutiner: uendret checkbox-oppførsel.
+- Loggførings-rutiner: checkboxen åpner en liten popover/dialog:
+  - Tallfelt for temperatur (desimal, `°C`, samme validering som dagens widget).
+  - Valgfritt notat-felt.
+  - «Lagre»-knapp → lagrer i `temperature_readings` (med `routine_id`, `unit_id`, `store_id`, `user_id`) **og** markerer rutinen som fullført via samme `task_completions`-flyt som i dag.
+  - Angre-fjerning: hvis avkrysset og ansatt fjerner haken, slettes både `task_completions`-raden og siste tilhørende måling for den vaktforekomsten (samme dag) — bekreftelse først.
+- Siste registrerte verdi vises som liten tekst under tittelen (à la dagens widget).
 
-## Ansatt-UI
-
-I `EmployeeDashboard` når man er inne i en vakt: widgetene rendres på riktig plass mellom seksjoner/rutiner. Hver widget viser:
-- Tittel
-- Ett tallfelt (`inputMode="decimal"`) pr. enhet med enhetens navn som label og «°C» som suffix
-- Valgfritt kommentarfelt
-- «Lagre målinger»-knapp som sender én rad pr. utfylt enhet til `temperature_readings`
-- Under skjemaet: siste måling pr. enhet vist som liten grå tekst («Sist: 3,2 °C kl. 08:14 av Anna») så ansatt ser at det er registrert
-
-Widgeten «tømmer seg» etter lagring og viser en kort bekreftelse (toast). Den regnes ikke som «avkrysset» slik som en rutine — den kan brukes flere ganger i løpet av vakten hvis noen vil logge på nytt.
+`TemperatureShiftWidgets`-blokken nederst i vaktvisningen fjernes.
 
 ## Tekniske detaljer
 
-- Norsk locale (nb-NO) og komma som desimalskille i visning; internt lagres tall som numeric.
-- Filtrering i admin-loggen gjøres server-side via Supabase-spørring (`gte`/`lte` på `created_at`, `eq` på `unit_id`).
-- Ingen grenseverdier / varsler i denne omgangen — kun råloggen.
-- Realtime-abonnement på `temperature_readings` er ikke nødvendig i første omgang.
+Migration:
+- `ALTER TABLE public.routines ADD COLUMN task_type text NOT NULL DEFAULT 'vanlig' CHECK (task_type IN ('vanlig','loggforing'));`
+- `ALTER TABLE public.routines ADD COLUMN measurement_point_id uuid REFERENCES public.temperature_units(id) ON DELETE SET NULL;`
+- `ALTER TABLE public.temperature_readings ADD COLUMN routine_id uuid REFERENCES public.routines(id) ON DELETE SET NULL;`
+- Behold `temperature_units` (nå semantisk «målepunkter») og `temperature_readings`. Drop `temperature_widgets` og `temperature_widget_units` (ingen live data brukes utenfor admin-oppsett).
+- Ingen RLS-endringer nødvendig — eksisterende `store_id`-scopede policyer dekker de nye kolonnene.
 
-## Rekkefølge for implementasjon
+Filer:
+- `src/components/TemperatureManager.tsx` → forenkles kraftig til én liste + detaljvisning + CSV-eksport (bygget med `Blob` + `URL.createObjectURL`, ingen ny avhengighet). Fanen døpes om til «Logger».
+- `src/pages/AdminDashboard.tsx` → rename tab label `Temperatur` → `Logger`.
+- `src/components/SectionManager.tsx` → utvide new/edit-rutine-dialogene med type + målepunkt-dropdown; hente målepunkter for butikken.
+- `src/pages/EmployeeDashboard.tsx` → grener render/toggle-logikk på `task_type`; ny liten `LogReadingDialog`-komponent inline eller i `src/components/LogReadingDialog.tsx`.
+- Slett `src/components/TemperatureShiftWidgets.tsx` og `src/components/TemperatureWidget.tsx` og fjern referanser.
+- Regenererte Supabase-typer plukker opp nye kolonner automatisk etter migrasjonen.
 
-1. Migrasjon: fire nye tabeller + RLS + GRANTs.
-2. Admin: enhet-manager (CRUD).
-3. Admin: widget-oppretting inne i vakt.
-4. Ansatt: widget-rendering + innsending i vakt.
-5. Admin: temperaturlogg-fane med filtre og paginering.
+CSV-format (UTF-8, `;`-separator, norske desimaler `,`):
+```text
+dato;temperatur_c;målepunkt;bruker;vakt;rutine;notat
+```
+
+## Migrering av eksisterende data
+Ingen produksjonsdata i `temperature_widgets` er avhengig av å bevares (kun oppsett). Eksisterende `temperature_readings` beholdes og vises automatisk under sitt målepunkt — `routine_id` blir bare `NULL` for gamle rader.
