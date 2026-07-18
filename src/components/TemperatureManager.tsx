@@ -399,8 +399,19 @@ function PointDetail({
                       <div className="text-xs mt-1 italic text-muted-foreground">{r.note}</div>
                     )}
                   </div>
-                  <div className="text-lg font-semibold shrink-0">
-                    {formatTemp(Number(r.value_celsius))} °C
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-lg font-semibold">
+                      {formatTemp(Number(r.value_celsius))} °C
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setDeleteReadingId(r.id)}
+                      aria-label="Slett måling"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
