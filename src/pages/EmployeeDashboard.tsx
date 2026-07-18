@@ -152,6 +152,7 @@ export default function EmployeeDashboard() {
   const [highlightedRoutineId, setHighlightedRoutineId] = useState<string | null>(null);
   const [searchHighlightTerm, setSearchHighlightTerm] = useState<string | null>(null);
   const { isSupported: wakeLockSupported, isActive: wakeLockActive, toggleWakeLock } = useWakeLock();
+  const [logRoutine, setLogRoutine] = useState<Routine | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -510,7 +511,14 @@ export default function EmployeeDashboard() {
     if (!user || !selectedShift) return;
 
     const isCompleted = completions.has(routineId);
+    const routine = routines.find((r) => r.id === routineId);
     const today = new Date().toISOString().split("T")[0];
+
+    if (!isCompleted && routine?.task_type === "loggforing" && routine.measurement_point_id) {
+      setLogRoutine(routine);
+      return;
+    }
+
 
     if (isCompleted) {
       if (!activeStore) return;
