@@ -752,6 +752,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string | null
           image_urls: string[] | null
           message: string
           store_id: string
@@ -762,6 +763,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string | null
           image_urls?: string[] | null
           message: string
           store_id: string
@@ -772,6 +774,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          image_url?: string | null
           image_urls?: string[] | null
           message?: string
           store_id?: string
