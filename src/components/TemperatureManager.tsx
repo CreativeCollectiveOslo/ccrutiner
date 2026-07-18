@@ -5,14 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
-} from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -28,21 +23,16 @@ import { Calendar } from "@/components/ui/calendar";
 import { getPaginationRange } from "@/lib/pagination";
 import { toast } from "sonner";
 import {
-  Loader2, Plus, Trash2, Pencil, Check, X, CalendarIcon, Thermometer,
+  Loader2, Plus, Trash2, ChevronRight, CalendarIcon, Thermometer, Download, ArrowLeft, Check,
 } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-interface Unit { id: string; name: string; order_index: number; }
-interface Shift { id: string; name: string; }
-interface Widget {
-  id: string; title: string; shift_id: string; section_id: string | null; order_index: number;
-  unit_ids: string[];
-}
+interface Point { id: string; name: string; order_index: number; }
 interface Reading {
   id: string; value_celsius: number; note: string | null; created_at: string;
-  unit_id: string; user_id: string;
+  unit_id: string; user_id: string; routine_id: string | null;
 }
 
 const READINGS_PER_PAGE = 25;
@@ -51,51 +41,28 @@ const formatTemp = (n: number) =>
 
 export function TemperatureManager() {
   const { activeStore } = useStore();
-  const [tab, setTab] = useState<"units" | "widgets" | "log">("units");
+  const [openPointId, setOpenPointId] = useState<string | null>(null);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex border-b border-border">
-        {(["units", "widgets", "log"] as const).map((t) => {
-          const label = t === "units" ? "Enheter" : t === "widgets" ? "Skjemaer" : "Logg";
-          return (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
-                tab === t ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {label}
-              {tab === t && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+  if (!activeStore) {
+    return <p className="text-sm text-muted-foreground">Velg en butikk først.</p>;
+  }
 
-      {!activeStore ? (
-        <p className="text-sm text-muted-foreground">Velg en butikk først.</p>
-      ) : tab === "units" ? (
-        <UnitsPanel storeId={activeStore.id} />
-      ) : tab === "widgets" ? (
-        <WidgetsPanel storeId={activeStore.id} />
-      ) : (
-        <LogPanel storeId={activeStore.id} />
-      )}
-    </div>
+  return openPointId ? (
+    <PointDetail
+      storeId={activeStore.id}
+      pointId={openPointId}
+      onBack={() => setOpenPointId(null)}
+    />
+  ) : (
+    <PointsList storeId={activeStore.id} onOpen={setOpenPointId} />
   );
 }
 
-/* ================= UNITS ================= */
-function UnitsPanel({ storeId }: { storeId: string }) {
-  const [units, setUnits] = useState<Unit[]>([]);
+/* ================= LIST ================= */
+function PointsList({ storeId, onOpen }: { storeId: string; onOpen: (id: string) => void }) {
+  const [points, setPoints] = useState<Point[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -104,7 +71,7 @@ function UnitsPanel({ storeId }: { storeId: string }) {
       .select("*")
       .eq("store_id", storeId)
       .order("order_index");
-    setUnits((data || []) as Unit[]);
+    setPoints((data || []) as Point[]);
     setLoading(false);
   };
 
@@ -113,29 +80,10 @@ function UnitsPanel({ storeId }: { storeId: string }) {
   const add = async () => {
     if (!newName.trim()) return;
     const { error } = await supabase.from("temperature_units").insert({
-      store_id: storeId,
-      name: newName.trim(),
-      order_index: units.length,
+      store_id: storeId, name: newName.trim(), order_index: points.length,
     });
-    if (error) return toast.error("Kunne ikke opprette enhet");
+    if (error) return toast.error("Kunne ikke opprette målepunkt");
     setNewName("");
-    load();
-  };
-
-  const save = async (id: string) => {
-    if (!editName.trim()) return;
-    const { error } = await supabase.from("temperature_units")
-      .update({ name: editName.trim() }).eq("id", id);
-    if (error) return toast.error("Kunne ikke lagre");
-    setEditingId(null);
-    load();
-  };
-
-  const del = async () => {
-    if (!deleteId) return;
-    const { error } = await supabase.from("temperature_units").delete().eq("id", deleteId);
-    if (error) return toast.error("Kunne ikke slette");
-    setDeleteId(null);
     load();
   };
 
@@ -145,10 +93,10 @@ function UnitsPanel({ storeId }: { storeId: string }) {
     <div className="space-y-4">
       <Card>
         <CardContent className="p-4 space-y-3">
-          <Label className="text-sm">Legg til enhet</Label>
+          <Label className="text-sm">Nytt målepunkt</Label>
           <div className="flex gap-2">
             <Input
-              placeholder="F.eks. Kjøleskap kaffedisk"
+              placeholder="F.eks. Kjøleskapet under kaffemaskinen"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && add()}
@@ -160,293 +108,58 @@ function UnitsPanel({ storeId }: { storeId: string }) {
         </CardContent>
       </Card>
 
-      {units.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-6">Ingen enheter ennå.</p>
+      {points.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-6">
+          Ingen målepunkter ennå.
+        </p>
       ) : (
         <div className="space-y-2">
-          {units.map((u) => (
-            <Card key={u.id}>
+          {points.map((p) => (
+            <Card key={p.id} className="cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => onOpen(p.id)}>
               <CardContent className="p-3 flex items-center gap-2">
                 <Thermometer className="h-4 w-4 text-primary shrink-0" />
-                {editingId === u.id ? (
-                  <>
-                    <Input
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="h-8"
-                      autoFocus
-                    />
-                    <Button size="sm" variant="ghost" onClick={() => save(u.id)}>
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex-1 text-sm">{u.name}</span>
-                    <Button size="sm" variant="ghost"
-                      onClick={() => { setEditingId(u.id); setEditName(u.name); }}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setDeleteId(u.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </>
-                )}
+                <span className="flex-1 text-sm">{p.name}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </CardContent>
             </Card>
           ))}
         </div>
       )}
-
-      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Slette enhet?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Enheten fjernes fra alle skjemaer. Tidligere målinger beholdes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Avbryt</AlertDialogCancel>
-            <AlertDialogAction onClick={del}>Slett</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
 
-/* ================= WIDGETS ================= */
-function WidgetsPanel({ storeId }: { storeId: string }) {
-  const [widgets, setWidgets] = useState<Widget[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [shifts, setShifts] = useState<Shift[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editWidget, setEditWidget] = useState<Widget | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  const [fTitle, setFTitle] = useState("");
-  const [fShiftId, setFShiftId] = useState<string>("");
-  const [fUnits, setFUnits] = useState<string[]>([]);
-
-  const load = async () => {
-    setLoading(true);
-    const [wRes, uRes, sRes, wuRes] = await Promise.all([
-      supabase.from("temperature_widgets").select("*").eq("store_id", storeId).order("order_index"),
-      supabase.from("temperature_units").select("*").eq("store_id", storeId).order("order_index"),
-      supabase.from("shifts").select("id, name").eq("store_id", storeId).order("order_index"),
-      supabase.from("temperature_widget_units").select("widget_id, unit_id"),
-    ]);
-    const byWidget = new Map<string, string[]>();
-    for (const r of (wuRes.data || []) as any[]) {
-      if (!byWidget.has(r.widget_id)) byWidget.set(r.widget_id, []);
-      byWidget.get(r.widget_id)!.push(r.unit_id);
-    }
-    setWidgets(((wRes.data || []) as any[]).map((w) => ({
-      ...w, unit_ids: byWidget.get(w.id) || [],
-    })));
-    setUnits((uRes.data || []) as Unit[]);
-    setShifts((sRes.data || []) as Shift[]);
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [storeId]);
-
-  const openNew = () => {
-    setEditWidget(null);
-    setFTitle("");
-    setFShiftId(shifts[0]?.id || "");
-    setFUnits([]);
-    setDialogOpen(true);
-  };
-  const openEdit = (w: Widget) => {
-    setEditWidget(w);
-    setFTitle(w.title);
-    setFShiftId(w.shift_id);
-    setFUnits(w.unit_ids);
-    setDialogOpen(true);
-  };
-
-  const save = async () => {
-    if (!fTitle.trim() || !fShiftId) {
-      toast.error("Tittel og vakt er påkrevd");
-      return;
-    }
-    if (editWidget) {
-      const { error } = await supabase.from("temperature_widgets").update({
-        title: fTitle.trim(), shift_id: fShiftId,
-      }).eq("id", editWidget.id);
-      if (error) return toast.error("Kunne ikke lagre");
-      await supabase.from("temperature_widget_units").delete().eq("widget_id", editWidget.id);
-      if (fUnits.length) {
-        await supabase.from("temperature_widget_units").insert(
-          fUnits.map((uid, i) => ({ widget_id: editWidget.id, unit_id: uid, order_index: i })),
-        );
-      }
-    } else {
-      const { data, error } = await supabase.from("temperature_widgets").insert({
-        store_id: storeId, shift_id: fShiftId,
-        title: fTitle.trim(), order_index: widgets.length,
-      }).select().single();
-      if (error || !data) return toast.error("Kunne ikke opprette");
-      if (fUnits.length) {
-        await supabase.from("temperature_widget_units").insert(
-          fUnits.map((uid, i) => ({ widget_id: data.id, unit_id: uid, order_index: i })),
-        );
-      }
-    }
-    setDialogOpen(false);
-    load();
-  };
-
-  const del = async () => {
-    if (!deleteId) return;
-    const { error } = await supabase.from("temperature_widgets").delete().eq("id", deleteId);
-    if (error) return toast.error("Kunne ikke slette");
-    setDeleteId(null);
-    load();
-  };
-
-  if (loading) return <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={openNew} disabled={shifts.length === 0}>
-          <Plus className="h-4 w-4 mr-2" /> Nytt skjema
-        </Button>
-      </div>
-      {shifts.length === 0 && (
-        <p className="text-xs text-muted-foreground text-center">
-          Opprett en vakt først under «Rutiner».
-        </p>
-      )}
-
-      {widgets.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-6">Ingen skjemaer ennå.</p>
-      ) : (
-        <div className="space-y-2">
-          {widgets.map((w) => {
-            const shift = shifts.find((s) => s.id === w.shift_id);
-            return (
-              <Card key={w.id}>
-                <CardContent className="p-3 flex items-center gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{w.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {shift?.name || "—"} · {w.unit_ids.length} enhet{w.unit_ids.length === 1 ? "" : "er"}
-                    </div>
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(w)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setDeleteId(w.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editWidget ? "Rediger skjema" : "Nytt skjema"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="w-title">Tittel</Label>
-              <Input
-                id="w-title" value={fTitle}
-                onChange={(e) => setFTitle(e.target.value)}
-                placeholder="F.eks. Morgentemperaturer"
-              />
-            </div>
-            <div>
-              <Label>Vakt</Label>
-              <Select value={fShiftId} onValueChange={setFShiftId}>
-                <SelectTrigger><SelectValue placeholder="Velg vakt" /></SelectTrigger>
-                <SelectContent>
-                  {shifts.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Enheter</Label>
-              <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                {units.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Opprett enheter først.</p>
-                ) : units.map((u) => (
-                  <label key={u.id} className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={fUnits.includes(u.id)}
-                      onCheckedChange={(v) => {
-                        setFUnits((prev) =>
-                          v ? [...prev, u.id] : prev.filter((x) => x !== u.id));
-                      }}
-                    />
-                    <span className="text-sm">{u.name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Avbryt</Button>
-            <Button onClick={save}>Lagre</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Slette skjema?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Skjemaet fjernes fra vakten. Tidligere målinger beholdes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Avbryt</AlertDialogCancel>
-            <AlertDialogAction onClick={del}>Slett</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
-/* ================= LOG ================= */
-function LogPanel({ storeId }: { storeId: string }) {
+/* ================= DETAIL ================= */
+function PointDetail({
+  storeId, pointId, onBack,
+}: { storeId: string; pointId: string; onBack: () => void }) {
+  const [point, setPoint] = useState<Point | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [savingName, setSavingName] = useState(false);
   const [readings, setReadings] = useState<Reading[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
   const [names, setNames] = useState<Map<string, string>>(new Map());
+  const [routineTitles, setRoutineTitles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [unitFilter, setUnitFilter] = useState<string>("all");
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const load = async () => {
+  const loadPoint = async () => {
+    const { data } = await supabase.from("temperature_units")
+      .select("*").eq("id", pointId).maybeSingle();
+    if (data) { setPoint(data as Point); setEditingName((data as Point).name); }
+  };
+
+  const loadReadings = async () => {
     setLoading(true);
-    const { data: uData } = await supabase
-      .from("temperature_units").select("*").eq("store_id", storeId).order("order_index");
-    setUnits((uData || []) as Unit[]);
-
     let q = supabase.from("temperature_readings")
       .select("*", { count: "exact" })
       .eq("store_id", storeId)
+      .eq("unit_id", pointId)
       .order("created_at", { ascending: false });
-    if (unitFilter !== "all") q = q.eq("unit_id", unitFilter);
     if (fromDate) q = q.gte("created_at", fromDate.toISOString());
     if (toDate) {
       const end = new Date(toDate); end.setHours(23, 59, 59, 999);
@@ -466,34 +179,129 @@ function LogPanel({ storeId }: { storeId: string }) {
     } else {
       setNames(new Map());
     }
+
+    const rids = Array.from(new Set(list.map((r) => r.routine_id).filter(Boolean))) as string[];
+    if (rids.length) {
+      const { data: rs } = await supabase.from("routines").select("id, title").in("id", rids);
+      setRoutineTitles(new Map((rs || []).map((r: any) => [r.id, r.title])));
+    } else {
+      setRoutineTitles(new Map());
+    }
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ },
-    [storeId, page, unitFilter, fromDate?.getTime(), toDate?.getTime()]);
+  useEffect(() => { loadPoint(); /* eslint-disable-next-line */ }, [pointId]);
+  useEffect(() => { loadReadings(); /* eslint-disable-next-line */ },
+    [pointId, page, fromDate?.getTime(), toDate?.getTime()]);
+  useEffect(() => { setPage(1); }, [fromDate?.getTime(), toDate?.getTime()]);
 
-  useEffect(() => { setPage(1); }, [unitFilter, fromDate?.getTime(), toDate?.getTime()]);
+  const saveName = async () => {
+    if (!point || !editingName.trim() || editingName === point.name) return;
+    setSavingName(true);
+    const { error } = await supabase.from("temperature_units")
+      .update({ name: editingName.trim() }).eq("id", point.id);
+    setSavingName(false);
+    if (error) return toast.error("Kunne ikke lagre navn");
+    toast.success("Navn lagret");
+    loadPoint();
+  };
 
-  const unitName = (id: string) => units.find((u) => u.id === id)?.name || "—";
+  const del = async () => {
+    const { error } = await supabase.from("temperature_units").delete().eq("id", pointId);
+    if (error) return toast.error("Kunne ikke slette");
+    toast.success("Målepunkt slettet");
+    setDeleteOpen(false);
+    onBack();
+  };
+
+  const exportCsv = async () => {
+    let q = supabase.from("temperature_readings")
+      .select("*")
+      .eq("store_id", storeId)
+      .eq("unit_id", pointId)
+      .order("created_at", { ascending: false });
+    if (fromDate) q = q.gte("created_at", fromDate.toISOString());
+    if (toDate) {
+      const end = new Date(toDate); end.setHours(23, 59, 59, 999);
+      q = q.lte("created_at", end.toISOString());
+    }
+    const { data, error } = await q;
+    if (error || !data) return toast.error("Kunne ikke eksportere");
+    const rows = data as Reading[];
+
+    const uids = Array.from(new Set(rows.map((r) => r.user_id)));
+    const rids = Array.from(new Set(rows.map((r) => r.routine_id).filter(Boolean))) as string[];
+    const [{ data: profs }, { data: rs }] = await Promise.all([
+      uids.length ? supabase.from("profiles").select("id, name").in("id", uids) : Promise.resolve({ data: [] } as any),
+      rids.length ? supabase.from("routines").select("id, title").in("id", rids) : Promise.resolve({ data: [] } as any),
+    ]);
+    const nameMap = new Map((profs || []).map((p: any) => [p.id, p.name || "Ukjent"]));
+    const routineMap = new Map((rs || []).map((r: any) => [r.id, r.title]));
+
+    const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
+    const header = ["dato", "temperatur_c", "målepunkt", "bruker", "rutine", "notat"];
+    const lines = [header.join(";")];
+    for (const r of rows) {
+      lines.push([
+        format(new Date(r.created_at), "yyyy-MM-dd HH:mm"),
+        formatTemp(Number(r.value_celsius)),
+        esc(point?.name || ""),
+        esc(nameMap.get(r.user_id) || "Ukjent"),
+        esc(r.routine_id ? (routineMap.get(r.routine_id) || "") : ""),
+        esc(r.note || ""),
+      ].join(";"));
+    }
+    const csv = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `loggforing_${point?.name || "malepunkt"}_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / READINGS_PER_PAGE));
 
   return (
     <div className="space-y-4">
+      <button
+        onClick={onBack}
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+      >
+        <ArrowLeft className="h-4 w-4" /> Tilbake
+      </button>
+
       <Card>
         <CardContent className="p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <Label className="text-xs">Enhet</Label>
-              <Select value={unitFilter} onValueChange={setUnitFilter}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle</SelectItem>
-                  {units.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <Label className="text-xs">Navn på målepunkt</Label>
+          <div className="flex gap-2">
+            <Input
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+            />
+            <Button
+              onClick={saveName}
+              disabled={savingName || !editingName.trim() || editingName === point?.name}
+            >
+              {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            </Button>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={exportCsv} disabled={total === 0}>
+              <Download className="h-4 w-4 mr-2" /> Eksporter CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setDeleteOpen(true)}
+              className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" /> Slett målepunkt
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Fra dato</Label>
               <Popover>
@@ -558,11 +366,15 @@ function LogPanel({ storeId }: { storeId: string }) {
               <CardContent className="p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium">{unitName(r.unit_id)}</div>
                     <div className="text-xs text-muted-foreground">
                       {format(new Date(r.created_at), "d. MMM yyyy 'kl.' HH:mm", { locale: nb })}
                       {" · "}{names.get(r.user_id) || "Ukjent"}
                     </div>
+                    {r.routine_id && routineTitles.get(r.routine_id) && (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Rutine: {routineTitles.get(r.routine_id)}
+                      </div>
+                    )}
                     {r.note && (
                       <div className="text-xs mt-1 italic text-muted-foreground">{r.note}</div>
                     )}
@@ -603,6 +415,23 @@ function LogPanel({ storeId }: { storeId: string }) {
           </PaginationContent>
         </Pagination>
       )}
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette målepunkt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Målepunktet fjernes fra valglisten i rutiner. Målinger beholdes i historikken,
+              men mister koblingen til navnet.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={del}
+              className="bg-destructive hover:bg-destructive/90">Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
