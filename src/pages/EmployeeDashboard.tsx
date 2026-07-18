@@ -1284,9 +1284,7 @@ export default function EmployeeDashboard() {
           }}
         />
       )}
-          </div>
-        )}
-      </main>
+
 
       {isAdmin && (
         <footer className="fixed bottom-0 left-0 right-0 border-t bg-card/95 backdrop-blur">
