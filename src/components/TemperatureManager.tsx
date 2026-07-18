@@ -235,8 +235,12 @@ function PointDetail({
       uids.length ? supabase.from("profiles").select("id, name").in("id", uids) : Promise.resolve({ data: [] } as any),
       rids.length ? supabase.from("routines").select("id, title").in("id", rids) : Promise.resolve({ data: [] } as any),
     ]);
-    const nameMap = new Map((profs || []).map((p: any) => [p.id, p.name || "Ukjent"]));
-    const routineMap = new Map((rs || []).map((r: any) => [r.id, r.title]));
+    const nameMap = new Map<string, string>(
+      ((profs || []) as any[]).map((p) => [p.id as string, (p.name || "Ukjent") as string]),
+    );
+    const routineMap = new Map<string, string>(
+      ((rs || []) as any[]).map((r) => [r.id as string, (r.title || "") as string]),
+    );
 
     const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
     const header = ["dato", "temperatur_c", "målepunkt", "bruker", "rutine", "notat"];
