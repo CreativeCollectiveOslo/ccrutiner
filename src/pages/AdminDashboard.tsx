@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [userStoreMemberships, setUserStoreMemberships] = useState<Record<string, string[]>>({});
-  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info" | "stores">("routines");
+  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info" | "temperature" | "stores">("routines");
   const [shiftManagerOpen, setShiftManagerOpen] = useState(false);
   const [infoCategoryManagerOpen, setInfoCategoryManagerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
