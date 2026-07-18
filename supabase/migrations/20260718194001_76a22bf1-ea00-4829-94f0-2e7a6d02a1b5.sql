@@ -1,0 +1,1 @@
+CREATE POLICY "Update temp readings" ON public.temperature_readings FOR UPDATE TO authenticated USING (public.has_store_access(auth.uid(), store_id)) WITH CHECK (public.has_store_access(auth.uid(), store_id));
