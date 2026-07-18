@@ -146,6 +146,22 @@ function PointDetail({
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteReadingId, setDeleteReadingId] = useState<string | null>(null);
+
+  const deleteReading = async () => {
+    if (!deleteReadingId) return;
+    const id = deleteReadingId;
+    setDeleteReadingId(null);
+    setReadings((prev) => prev.filter((r) => r.id !== id));
+    setTotal((t) => Math.max(0, t - 1));
+    const { error } = await supabase.from("temperature_readings").delete().eq("id", id);
+    if (error) {
+      toast.error("Kunne ikke slette måling");
+      loadReadings();
+      return;
+    }
+    toast.success("Måling slettet");
+  };
 
   const loadPoint = async () => {
     const { data } = await supabase.from("temperature_units")
