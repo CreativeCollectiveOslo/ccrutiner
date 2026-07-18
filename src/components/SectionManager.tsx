@@ -449,11 +449,16 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       className="flex items-start justify-between py-3 border-b last:border-b-0"
     >
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-sm font-medium">{routine.title}</h4>
           {routine.priority > 0 && (
             <Badge variant="secondary" className="text-xs">
               P{routine.priority}
+            </Badge>
+          )}
+          {routine.task_type === "loggforing" && (
+            <Badge variant="outline" className="text-xs">
+              Loggføring{routine.measurement_point_id ? ` · ${measurementPoints.find(p => p.id === routine.measurement_point_id)?.name || "—"}` : ""}
             </Badge>
           )}
         </div>
