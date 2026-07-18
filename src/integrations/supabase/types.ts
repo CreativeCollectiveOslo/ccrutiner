@@ -621,6 +621,184 @@ export type Database = {
           },
         ]
       }
+      temperature_readings: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          store_id: string
+          unit_id: string
+          user_id: string
+          value_celsius: number
+          widget_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          store_id: string
+          unit_id: string
+          user_id?: string
+          value_celsius: number
+          widget_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          store_id?: string
+          unit_id?: string
+          user_id?: string
+          value_celsius?: number
+          widget_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "temperature_readings_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "temperature_readings_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "temperature_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "temperature_readings_widget_id_fkey"
+            columns: ["widget_id"]
+            isOneToOne: false
+            referencedRelation: "temperature_widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      temperature_units: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "temperature_units_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      temperature_widget_units: {
+        Row: {
+          order_index: number
+          unit_id: string
+          widget_id: string
+        }
+        Insert: {
+          order_index?: number
+          unit_id: string
+          widget_id: string
+        }
+        Update: {
+          order_index?: number
+          unit_id?: string
+          widget_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "temperature_widget_units_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "temperature_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "temperature_widget_units_widget_id_fkey"
+            columns: ["widget_id"]
+            isOneToOne: false
+            referencedRelation: "temperature_widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      temperature_widgets: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          section_id: string | null
+          shift_id: string
+          store_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          section_id?: string | null
+          shift_id: string
+          store_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          section_id?: string | null
+          shift_id?: string
+          store_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "temperature_widgets_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "temperature_widgets_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "temperature_widgets_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

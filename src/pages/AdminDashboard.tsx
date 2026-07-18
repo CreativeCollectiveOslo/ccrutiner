@@ -24,6 +24,7 @@ import { SectionManager } from "@/components/SectionManager";
 import { InfoCategoryManager } from "@/components/InfoCategoryManager";
 import { InfoSectionManager } from "@/components/InfoSectionManager";
 import { StoreManager } from "@/components/StoreManager";
+import { TemperatureManager } from "@/components/TemperatureManager";
 
 
 interface Shift {
@@ -51,7 +52,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [userStoreMemberships, setUserStoreMemberships] = useState<Record<string, string[]>>({});
-  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info" | "stores">("routines");
+  const [activeTab, setActiveTab] = useState<"routines" | "users" | "announcements" | "info" | "temperature" | "stores">("routines");
   const [shiftManagerOpen, setShiftManagerOpen] = useState(false);
   const [infoCategoryManagerOpen, setInfoCategoryManagerOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -493,6 +494,19 @@ export default function AdminDashboard() {
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                 )}
               </button>
+              <button
+                onClick={() => setActiveTab("temperature")}
+                className={`flex-1 px-2 py-3 text-xs sm:text-sm font-medium transition-colors relative ${
+                  activeTab === "temperature"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Temperatur
+                {activeTab === "temperature" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
             </div>
           </div>
         )}
@@ -603,6 +617,8 @@ export default function AdminDashboard() {
               <InfoSectionManager categoryId={selectedInfoCategory} categories={infoCategories} />
             )}
           </div>
+        ) : activeTab === "temperature" ? (
+          <TemperatureManager />
         ) : activeTab === "stores" ? (
           <StoreManager />
         ) : (
