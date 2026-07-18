@@ -278,6 +278,11 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       ? Math.max(...routines.map((r) => r.order_index ?? 0)) + 1
       : 0;
 
+    if (newRoutine.taskType === "loggforing" && !newRoutine.measurementPointId) {
+      toast.error("Velg et målepunkt for loggføring");
+      return;
+    }
+
     const { data: routineData, error } = await supabase
       .from("routines")
       .insert({
@@ -289,6 +294,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
         section_id: currentSectionForNewRoutine,
         image_urls: newRoutine.imageUrls.length > 0 ? newRoutine.imageUrls : null,
         store_id: activeStore.id,
+        task_type: newRoutine.taskType,
+        measurement_point_id: newRoutine.taskType === "loggforing" ? newRoutine.measurementPointId : null,
       })
       .select()
       .single();
