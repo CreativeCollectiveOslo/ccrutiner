@@ -327,8 +327,6 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
     e.preventDefault();
     if (!editingRoutineId) return;
 
-    const { error } = await supabase
-      .from("routines")
     if (editRoutine.taskType === "loggforing" && !editRoutine.measurementPointId) {
       toast.error("Velg et målepunkt for loggføring");
       return;
