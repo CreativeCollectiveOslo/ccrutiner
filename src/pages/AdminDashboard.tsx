@@ -24,6 +24,7 @@ import { SectionManager } from "@/components/SectionManager";
 import { InfoCategoryManager } from "@/components/InfoCategoryManager";
 import { InfoSectionManager } from "@/components/InfoSectionManager";
 import { StoreManager } from "@/components/StoreManager";
+import { TemperatureManager } from "@/components/TemperatureManager";
 
 
 interface Shift {
