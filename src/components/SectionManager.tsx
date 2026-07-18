@@ -412,7 +412,7 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
 
   const openNewRoutine = (sectionId: string | null) => {
     setCurrentSectionForNewRoutine(sectionId);
-    setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [] });
+    setNewRoutine({ title: "", description: "", priority: 0, sendNotification: false, imageUrls: [], taskType: "vanlig", measurementPointId: "" });
     setRoutineDialogOpen(true);
   };
 
@@ -424,6 +424,8 @@ export function SectionManager({ shiftId, shifts }: SectionManagerProps) {
       priority: routine.priority,
       sendNotification: false,
       imageUrls: routine.image_urls || [],
+      taskType: (routine.task_type === "loggforing" ? "loggforing" : "vanlig"),
+      measurementPointId: routine.measurement_point_id || "",
     });
     setEditRoutineDialogOpen(true);
   };
