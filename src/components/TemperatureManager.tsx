@@ -388,7 +388,9 @@ function PointDetail({
                   <div className="min-w-0 flex-1">
                     <div className="text-xs text-muted-foreground">
                       {format(new Date(r.created_at), "d. MMM yyyy 'kl.' HH:mm", { locale: nb })}
-                      {" · "}{names.get(r.user_id) || "Ukjent"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {names.get(r.user_id) || "Ukjent"}
                     </div>
                     {r.routine_id && routineTitles.get(r.routine_id) && (
                       <div className="text-xs text-muted-foreground mt-0.5">
