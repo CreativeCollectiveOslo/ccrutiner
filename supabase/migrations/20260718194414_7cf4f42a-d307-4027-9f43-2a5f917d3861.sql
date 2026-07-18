@@ -1,0 +1,1 @@
+CREATE POLICY "Delete temp readings" ON public.temperature_readings FOR DELETE TO authenticated USING (public.has_store_access(auth.uid(), store_id));

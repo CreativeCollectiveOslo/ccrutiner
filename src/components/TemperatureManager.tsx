@@ -146,6 +146,22 @@ function PointDetail({
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteReadingId, setDeleteReadingId] = useState<string | null>(null);
+
+  const deleteReading = async () => {
+    if (!deleteReadingId) return;
+    const id = deleteReadingId;
+    setDeleteReadingId(null);
+    setReadings((prev) => prev.filter((r) => r.id !== id));
+    setTotal((t) => Math.max(0, t - 1));
+    const { error } = await supabase.from("temperature_readings").delete().eq("id", id);
+    if (error) {
+      toast.error("Kunne ikke slette måling");
+      loadReadings();
+      return;
+    }
+    toast.success("Måling slettet");
+  };
 
   const loadPoint = async () => {
     const { data } = await supabase.from("temperature_units")
@@ -383,8 +399,19 @@ function PointDetail({
                       <div className="text-xs mt-1 italic text-muted-foreground">{r.note}</div>
                     )}
                   </div>
-                  <div className="text-lg font-semibold shrink-0">
-                    {formatTemp(Number(r.value_celsius))} °C
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-lg font-semibold">
+                      {formatTemp(Number(r.value_celsius))} °C
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setDeleteReadingId(r.id)}
+                      aria-label="Slett måling"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -432,6 +459,22 @@ function PointDetail({
           <AlertDialogFooter>
             <AlertDialogCancel>Avbryt</AlertDialogCancel>
             <AlertDialogAction onClick={del}
+              className="bg-destructive hover:bg-destructive/90">Slett</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deleteReadingId} onOpenChange={(o) => !o && setDeleteReadingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slette måling?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Denne målingen slettes permanent.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteReading}
               className="bg-destructive hover:bg-destructive/90">Slett</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
