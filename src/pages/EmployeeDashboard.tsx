@@ -128,7 +128,7 @@ interface InfoSection {
 
 export default function EmployeeDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { activeStore, canSwitchStore, loading: storeLoading } = useStore();
+  const { activeStore, canSwitchStore, loading: storeLoading, storeSwitchKey } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
