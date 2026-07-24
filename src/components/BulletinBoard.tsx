@@ -119,6 +119,10 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [activeStore?.id]);
+
+  useEffect(() => {
     if (activeStore) {
       fetchPosts();
       fetchProfiles();
