@@ -168,9 +168,11 @@ export default function EmployeeDashboard() {
       fetchProfiles();
       fetchShiftInfo();
       setSelectedShift(null);
+      setSelectedInfoCategory(null);
     } else if (user && !storeLoading && !activeStore) {
       setLoading(false);
     }
+
   }, [user, authLoading, navigate, activeStore, storeLoading]);
 
   const checkAdminStatus = async () => {
