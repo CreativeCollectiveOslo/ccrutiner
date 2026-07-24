@@ -18,6 +18,9 @@ interface StoreContextType {
   setActiveStore: (id: string) => void;
   refreshStores: () => Promise<void>;
   loading: boolean;
+  /** Increments each time the user explicitly switches to a different store.
+   *  Subscribe with useEffect to reset local UI state (selected items, pagination, etc.). */
+  storeSwitchKey: number;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
