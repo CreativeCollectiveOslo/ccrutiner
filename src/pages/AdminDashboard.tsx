@@ -100,6 +100,15 @@ export default function AdminDashboard() {
     }
   }, [user, authLoading, navigate]);
 
+  // Reset local UI state when the user explicitly switches store
+  useEffect(() => {
+    if (storeSwitchKey === 0) return;
+    setSelectedShift("");
+    setSelectedInfoCategory("");
+    setShiftManagerOpen(false);
+    setInfoCategoryManagerOpen(false);
+  }, [storeSwitchKey]);
+
   // Only fetch data after admin verification
   useEffect(() => {
     if (isAdmin && activeStore) {
