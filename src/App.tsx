@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import HeadingsDemo from "./pages/HeadingsDemo";
 import NotFound from "./pages/NotFound";
 import { useBlurOnScroll } from "./hooks/use-blur-on-scroll";
+import { PullToRefresh } from "./components/PullToRefresh";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const AppInner = () => {
     <BrowserRouter>
       <AuthProvider>
         <StoreProvider>
+          <PullToRefresh />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -37,6 +39,7 @@ const AppInner = () => {
     </BrowserRouter>
   );
 };
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
