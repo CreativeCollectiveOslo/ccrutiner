@@ -44,7 +44,7 @@ interface UserWithRole {
 
 export default function AdminDashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { activeStore, availableStores, isSuperAdmin, loading: storeLoading } = useStore();
+  const { activeStore, availableStores, isSuperAdmin, loading: storeLoading, storeSwitchKey } = useStore();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [selectedShift, setSelectedShift] = useState<string>("");
   const [infoCategories, setInfoCategories] = useState<{ id: string; name: string; color_code: string; order_index: number }[]>([]);
@@ -99,6 +99,15 @@ export default function AdminDashboard() {
       verifyAdminRole();
     }
   }, [user, authLoading, navigate]);
+
+  // Reset local UI state when the user explicitly switches store
+  useEffect(() => {
+    if (storeSwitchKey === 0) return;
+    setSelectedShift("");
+    setSelectedInfoCategory("");
+    setShiftManagerOpen(false);
+    setInfoCategoryManagerOpen(false);
+  }, [storeSwitchKey]);
 
   // Only fetch data after admin verification
   useEffect(() => {

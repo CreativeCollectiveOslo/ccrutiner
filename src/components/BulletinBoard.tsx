@@ -73,7 +73,7 @@ const VARIANT_CONFIG = {
 export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: BulletinBoardProps) {
   const config = VARIANT_CONFIG[variant];
   const { user } = useAuth();
-  const { activeStore } = useStore();
+  const { activeStore, storeSwitchKey } = useStore();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [profiles, setProfiles] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -119,8 +119,9 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
 
   useEffect(() => {
+    if (storeSwitchKey === 0) return;
     setCurrentPage(1);
-  }, [activeStore?.id]);
+  }, [storeSwitchKey]);
 
   useEffect(() => {
     if (activeStore) {

@@ -18,6 +18,9 @@ interface StoreContextType {
   setActiveStore: (id: string) => void;
   refreshStores: () => Promise<void>;
   loading: boolean;
+  /** Increments each time the user explicitly switches to a different store.
+   *  Subscribe with useEffect to reset local UI state (selected items, pagination, etc.). */
+  storeSwitchKey: number;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -30,6 +33,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [storeSwitchKey, setStoreSwitchKey] = useState(0);
 
   const loadForUser = useCallback(async () => {
     if (!user) {
@@ -91,9 +95,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const setActiveStore = (id: string) => {
     const store = availableStores.find((s) => s.id === id);
-    if (store) {
+    if (store && store.id !== activeStore?.id) {
       setActiveStoreState(store);
       localStorage.setItem(ACTIVE_STORE_KEY, store.id);
+      setStoreSwitchKey((k) => k + 1);
     }
   };
 
@@ -108,6 +113,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setActiveStore,
         refreshStores: loadForUser,
         loading,
+        storeSwitchKey,
       }}
     >
       {children}
