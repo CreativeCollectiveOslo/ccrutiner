@@ -155,6 +155,17 @@ export default function EmployeeDashboard() {
   const [logRoutine, setLogRoutine] = useState<Routine | null>(null);
   const navigate = useNavigate();
 
+  // Reset UI state when the user explicitly switches store
+  useEffect(() => {
+    if (storeSwitchKey === 0) return;
+    setSelectedShift(null);
+    setSelectedInfoCategory(null);
+    setExpandedDescriptions(new Set());
+    setHighlightedRoutineId(null);
+    setSearchHighlightTerm(null);
+    setLogRoutine(null);
+  }, [storeSwitchKey]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
@@ -167,8 +178,6 @@ export default function EmployeeDashboard() {
       fetchAllShiftProgress();
       fetchProfiles();
       fetchShiftInfo();
-      setSelectedShift(null);
-      setSelectedInfoCategory(null);
     } else if (user && !storeLoading && !activeStore) {
       setLoading(false);
     }
