@@ -119,8 +119,9 @@ export function BulletinBoard({ searchHighlightTerm, variant = "bulletin" }: Bul
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
 
   useEffect(() => {
+    if (storeSwitchKey === 0) return;
     setCurrentPage(1);
-  }, [activeStore?.id]);
+  }, [storeSwitchKey]);
 
   useEffect(() => {
     if (activeStore) {
