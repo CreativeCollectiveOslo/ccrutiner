@@ -121,13 +121,13 @@ export default function AdminDashboard() {
       .order("order_index");
     if (!error && data) {
       setInfoCategories(data as any);
-      if (data.length > 0 && !selectedInfoCategory) {
-        setSelectedInfoCategory(data[0].id);
-      } else if (data.length === 0) {
-        setSelectedInfoCategory("");
+      const stillExists = data.some((c: any) => c.id === selectedInfoCategory);
+      if (!stillExists) {
+        setSelectedInfoCategory(data.length > 0 ? data[0].id : "");
       }
     }
   };
+
 
   const fetchUsers = async () => {
     const { data: profiles, error: profileError } = await supabase
